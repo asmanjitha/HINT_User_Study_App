@@ -4,10 +4,10 @@ Study 2 is presented as a modality-comparison study rather than repeating
 Study 1's environment flow.  Completion is tracked once per required
 modality: Keyboard, Joystick, Voice, and implicit Gaze/Physiological input.
 
-Only the Keyboard Gridworld input path is a live console integration in this
-build.  Other modalities are represented as tracked Trials until their real
-hardware/input adapters are connected; the console never relabels keyboard
-input as voice/gaze/joystick.
+Keyboard and Voice Gridworld input paths are live Actor-Critic integrations.
+Joystick and implicit feedback remain tracked Trials until their dedicated
+input adapters are connected. Voice commands use the microphone selected on
+the Devices page and are never synthesized from keyboard input.
 """
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.application_controller import ApplicationController
+from devices.voice_recognizer import VoiceCommandRecognizer
 from core.workflow_manager import (
     STEP_LABELS,
     STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
@@ -398,6 +399,12 @@ class Study2StudyPanel(QWidget):
         modality = Modality[self._modality_combo.currentData()]
         if modality == Modality.KEYBOARD:
             text = "Live Actor-Critic Gridworld is integrated for Keyboard feedback."
+        elif modality == Modality.VOICE:
+            text = (
+                "Live Actor-Critic Gridworld + microphone speech recognition. "
+                "Requested mode: say a direction. Anytime mode: say STOP, then "
+                "the state-box number, then a direction."
+            )
         else:
             text = (
                 f"Tracked/external run: the real {modality.value} adapter is not integrated "
@@ -416,7 +423,7 @@ class Study2StudyPanel(QWidget):
             modality=modality,
             rl_algorithm=(
                 "actor_critic_gridworld"
-                if modality == Modality.KEYBOARD
+                if modality in (Modality.KEYBOARD, Modality.VOICE)
                 else "external_multimodal_gridworld"
             ),
             random_seed=self._seed_spin.value(),
@@ -479,6 +486,26 @@ class Study2StudyPanel(QWidget):
             if answer != QMessageBox.StandardButton.Yes:
                 return
 
+        if modality == Modality.VOICE:
+            ok, message = self._controller.device_manager.check_microphone()
+            if not ok:
+                QMessageBox.warning(
+                    self,
+                    "Voice microphone unavailable",
+                    "The Voice condition needs a connected microphone that is "
+                    f"receiving data.\n\n{message}\n\nOpen Devices, connect/check the "
+                    "microphone, then start this run again.",
+                )
+                return
+            if not VoiceCommandRecognizer.backend_available():
+                QMessageBox.warning(
+                    self,
+                    "Speech recognition unavailable",
+                    "The Vosk Python package is not installed. "
+                    "Install requirements.txt before running Voice feedback.",
+                )
+                return
+
         if not self._controller.device_manager.shimmer_stream_healthy():
             answer = QMessageBox.question(
                 self,
@@ -508,7 +535,7 @@ class Study2StudyPanel(QWidget):
             QMessageBox.critical(self, "Could not start run", str(exc))
             return
 
-        self._active_live_rl = modality == Modality.KEYBOARD
+        self._active_live_rl = modality in (Modality.KEYBOARD, Modality.VOICE)
 
         try:
             if self._active_live_rl:

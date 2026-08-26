@@ -22,10 +22,12 @@ import glob
 import logging
 import os
 import platform
+import queue
 import re
 import threading
 import time
 from ctypes import wintypes
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -444,6 +446,8 @@ class MicrophoneDevice(BaseDevice):
         self._callback_count = 0
         self._peak_level = 0.0
         self._got_first_frame = False
+        self._sample_rate = 0.0
+        self._audio_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=256)
         self._lock = threading.Lock()
 
         self.first_audio_frame.connect(self._mark_receiving)
@@ -501,6 +505,8 @@ class MicrophoneDevice(BaseDevice):
             rate = float(info.get("default_samplerate", 44100.0) or 44100.0)
 
             self._sd = sd
+            self._sample_rate = rate
+            self._drain_audio_queue()
             self._selected_id = str(index)
             self._selected_name = str(info.get("name", f"Microphone {index}"))
             self._last_error = ""
@@ -547,8 +553,117 @@ class MicrophoneDevice(BaseDevice):
                 emit_first = True
             if status:
                 self._last_error = str(status)
+        try:
+            mono = np.asarray(indata[:, 0], dtype=np.float32).copy()
+            try:
+                self._audio_queue.put_nowait(mono)
+            except queue.Full:
+                try:
+                    self._audio_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                try:
+                    self._audio_queue.put_nowait(mono)
+                except queue.Full:
+                    pass
+        except Exception:
+            # Audio monitoring/status must never be broken by the command queue.
+            pass
+
         if emit_first:
             self.first_audio_frame.emit()
+
+    def _drain_audio_queue(self) -> None:
+        while True:
+            try:
+                self._audio_queue.get_nowait()
+            except queue.Empty:
+                break
+
+    def capture_phrase(
+        self,
+        *,
+        timeout_s: float = 0.75,
+        phrase_time_limit_s: float = 2.5,
+        silence_s: float = 0.40,
+        activation_peak: float = 0.012,
+        preroll_s: float = 0.15,
+    ) -> dict[str, Any] | None:
+        """Capture one spoken phrase from the already-open microphone stream.
+
+        A lightweight amplitude gate is used only to decide when a phrase begins
+        and ends; speech-to-text is performed by ``VoiceCommandRecognizer``.
+        This method is designed to be called from a background worker thread.
+        """
+
+        if self._stream is None or self._sample_rate <= 0:
+            return None
+
+        self._drain_audio_queue()
+        start_deadline = time.monotonic() + max(0.05, float(timeout_s))
+        pre_chunks: deque[np.ndarray] = deque()
+        pre_samples = 0
+        max_pre_samples = max(1, int(self._sample_rate * max(0.0, preroll_s)))
+        phrase_chunks: list[np.ndarray] = []
+        phrase_samples = 0
+        max_phrase_samples = max(1, int(self._sample_rate * max(0.25, phrase_time_limit_s)))
+        speech_started = False
+        last_voice_at = 0.0
+
+        while True:
+            if not speech_started and time.monotonic() >= start_deadline:
+                return None
+
+            try:
+                chunk = self._audio_queue.get(timeout=0.10)
+            except queue.Empty:
+                if speech_started and last_voice_at and time.monotonic() - last_voice_at >= silence_s:
+                    break
+                continue
+
+            if chunk.size == 0:
+                continue
+
+            now = time.monotonic()
+            peak = float(np.max(np.abs(chunk)))
+
+            if not speech_started:
+                pre_chunks.append(chunk)
+                pre_samples += int(chunk.size)
+                while pre_chunks and pre_samples > max_pre_samples:
+                    removed = pre_chunks.popleft()
+                    pre_samples -= int(removed.size)
+
+                if peak >= activation_peak:
+                    speech_started = True
+                    phrase_chunks.extend(pre_chunks)
+                    phrase_samples = sum(int(item.size) for item in phrase_chunks)
+                    last_voice_at = now
+                continue
+
+            phrase_chunks.append(chunk)
+            phrase_samples += int(chunk.size)
+            if peak >= activation_peak:
+                last_voice_at = now
+
+            if phrase_samples >= max_phrase_samples:
+                break
+            if last_voice_at and now - last_voice_at >= max(0.15, silence_s):
+                break
+
+        if not phrase_chunks:
+            return None
+
+        samples = np.concatenate(phrase_chunks)
+        if samples.size == 0:
+            return None
+        samples = np.clip(samples, -1.0, 1.0)
+        pcm = (samples * 32767.0).astype(np.int16).tobytes()
+        return {
+            "pcm": pcm,
+            "sample_rate": int(self._sample_rate),
+            "duration_s": float(samples.size / self._sample_rate),
+        }
 
     def _mark_receiving(self) -> None:
         if self.status in (DeviceStatus.CONNECTED, DeviceStatus.WARNING):
@@ -581,6 +696,8 @@ class MicrophoneDevice(BaseDevice):
             logger.exception("Error while closing microphone stream")
         self._stream = None
         self._sd = None
+        self._sample_rate = 0.0
+        self._drain_audio_queue()
         self._selected_id = ""
         self._selected_name = ""
         self._last_error = ""

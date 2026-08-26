@@ -51,6 +51,19 @@ studies:
 
 random_seed: 42
 
+voice_recognition:
+  # Uses the microphone selected on the Devices page. Recognition is local via
+  # Vosk. On first use Vosk may download/cache its small English model; after
+  # that, participant speech recognition runs offline on the study PC.
+  engine: "vosk"
+  language: "en-us"
+  # Optional: set a pre-downloaded Vosk model folder to avoid first-use download.
+  model_path: ""
+  listen_window_seconds: 0.75
+  phrase_time_limit_seconds: 2.5
+  silence_seconds: 0.40
+  activation_peak: 0.012
+
 critical_state:
   detection_method: "oscillation_pattern"
 

@@ -4,7 +4,7 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
-## What's in this version (V1.1.3 — HoloLens study recording)
+## What's in this version (V1.1.4 — Study 2 offline voice feedback)
 
 The console uses a single process-oriented workflow on the existing data
 model and Actor-Critic Gridworld integration. V0.9 retains the IRB-aligned
@@ -43,17 +43,26 @@ can be identified directly from the filesystem:
   work). Study 1 Training keeps its existing practice matrix. Study 1 Study
   now tracks the three protocol settings (with two Gridworld timing
   conditions), and Study 2 Study centers its progress view on multimodal
-  Gridworld feedback. Keyboard Gridworld runs launch the live Actor-Critic
-  integration; non-integrated modalities/environments create tracked Trials
-  until their real device/simulator adapters are connected.
+  Gridworld feedback. Keyboard **and Voice** Gridworld runs now launch the live
+  Actor-Critic integration in both Study 2 Training and Study 2 Study. Voice
+  uses the microphone selected on the Devices page and local Vosk speech
+  recognition. Joystick/implicit conditions remain tracked until their dedicated
+  live adapters are connected.
 
 - **Event Log** — live event feed + disk usage, for monitoring/debugging.
   Device status and current-session context now live on the Devices and
   Workflow pages instead.
 
-The participant-facing second window (maze view + arrow-key/on-screen
-feedback controls) is unchanged from V0.1 and still pops up automatically
-whenever a live Keyboard Gridworld trial starts (Study 1 or Study 2).
+The participant-facing second window (maze view + feedback controls) opens
+automatically for live Keyboard and Voice Gridworld trials. In Voice Requested
+Feedback, the participant says **UP / DOWN / LEFT / RIGHT**. In Voice Anytime
+Feedback, the participant says **STOP**, then the number of one of the displayed
+recent-state boxes, then **UP / DOWN / LEFT / RIGHT**.
+
+Voice recognition is local through Vosk. If no English Vosk model is already
+cached, Vosk can obtain its small English model on first initialization; for a
+fully offline study machine, set `voice_recognition.model_path` in
+`config/study.yaml` to a pre-downloaded model directory before data collection.
 
 ### HoloLens files per activity run
 
@@ -151,6 +160,8 @@ hint_study_console/
 │   ├── base_device.py          # BaseDevice interface, MockDevice
 │   ├── shimmer_protocol.py     # Shimmer3 LiteProtocol helpers + packet parser
 │   ├── shimmer_device.py       # real Bluetooth/serial GSR+PPG streaming
+│   ├── input_devices.py        # keyboard/joystick/microphone adapters + PCM phrase capture
+│   ├── voice_recognizer.py     # local Vosk STOP/number/direction recognition
 │   └── device_manager.py       # owns one device per DeviceType
 ├── gui/                       # PySide6 widgets
 │   ├── main_window.py          # left nav (Devices / Workflow / Event Log)
@@ -158,9 +169,9 @@ hint_study_console/
 │   ├── workflow_page.py        # participant selector + step menu + detail panels
 │   ├── registration_panel.py   # Registration step detail
 │   ├── study1_step_panel.py    # Study 1 Training/Study (real RL trial)
-│   ├── study2_step_panel.py    # Study 2 Training/Study (manual session tracking)
+│   ├── study2_step_panel.py    # Study 2 Training; live Gridworld Keyboard/Voice
 │   ├── participant_dialog.py   # "New Participant" dialog
-│   ├── participant_window.py   # participant-facing maze view (unchanged)
+│   ├── participant_window.py   # participant maze + keyboard/voice feedback state machine
 │   └── event_log_page.py
 ├── rl/, recording/            # Actor-Critic Gridworld experiment + CSV recorder (unchanged)
 ├── config/                    # app.yaml, study.yaml, logging.yaml

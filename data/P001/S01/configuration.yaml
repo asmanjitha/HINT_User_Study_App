@@ -38,6 +38,14 @@ studies:
     - Implicit (Gaze/Physiological)
     counterbalancing_method: latin_square
 random_seed: 42
+voice_recognition:
+  engine: vosk
+  language: en-us
+  model_path: ''
+  listen_window_seconds: 0.75
+  phrase_time_limit_seconds: 2.5
+  silence_seconds: 0.4
+  activation_peak: 0.012
 critical_state:
   detection_method: oscillation_pattern
 rl:

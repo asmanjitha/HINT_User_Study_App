@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.application_controller import ApplicationController
+from devices.voice_recognizer import VoiceCommandRecognizer
 from core.workflow_manager import (
     STEP_LABELS,
     STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
@@ -255,6 +256,29 @@ class Study2StepPanel(QWidget):
             )
             return
 
+        environment = Environment[self._env_combo.currentData()]
+        modality = Modality[self._modality_combo.currentData()]
+        timing = FeedbackTiming[self._timing_combo.currentData()]
+
+        if environment == Environment.GRIDWORLD and modality == Modality.VOICE:
+            ok, message = self._controller.device_manager.check_microphone()
+            if not ok:
+                QMessageBox.warning(
+                    self,
+                    "Voice microphone unavailable",
+                    "Voice Gridworld training needs a connected microphone that is "
+                    f"receiving data.\n\n{message}",
+                )
+                return
+            if not VoiceCommandRecognizer.backend_available():
+                QMessageBox.warning(
+                    self,
+                    "Speech recognition unavailable",
+                    "Vosk is not installed. Install requirements.txt "
+                    "before running Voice training.",
+                )
+                return
+
         if not self._controller.device_manager.all_connected():
             answer = QMessageBox.question(
                 self,
@@ -268,17 +292,34 @@ class Study2StepPanel(QWidget):
             run, session = self._controller.workflow_manager.start_run(
                 self._participant_code, self._step
             )
+            live_rl = (
+                environment == Environment.GRIDWORLD
+                and modality in (Modality.KEYBOARD, Modality.VOICE)
+            )
             condition = ExperimentCondition(
                 study=Study.STUDY_2,
-                environment=Environment[self._env_combo.currentData()],
-                feedback_timing=FeedbackTiming[self._timing_combo.currentData()],
-                modality=Modality[self._modality_combo.currentData()],
+                environment=environment,
+                feedback_timing=timing,
+                modality=modality,
+                rl_algorithm=(
+                    "actor_critic_gridworld"
+                    if live_rl
+                    else "external_multimodal_training"
+                ),
             )
-            trial = self._controller.start_tracked_trial(
-                session.session_id,
-                condition,
-                practice=True,
-            )
+            if live_rl:
+                trial = self._controller.start_actor_critic_trial(
+                    session.session_id,
+                    condition,
+                    practice=True,
+                    use_maze_qinit=False,
+                )
+            else:
+                trial = self._controller.start_tracked_trial(
+                    session.session_id,
+                    condition,
+                    practice=True,
+                )
             self._controller.workflow_manager.attach_trial(run.run_id, trial.trial_id)
         except Exception as exc:
             # If the workflow row was created but its practice Trial could not

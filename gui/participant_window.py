@@ -25,11 +25,20 @@ from core.application_controller import (
     ApplicationController,
 )
 
+from devices.voice_recognizer import (
+    VOICE_CONTEXT_DIRECTION,
+    VOICE_CONTEXT_IDLE,
+    VOICE_CONTEXT_STATE_NUMBER,
+    VOICE_CONTEXT_STOP,
+    VoiceCommandRecognizer,
+)
 from models.enums import (
     AppMode,
+    EventType,
     FeedbackTiming,
     Modality,
 )
+from models.event import StudyEvent
 
 
 class MazeCanvas(QWidget):
@@ -375,6 +384,25 @@ class ParticipantWindow(QWidget):
 
         self._history_buttons = []
 
+        voice_cfg = (
+            self._controller.config.study_raw
+            .get("voice_recognition", {})
+        )
+        self._voice_recognizer = VoiceCommandRecognizer(
+            self._controller.device_manager.microphone_device,
+            config=voice_cfg,
+            parent=self,
+        )
+        self._voice_recognizer.transcript_heard.connect(
+            self._on_voice_transcript
+        )
+        self._voice_recognizer.command_recognized.connect(
+            self._on_voice_command
+        )
+        self._voice_recognizer.recognition_error.connect(
+            self._on_voice_error
+        )
+
         self.setWindowTitle(
             "HINT Study — Participant"
         )
@@ -639,47 +667,63 @@ class ParticipantWindow(QWidget):
         self._clear_history_buttons()
         self._maze.clear_history()
         self._history_box.setVisible(False)
+        self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
+        self._pause_feedback_btn.setText(
+            "PAUSE & SELECT FEEDBACK  [SPACE]"
+        )
 
         if (
             self._feedback_timing
             == FeedbackTiming.ANYTIME
         ):
 
-            self._feedback_message.setText(
-                "When you want to give feedback, "
-                "press SPACE or the Pause button. "
-                "Then choose a recent state and "
-                "provide the corrective action."
-            )
+            if self._feedback_modality == Modality.VOICE:
+                if self._voice_recognizer.available:
+                    self._feedback_message.setText(
+                        'Voice feedback ready. Say "STOP" when you want '
+                        "to pause the agent and choose a recent state."
+                    )
+                    self._voice_recognizer.set_context(VOICE_CONTEXT_STOP)
+                else:
+                    self._feedback_message.setText(
+                        "Voice recognition is unavailable. Install the project "
+                        "requirements before running this condition."
+                    )
+                self._pause_feedback_btn.setText(
+                    'VOICE MODE — SAY "STOP" TO PAUSE'
+                )
+                self._pause_feedback_btn.setEnabled(False)
+            else:
+                self._feedback_message.setText(
+                    "When you want to give feedback, "
+                    "press SPACE or the Pause button. "
+                    "Then choose a recent state and "
+                    "provide the corrective action."
+                )
+                self._pause_feedback_btn.setEnabled(True)
 
             # Direction controls are only enabled after
             # the participant explicitly selects a state.
             self._set_controls(False)
 
-            self._skip_btn.setVisible(
-                False
-            )
-
-            self._pause_feedback_btn.setVisible(
-                True
-            )
-
-            self._pause_feedback_btn.setEnabled(
-                True
-            )
+            self._skip_btn.setVisible(False)
+            self._pause_feedback_btn.setVisible(True)
 
         else:
 
-            self._feedback_message.setText(
-                "Wait until the system "
-                "requests feedback."
-            )
+            if self._feedback_modality == Modality.VOICE:
+                self._feedback_message.setText(
+                    "Wait until the system requests feedback. Then say "
+                    "UP, DOWN, LEFT, or RIGHT."
+                )
+                self._skip_btn.setVisible(False)
+            else:
+                self._feedback_message.setText(
+                    "Wait until the system requests feedback."
+                )
+                self._skip_btn.setVisible(True)
 
             self._set_controls(False)
-
-            self._skip_btn.setVisible(
-                True
-            )
 
             self._pause_feedback_btn.setVisible(
                 False
@@ -755,11 +799,19 @@ class ParticipantWindow(QWidget):
             self._anytime_history
         )
 
-        self._feedback_message.setText(
-            "Agent paused. Select one of the "
-            "recent states below. After selecting "
-            "a state, choose the corrective action."
-        )
+        if self._feedback_modality == Modality.VOICE:
+            max_box = max(1, len(self._anytime_history))
+            self._feedback_message.setText(
+                "Agent paused. Say the NUMBER of the state box you want "
+                f"to correct (1 to {max_box})."
+            )
+            self._voice_recognizer.set_context(VOICE_CONTEXT_STATE_NUMBER)
+        else:
+            self._feedback_message.setText(
+                "Agent paused. Select one of the "
+                "recent states below. After selecting "
+                "a state, choose the corrective action."
+            )
 
         self.setFocus()
 
@@ -783,16 +835,23 @@ class ParticipantWindow(QWidget):
             "state"
         )
 
-        self._feedback_message.setText(
-            (
-                f"Feedback requested "
-                f"at cell {state}. "
-                f"Time remaining: "
-                f"{self._remaining_seconds} s"
+        if self._feedback_modality == Modality.VOICE:
+            self._feedback_message.setText(
+                f"Feedback requested at cell {state}. Say UP, DOWN, LEFT, "
+                f"or RIGHT. Time remaining: {self._remaining_seconds} s"
             )
-        )
-
-        self._set_controls(True)
+            self._set_controls(False)
+            self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+        else:
+            self._feedback_message.setText(
+                (
+                    f"Feedback requested "
+                    f"at cell {state}. "
+                    f"Time remaining: "
+                    f"{self._remaining_seconds} s"
+                )
+            )
+            self._set_controls(True)
 
         self._countdown.start(
             1000
@@ -826,15 +885,26 @@ class ParticipantWindow(QWidget):
                 )
 
             self._set_controls(False)
-            self._pause_feedback_btn.setEnabled(True)
 
-            self._feedback_message.setText(
-                f"Feedback {payload.get('action_name')} "
-                f"applied to step {payload.get('step')} "
-                f"({payload.get('steps_back', 0)} step(s) back). "
-                "Training resumed. Press SPACE when you "
-                "want to provide another correction."
-            )
+            if self._feedback_modality == Modality.VOICE:
+                self._pause_feedback_btn.setEnabled(False)
+                self._voice_recognizer.set_context(VOICE_CONTEXT_STOP)
+                self._feedback_message.setText(
+                    f"Feedback {payload.get('action_name')} "
+                    f"applied to step {payload.get('step')} "
+                    f"({payload.get('steps_back', 0)} step(s) back). "
+                    'Training resumed. Say "STOP" when you want to provide '
+                    "another correction."
+                )
+            else:
+                self._pause_feedback_btn.setEnabled(True)
+                self._feedback_message.setText(
+                    f"Feedback {payload.get('action_name')} "
+                    f"applied to step {payload.get('step')} "
+                    f"({payload.get('steps_back', 0)} step(s) back). "
+                    "Training resumed. Press SPACE when you "
+                    "want to provide another correction."
+                )
 
             self.setFocus()
             return
@@ -848,6 +918,8 @@ class ParticipantWindow(QWidget):
             )
 
             self._countdown.stop()
+            if self._feedback_modality == Modality.VOICE:
+                self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
 
             if payload.get(
                 "skipped"
@@ -880,6 +952,101 @@ class ParticipantWindow(QWidget):
                     False
                 )
 
+    # --------------------------------------------------
+    # Voice feedback
+    # --------------------------------------------------
+
+    def _on_voice_transcript(self, payload: dict) -> None:
+        if self._feedback_modality != Modality.VOICE:
+            return
+        trial = self._controller.active_trial
+        if trial is None:
+            return
+        value = (
+            f"context={payload.get('context', '')};"
+            f"transcript={payload.get('transcript', '')};"
+            f"parsed={payload.get('command') or ''}"
+        )
+        self._controller.event_bus.publish(
+            StudyEvent(
+                event_type=EventType.VOICE_TRANSCRIPT,
+                participant_id=trial.participant_code,
+                session_id=trial.session_id,
+                trial_id=trial.trial_id,
+                value=value,
+            )
+        )
+
+    def _on_voice_command(self, payload: dict) -> None:
+        if self._feedback_modality != Modality.VOICE:
+            return
+
+        context = str(payload.get("context", ""))
+        command = str(payload.get("command", ""))
+        transcript = str(payload.get("transcript", ""))
+        trial = self._controller.active_trial
+        if trial is not None:
+            self._controller.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.VOICE_COMMAND,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        f"context={context};command={command};"
+                        f"transcript={transcript}"
+                    ),
+                )
+            )
+
+        if context == VOICE_CONTEXT_STOP and command == "stop":
+            if not self._begin_anytime_feedback():
+                self._voice_recognizer.set_context(VOICE_CONTEXT_STOP)
+            return
+
+        if context == VOICE_CONTEXT_STATE_NUMBER:
+            try:
+                box_number = int(command)
+            except ValueError:
+                self._voice_recognizer.set_context(VOICE_CONTEXT_STATE_NUMBER)
+                return
+            selected = next(
+                (
+                    item for item in self._anytime_history
+                    if int(item.get("history_index", -1)) == box_number
+                ),
+                None,
+            )
+            if selected is None:
+                self._feedback_message.setText(
+                    f"Box {box_number} is not available. Say a number shown below."
+                )
+                self._voice_recognizer.set_context(VOICE_CONTEXT_STATE_NUMBER)
+                return
+            self._select_history_state(selected)
+            return
+
+        if context == VOICE_CONTEXT_DIRECTION:
+            action_map = {
+                "up": 0,
+                "down": 1,
+                "left": 2,
+                "right": 3,
+            }
+            action = action_map.get(command)
+            if action is None:
+                self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+                return
+            self._send_action(action, modality=Modality.VOICE)
+
+    def _on_voice_error(self, message: str) -> None:
+        if self._feedback_modality != Modality.VOICE:
+            return
+        # Keep the participant informed, but do not stop the RL trial.  The
+        # requested-feedback timeout remains the final fallback.
+        if self._waiting_for_feedback or self._anytime_feedback_active:
+            self._feedback_message.setText(message)
+
     def _on_status_changed(
         self,
         status: str,
@@ -892,6 +1059,7 @@ class ParticipantWindow(QWidget):
         if status == "Stopped":
 
             self._countdown.stop()
+            self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
             self._anytime_feedback_active = False
             self._selected_history_step = None
             self._anytime_history = []
@@ -904,7 +1072,10 @@ class ParticipantWindow(QWidget):
     def _send_action(
         self,
         action: int,
+        modality: Modality | None = None,
     ) -> None:
+
+        submission_modality = modality or Modality.KEYBOARD
 
         if (
             self._feedback_timing
@@ -916,7 +1087,7 @@ class ParticipantWindow(QWidget):
 
             self._controller.rl_manager.submit_feedback(
                 action,
-                Modality.KEYBOARD,
+                submission_modality,
             )
 
             return
@@ -931,7 +1102,7 @@ class ParticipantWindow(QWidget):
 
         self._controller.rl_manager.submit_feedback(
             action,
-            Modality.KEYBOARD,
+            submission_modality,
             selected_step=(
                 self._selected_history_step
             ),
@@ -939,18 +1110,18 @@ class ParticipantWindow(QWidget):
 
     def _begin_anytime_feedback(
         self,
-    ) -> None:
+    ) -> bool:
 
         if (
             self._feedback_timing
             != FeedbackTiming.ANYTIME
         ):
-            return
+            return False
 
         if self._anytime_feedback_active:
-            return
+            return False
 
-        self._controller.rl_manager.begin_anytime_feedback()
+        return self._controller.rl_manager.begin_anytime_feedback()
 
     def _clear_history_buttons(
         self,
@@ -1011,6 +1182,10 @@ class ParticipantWindow(QWidget):
             button.setFocusPolicy(
                 Qt.FocusPolicy.NoFocus
             )
+            if self._feedback_modality == Modality.VOICE:
+                # Voice trials show the numbered boxes as visual references,
+                # but selection itself must be spoken rather than clicked.
+                button.setEnabled(False)
 
             button.clicked.connect(
                 lambda checked=False, record=item:
@@ -1081,14 +1256,23 @@ class ParticipantWindow(QWidget):
             ),
         )
 
-        self._set_controls(True)
         self._skip_btn.setVisible(False)
 
-        self._feedback_message.setText(
-            f"Selected step {item['step']} at "
-            f"cell {tuple(item['state'])}. "
-            "Now choose UP, DOWN, LEFT, or RIGHT."
-        )
+        if self._feedback_modality == Modality.VOICE:
+            self._set_controls(False)
+            self._feedback_message.setText(
+                f"Selected box {item.get('history_index', '?')} — step "
+                f"{item['step']} at cell {tuple(item['state'])}. "
+                "Now say UP, DOWN, LEFT, or RIGHT."
+            )
+            self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+        else:
+            self._set_controls(True)
+            self._feedback_message.setText(
+                f"Selected step {item['step']} at "
+                f"cell {tuple(item['state'])}. "
+                "Now choose UP, DOWN, LEFT, or RIGHT."
+            )
 
         self.setFocus()
 
@@ -1138,13 +1322,19 @@ class ParticipantWindow(QWidget):
             self._remaining_seconds - 1,
         )
 
-        self._feedback_message.setText(
-            (
-                "Feedback requested. "
-                f"Time remaining: "
-                f"{self._remaining_seconds} s"
+        if self._feedback_modality == Modality.VOICE:
+            self._feedback_message.setText(
+                "Feedback requested. Say UP, DOWN, LEFT, or RIGHT. "
+                f"Time remaining: {self._remaining_seconds} s"
             )
-        )
+        else:
+            self._feedback_message.setText(
+                (
+                    "Feedback requested. "
+                    f"Time remaining: "
+                    f"{self._remaining_seconds} s"
+                )
+            )
 
         if (
             self._remaining_seconds
@@ -1161,6 +1351,17 @@ class ParticipantWindow(QWidget):
         self,
         event: QKeyEvent,
     ) -> None:
+
+        if self._feedback_modality == Modality.VOICE:
+            # Do not silently turn keyboard presses into Voice observations.
+            # The Voice condition is controlled only by recognized speech.
+            if event.key() in (
+                Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Left, Qt.Key.Key_Right,
+                Qt.Key.Key_W, Qt.Key.Key_A, Qt.Key.Key_S, Qt.Key.Key_D,
+                Qt.Key.Key_Space,
+            ):
+                event.accept()
+                return
 
         key_map = {
             Qt.Key.Key_Up: 0,

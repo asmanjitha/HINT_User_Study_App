@@ -944,6 +944,9 @@ class ActorCriticGridworldExperiment(
         state = (
             self._pending_ambiguity
         )
+        request_step = int(self.env.steps)
+
+        executed_transition = None
 
         if action is not None:
 
@@ -956,6 +959,12 @@ class ActorCriticGridworldExperiment(
             )
 
             self.human_feedback_given = True
+
+            # Requested feedback refers to the agent's current live state.
+            # Execute the participant's correction immediately so "LEFT", for
+            # example, actually moves the agent left rather than merely biasing
+            # a later stochastic policy action.
+            executed_transition = self._execute_requested_human_action(action)
 
         latency_ms = None
 
@@ -972,7 +981,7 @@ class ActorCriticGridworldExperiment(
                     self.current_episode,
 
                 "step":
-                    self.env.steps,
+                    request_step,
 
                 "state":
                     state,
@@ -996,6 +1005,16 @@ class ActorCriticGridworldExperiment(
                         else _ACTION_NAMES[
                             action
                         ]
+                    ),
+
+                "executed_immediately":
+                    executed_transition is not None,
+
+                "result_state":
+                    (
+                        None
+                        if executed_transition is None
+                        else executed_transition["state_after"]
                     ),
 
                 "modality":
@@ -1024,6 +1043,14 @@ class ActorCriticGridworldExperiment(
 
         self._emit_view()
 
+        if executed_transition is not None and executed_transition["done"]:
+            if executed_transition["target_reached"]:
+                self._save_first_goal_snapshot()
+            self._finish_episode(
+                target_reached=bool(executed_transition["target_reached"])
+            )
+            return
+
         if (
             self._running
             and not self._paused_by_user
@@ -1036,6 +1063,56 @@ class ActorCriticGridworldExperiment(
             self._step_timer.start(
                 self.step_interval_ms
             )
+
+    def _execute_requested_human_action(self, action: int) -> dict:
+        """Execute/log the correction chosen for a requested live state."""
+
+        timestamp = time.time()
+        state_before = tuple(self.state)
+        full_state = self._full_state(state_before)
+
+        next_state, reward, done, target_reached = self.env.step(action)
+        state_after = tuple(next_state)
+        next_full_state = self._full_state(state_after)
+
+        # This is a real environment transition in addition to the direct human
+        # guidance update above, so let Actor-Critic learn from its reward too.
+        self.agent.learn(
+            full_state,
+            action,
+            reward,
+            next_full_state,
+            done,
+        )
+
+        self.state = state_after
+        self._record_state_history(state_after)
+        self.total_reward += reward
+        self._last_action = action
+        self._last_reward = float(reward)
+        self.detector.add_position(state_after)
+
+        collision = bool(done and reward == -50)
+        payload = {
+            "timestamp": timestamp,
+            "episode": self.current_episode,
+            "step": self.env.steps,
+            "state_before": state_before,
+            "state_after": state_after,
+            "action": action,
+            "action_name": _ACTION_NAMES[action],
+            "reward": float(reward),
+            "total_reward": float(self.total_reward),
+            "done": bool(done),
+            "target_reached": bool(target_reached),
+            "collision": collision,
+            "entropy_coef": float(self.agent.entropy_coef),
+            "ambiguity_detected": False,
+            "control_source": "human_requested_feedback",
+        }
+        self.step_completed.emit(payload)
+        self._emit_view()
+        return payload
 
     def _on_feedback_timeout(
         self,

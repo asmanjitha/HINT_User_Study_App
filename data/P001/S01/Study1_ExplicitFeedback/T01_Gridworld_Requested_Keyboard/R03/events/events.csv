@@ -1,5 +1,0 @@
-timestamp,event,participant_id,session_id,trial_id,episode,step,value
-1787751204.934,TRIAL_STARTED,P001,P001_S01,P001_S01_ST1ST_T01_R03,,,T01/R03
-1787751204.953,EXPERIMENTER_NOTE,P001,P001_S01,P001_S01_ST1ST_T01_R03,,,HoloLens recording NOT started: [Errno 2] No such file or directory: 'D:\\Courses\\Independent Study 2\\User_Study\\Desktop App\\hint_study_console_v1.1.3_hololens_study_recording\\hint_study_console_v1.1.3_hololens_study_recording\\data\\P001\\S01\\Study1_ExplicitFeedback\\T01_Gridworld_Requested_Keyboard\\R03\\sensors\\hololens\\hololens_gaze_pointer.csv'
-1787751204.975,RECORDING_STOPPED,P001,P001_S01,P001_S01_ST1ST_T01_R03,,,Shimmer GSR+PPG: 0 samples -> D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.3_hololens_study_recording\hint_study_console_v1.1.3_hololens_study_recording\data\P001\S01\Study1_ExplicitFeedback\T01_Gridworld_Requested_Keyboard\R03\sensors\shimmer_gsr_ppg.csv
-1787751205.001,TRIAL_ENDED,P001,P001_S01,P001_S01_ST1ST_T01_R03,,,Aborted; T01/R03

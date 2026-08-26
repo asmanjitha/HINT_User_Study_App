@@ -30,7 +30,7 @@
     "study": "Study 1",
     "environment": "Gridworld",
     "feedback_timing": "Requested Feedback",
-    "modality": "Keyboard",
+    "modality": "Voice",
     "rl_algorithm": "actor_critic_gridworld",
     "order_index": null,
     "random_seed": 42

@@ -1,1 +1,0 @@
-timestamp,participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,study,environment,feedback_timing,modality,episode,step,state_before_row,state_before_col,action,action_name,state_after_row,state_after_col,reward,total_reward,done,target_reached,collision,entropy_coef,ambiguity_detected
