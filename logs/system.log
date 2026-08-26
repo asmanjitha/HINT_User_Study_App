@@ -1,0 +1,298 @@
+2026-08-25 16:41:43 [DEBUG] core.logging_setup: Logging configured from D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\config\logging.yaml
+2026-08-25 16:41:43 [INFO] core.application_controller: Starting HINT Study Console v1.1.0 (mode=DEVELOPMENT)
+2026-08-25 16:41:43 [DEBUG] core.database: Database schema ready (identifiable=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\data\identifiable.sqlite3, experimental=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\data\experimental.sqlite3)
+2026-08-25 16:41:43 [INFO] core.event_bus: EVENT APP_STARTED participant=None session=None trial=None value=None
+2026-08-25 16:41:53 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-25 16:41:54 [INFO] devices.hololens_device: Opened HoloLens stream workers for 192.168.1.11: PV 1280x720@30, EET 30 Hz.
+2026-08-25 16:41:55 [INFO] devices.hololens_device: First HoloLens PV camera frame received.
+2026-08-25 16:42:15 [ERROR] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 360, in _eye_worker
+    client.open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1848, in open
+    super().open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 869, in open
+    self._client = _connect_client_eet(self.host, self.port, self.sockopt, self.chunk, self.fps)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 657, in _connect_client_eet
+    c.open(host, port, sockopt, chunk_size, StreamMode.MODE_1)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 443, in open
+    self._client.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:42:15 [INFO] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:42:15 [INFO] devices.device_manager: Device HoloLens -> Error
+2026-08-25 16:42:15 [INFO] core.event_bus: EVENT DEVICE_ERROR participant=None session=None trial=None value=HoloLens
+2026-08-25 16:42:50 [ERROR] devices.hololens_device: PV camera stream error: timed out
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 304, in _pv_worker
+    packet = client.get_next_packet()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1794, in get_next_packet
+    data = super().get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 818, in get_next_packet
+    return self._client.get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 454, in get_next_packet
+    self._unpacker.extend(self._client.recv(self._chunk_size))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 347, in recv
+    chunk = self._socket.recv(chunk_size)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+2026-08-25 16:42:50 [INFO] devices.hololens_device: PV camera stream error: timed out
+2026-08-25 16:42:50 [INFO] devices.device_manager: Device HoloLens -> Warning
+2026-08-25 16:43:01 [DEBUG] devices.hololens_device: PV subsystem stop failed during disconnect
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 186, in disconnect_device
+    self._hl2ss_lnm.stop_subsystem_pv(
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss_lnm.py", line 61, in stop_subsystem_pv
+    hl2ss.stop_subsystem_pv(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 691, in stop_subsystem_pv
+    c.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: timed out
+2026-08-25 16:43:01 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-25 16:43:01 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-25 16:43:01 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-25 16:43:03 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-25 16:43:03 [INFO] devices.hololens_device: Opened HoloLens stream workers for 192.168.1.11: PV 1280x720@30, EET 30 Hz.
+2026-08-25 16:43:06 [ERROR] devices.hololens_device: PV camera stream error: timed out
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 278, in _pv_worker
+    lnm.start_subsystem_pv(
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss_lnm.py", line 54, in start_subsystem_pv
+    hl2ss.start_subsystem_pv(host, port, sockopt, enable_mrc, hologram_composition, recording_indicator, video_stabilization, blank_protected, show_mesh, shared, global_opacity, output_width, output_height, video_stabilization_length, hologram_perspective)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 683, in start_subsystem_pv
+    c.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: timed out
+2026-08-25 16:43:06 [INFO] devices.hololens_device: PV camera stream error: timed out
+2026-08-25 16:43:06 [INFO] devices.device_manager: Device HoloLens -> Error
+2026-08-25 16:43:06 [INFO] core.event_bus: EVENT DEVICE_ERROR participant=None session=None trial=None value=HoloLens
+2026-08-25 16:43:14 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-25 16:43:14 [INFO] devices.hololens_device: Opened HoloLens stream workers for 192.168.1.11: PV 1280x720@30, EET 30 Hz.
+2026-08-25 16:43:17 [ERROR] devices.hololens_device: PV camera stream error: timed out
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 278, in _pv_worker
+    lnm.start_subsystem_pv(
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss_lnm.py", line 54, in start_subsystem_pv
+    hl2ss.start_subsystem_pv(host, port, sockopt, enable_mrc, hologram_composition, recording_indicator, video_stabilization, blank_protected, show_mesh, shared, global_opacity, output_width, output_height, video_stabilization_length, hologram_perspective)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 683, in start_subsystem_pv
+    c.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: timed out
+2026-08-25 16:43:17 [INFO] devices.hololens_device: PV camera stream error: timed out
+2026-08-25 16:43:17 [INFO] devices.device_manager: Device HoloLens -> Error
+2026-08-25 16:43:17 [INFO] core.event_bus: EVENT DEVICE_ERROR participant=None session=None trial=None value=HoloLens
+2026-08-25 16:43:24 [ERROR] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 360, in _eye_worker
+    client.open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1848, in open
+    super().open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 869, in open
+    self._client = _connect_client_eet(self.host, self.port, self.sockopt, self.chunk, self.fps)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 657, in _connect_client_eet
+    c.open(host, port, sockopt, chunk_size, StreamMode.MODE_1)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 443, in open
+    self._client.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:43:24 [INFO] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:43:24 [INFO] devices.device_manager: Device HoloLens -> Warning
+2026-08-25 16:43:35 [ERROR] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 360, in _eye_worker
+    client.open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1848, in open
+    super().open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 869, in open
+    self._client = _connect_client_eet(self.host, self.port, self.sockopt, self.chunk, self.fps)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 657, in _connect_client_eet
+    c.open(host, port, sockopt, chunk_size, StreamMode.MODE_1)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 443, in open
+    self._client.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:43:35 [INFO] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:43:40 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-25 16:43:40 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-25 16:43:40 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-25 16:43:42 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-25 16:43:42 [INFO] devices.hololens_device: Opened HoloLens stream workers for 192.168.1.11: PV 1280x720@30, EET 30 Hz.
+2026-08-25 16:43:44 [INFO] devices.hololens_device: First HoloLens PV camera frame received.
+2026-08-25 16:44:03 [ERROR] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 360, in _eye_worker
+    client.open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1848, in open
+    super().open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 869, in open
+    self._client = _connect_client_eet(self.host, self.port, self.sockopt, self.chunk, self.fps)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 657, in _connect_client_eet
+    c.open(host, port, sockopt, chunk_size, StreamMode.MODE_1)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 443, in open
+    self._client.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:44:03 [INFO] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-25 16:44:03 [INFO] devices.device_manager: Device HoloLens -> Error
+2026-08-25 16:44:03 [INFO] core.event_bus: EVENT DEVICE_ERROR participant=None session=None trial=None value=HoloLens
+2026-08-25 16:45:22 [ERROR] devices.hololens_device: PV camera stream error: timed out
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 304, in _pv_worker
+    packet = client.get_next_packet()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1794, in get_next_packet
+    data = super().get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 818, in get_next_packet
+    return self._client.get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 454, in get_next_packet
+    self._unpacker.extend(self._client.recv(self._chunk_size))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 347, in recv
+    chunk = self._socket.recv(chunk_size)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+2026-08-25 16:45:22 [INFO] devices.hololens_device: PV camera stream error: timed out
+2026-08-25 16:45:22 [INFO] devices.device_manager: Device HoloLens -> Warning
+2026-08-25 16:45:30 [INFO] core.application_controller: Shutting down HINT Study Console
+2026-08-25 16:45:32 [DEBUG] devices.hololens_device: PV subsystem stop failed during disconnect
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 186, in disconnect_device
+    self._hl2ss_lnm.stop_subsystem_pv(
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss_lnm.py", line 61, in stop_subsystem_pv
+    hl2ss.stop_subsystem_pv(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 691, in stop_subsystem_pv
+    c.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: timed out
+2026-08-25 16:45:32 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-25 16:45:32 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-25 16:45:32 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-26 09:19:38 [DEBUG] core.logging_setup: Logging configured from D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\config\logging.yaml
+2026-08-26 09:19:38 [INFO] core.application_controller: Starting HINT Study Console v1.1.0 (mode=DEVELOPMENT)
+2026-08-26 09:19:38 [DEBUG] core.database: Database schema ready (identifiable=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\data\identifiable.sqlite3, experimental=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\data\experimental.sqlite3)
+2026-08-26 09:19:38 [INFO] core.event_bus: EVENT APP_STARTED participant=None session=None trial=None value=None
+2026-08-26 09:22:08 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-26 09:22:09 [INFO] devices.hololens_device: Opened HoloLens stream workers for 10.66.3.99: PV 1280x720@30, EET 30 Hz.
+2026-08-26 09:22:13 [ERROR] devices.hololens_device: PV camera stream error: timed out
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 304, in _pv_worker
+    packet = client.get_next_packet()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1794, in get_next_packet
+    data = super().get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 818, in get_next_packet
+    return self._client.get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 454, in get_next_packet
+    self._unpacker.extend(self._client.recv(self._chunk_size))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 347, in recv
+    chunk = self._socket.recv(chunk_size)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+2026-08-26 09:22:13 [INFO] devices.hololens_device: PV camera stream error: timed out
+2026-08-26 09:22:13 [INFO] devices.device_manager: Device HoloLens -> Error
+2026-08-26 09:22:13 [INFO] core.event_bus: EVENT DEVICE_ERROR participant=None session=None trial=None value=HoloLens
+2026-08-26 09:22:30 [ERROR] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 360, in _eye_worker
+    client.open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1848, in open
+    super().open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 869, in open
+    self._client = _connect_client_eet(self.host, self.port, self.sockopt, self.chunk, self.fps)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 657, in _connect_client_eet
+    c.open(host, port, sockopt, chunk_size, StreamMode.MODE_1)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 443, in open
+    self._client.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-26 09:22:30 [INFO] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-26 09:22:30 [INFO] devices.device_manager: Device HoloLens -> Warning
+2026-08-26 09:24:31 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-26 09:24:31 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-26 09:24:31 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-26 09:24:38 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-26 09:24:38 [INFO] devices.hololens_device: Opened HoloLens stream workers for 10.66.3.99: PV 760x428@30, EET 30 Hz.
+2026-08-26 09:24:59 [ERROR] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 360, in _eye_worker
+    client.open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1848, in open
+    super().open()
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 869, in open
+    self._client = _connect_client_eet(self.host, self.port, self.sockopt, self.chunk, self.fps)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 657, in _connect_client_eet
+    c.open(host, port, sockopt, chunk_size, StreamMode.MODE_1)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 443, in open
+    self._client.open(host, port, sockopt)
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 338, in open
+    self._socket.connect((host, port))
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-26 09:24:59 [INFO] devices.hololens_device: Extended Eye Tracking stream error: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+2026-08-26 09:24:59 [INFO] devices.device_manager: Device HoloLens -> Error
+2026-08-26 09:24:59 [INFO] core.event_bus: EVENT DEVICE_ERROR participant=None session=None trial=None value=HoloLens
+2026-08-26 09:25:18 [ERROR] devices.hololens_device: PV camera stream error: [WinError 10054] An existing connection was forcibly closed by the remote host
+Traceback (most recent call last):
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.2_gaze_overlay\hint_study_console_v1.1.2_gaze_overlay\devices\hololens_device.py", line 304, in _pv_worker
+    packet = client.get_next_packet()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 1794, in get_next_packet
+    data = super().get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 818, in get_next_packet
+    return self._client.get_next_packet(wait)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 454, in get_next_packet
+    self._unpacker.extend(self._client.recv(self._chunk_size))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Courses\Independent Study 2\User_Study\Desktop App\HL2SS_v1.0.37\viewer\hl2ss.py", line 347, in recv
+    chunk = self._socket.recv(chunk_size)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-08-26 09:25:18 [INFO] devices.hololens_device: PV camera stream error: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-08-26 09:25:18 [INFO] devices.device_manager: Device HoloLens -> Warning
+2026-08-26 09:25:34 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-26 09:25:34 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-26 09:25:34 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-26 09:25:36 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-26 09:25:36 [INFO] devices.hololens_device: Opened HoloLens stream workers for 10.66.3.99: PV 760x428@30, EET 30 Hz.
+2026-08-26 09:25:37 [INFO] devices.hololens_device: First HoloLens Extended Eye Tracking packet received.
+2026-08-26 09:25:38 [INFO] devices.hololens_device: First HoloLens PV camera frame received.
+2026-08-26 09:25:38 [INFO] devices.hololens_device: HoloLens connection validated by live camera and eye-gaze packets.
+2026-08-26 09:25:38 [INFO] devices.device_manager: Device HoloLens -> Receiving Data
+2026-08-26 09:25:57 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-26 09:25:57 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-26 09:25:57 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-26 09:26:01 [INFO] devices.device_manager: Device HoloLens -> Connecting
+2026-08-26 09:26:01 [INFO] devices.hololens_device: Opened HoloLens stream workers for 10.66.3.99: PV 1280x720@30, EET 30 Hz.
+2026-08-26 09:26:01 [INFO] devices.hololens_device: First HoloLens Extended Eye Tracking packet received.
+2026-08-26 09:26:03 [INFO] devices.hololens_device: First HoloLens PV camera frame received.
+2026-08-26 09:26:03 [INFO] devices.hololens_device: HoloLens connection validated by live camera and eye-gaze packets.
+2026-08-26 09:26:03 [INFO] devices.device_manager: Device HoloLens -> Receiving Data
+2026-08-26 09:26:18 [INFO] core.application_controller: Shutting down HINT Study Console
+2026-08-26 09:26:18 [INFO] devices.device_manager: Device HoloLens -> Disconnected
+2026-08-26 09:26:18 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=HoloLens
+2026-08-26 09:26:18 [INFO] devices.hololens_device: HoloLens disconnected.

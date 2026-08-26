@@ -1,0 +1,21 @@
+# HINT Study Console -- application configuration
+# Non-study settings: mode, data paths, database locations.
+
+app:
+  name: "HINT Study Console"
+  version: "1.1.0"
+
+  # DEVELOPMENT or STUDY. STUDY mode locks experimental configuration
+  # between participants and enforces session/task time limits.
+  mode: "DEVELOPMENT"
+
+paths:
+  data_dir: "data"
+  logs_dir: "logs"
+  identifiable_db: "data/identifiable.sqlite3"
+  experimental_db: "data/experimental.sqlite3"
+
+backup:
+  # Left blank intentionally -- must never be hard-coded to a specific
+  # university/server path (spec section 27). Configure per-deployment.
+  destination: ""
