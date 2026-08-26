@@ -4,7 +4,7 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
-## What's in this version (V1.1 — HoloLens 2 live connection validation)
+## What's in this version (V1.1.3 — HoloLens study recording)
 
 The console uses a single process-oriented workflow on the existing data
 model and Actor-Critic Gridworld integration. V0.9 retains the IRB-aligned
@@ -20,7 +20,10 @@ can be identified directly from the filesystem:
   connection, a separate validation window opens once to show live camera video
   plus combined/left/right gaze rays; **Validate Connection** reopens it later.
   Shimmer retains its guided Bluetooth COM workflow, live GSR+PPG verification,
-  and trial CSV recording.
+  and trial CSV recording. **HoloLens recording now follows every persisted
+  Training and Study trial:** each `R##` stores an annotated PV video, a
+  frame-synchronized gaze-pointer CSV, the raw EET packet CSV, and recording
+  metadata under `sensors/hololens/`.
 
 - **Workflow** — register a participant (name, age, email) or select an
   existing one, then step through the study using a left-hand menu:
@@ -51,6 +54,28 @@ can be identified directly from the filesystem:
 The participant-facing second window (maze view + arrow-key/on-screen
 feedback controls) is unchanged from V0.1 and still pops up automatically
 whenever a live Keyboard Gridworld trial starts (Study 1 or Study 2).
+
+### HoloLens files per activity run
+
+The existing naming convention is unchanged. For example:
+
+```text
+data/P001/S01/Training/Study1/
+  TR01_Gridworld_Anytime_Gaze/R01/
+    sensors/hololens/
+      hololens_pv_gaze_overlay.mp4
+      hololens_gaze_pointer.csv
+      hololens_eet_raw.csv
+      hololens_recording_metadata.json
+
+data/P001/S01/Study1_ExplicitFeedback/
+  T02_Gridworld_Anytime_Joystick/R01/
+    sensors/hololens/
+      ...same four files...
+```
+
+A repeated collection uses the next existing run directory (`R02`, `R03`, ...),
+so camera/gaze recordings are never intentionally merged across attempts.
 
 ### Why this design
 

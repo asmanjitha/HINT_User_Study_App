@@ -1,0 +1,1 @@
+participant_code,session_id,trial_id,condition_code,run_code,condition_name,study,environment,feedback_timing,modality,practice,trial_started_at_epoch,host_time_epoch,host_time_iso_utc,trial_elapsed_s,host_monotonic,stream_sample_index,trial_sample_index,shimmer_timestamp_raw,shimmer_timestamp_seconds,gsr_raw,gsr_adc,gsr_range,ppg_raw

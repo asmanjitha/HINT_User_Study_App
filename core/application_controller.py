@@ -377,15 +377,59 @@ class ApplicationController:
     # Experimental sensor recording lifecycle
 
     def _start_trial_sensor_recordings(self, trial: Trial) -> None:
-        """Automatically attach live Shimmer GSR/PPG to Study 1/2 trials.
+        """Attach connected sensors to the active readable R## directory.
 
-        Practice/training trials are intentionally excluded so familiarization
-        recordings do not get mixed with the primary experimental data.  If the
-        researcher explicitly chose to start a study while Shimmer was not live,
-        the trial is allowed to continue but an event records that physiology was
-        unavailable.
+        HoloLens PV + EET is recorded for BOTH training/practice and primary
+        study trials. Shimmer keeps the existing experimental-only policy so
+        familiarization physiology is not mixed with primary physiology data.
+        Sensor unavailability never prevents the trial from running; it is
+        recorded as an experimenter-note event instead.
         """
 
+        # HoloLens: requested for every training/study activity when the stream
+        # is live. This creates sensors/hololens inside the current R## folder.
+        if self.device_manager.hololens_stream_healthy():
+            try:
+                paths = self.device_manager.start_hololens_trial_recording(trial)
+                self.event_bus.publish(
+                    StudyEvent(
+                        event_type=EventType.RECORDING_STARTED,
+                        participant_id=trial.participant_code,
+                        session_id=trial.session_id,
+                        trial_id=trial.trial_id,
+                        value=(
+                            "HoloLens PV+EET -> "
+                            f"{paths['video']} ; pointer={paths['pointer_csv']} ; "
+                            f"raw_eet={paths['eet_csv']}"
+                        ),
+                    )
+                )
+            except Exception as exc:
+                logger.exception("Could not start HoloLens recording for %s", trial.trial_id)
+                self.event_bus.publish(
+                    StudyEvent(
+                        event_type=EventType.EXPERIMENTER_NOTE,
+                        participant_id=trial.participant_code,
+                        session_id=trial.session_id,
+                        trial_id=trial.trial_id,
+                        value=f"HoloLens recording NOT started: {exc}",
+                    )
+                )
+        else:
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.EXPERIMENTER_NOTE,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        "HoloLens recording NOT started: fresh PV + EET streams "
+                        "were not available when this activity began."
+                    ),
+                )
+            )
+
+        # Preserve the previous Shimmer policy: experimental trials only.
         if trial.practice:
             return
 
@@ -418,24 +462,42 @@ class ApplicationController:
         )
 
     def _stop_trial_sensor_recordings(self, trial: Trial, reason: str) -> None:
-        summary = self.device_manager.stop_shimmer_trial_recording(
+        holo_summary = self.device_manager.stop_hololens_trial_recording(
             trial_id=trial.trial_id,
             reason=reason,
         )
-        if summary is None:
-            return
-        self.event_bus.publish(
-            StudyEvent(
-                event_type=EventType.RECORDING_STOPPED,
-                participant_id=trial.participant_code,
-                session_id=trial.session_id,
-                trial_id=trial.trial_id,
-                value=(
-                    f"Shimmer GSR+PPG: {summary['sample_count']} samples -> "
-                    f"{summary['path']}"
-                ),
+        if holo_summary is not None:
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.RECORDING_STOPPED,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        f"HoloLens PV+EET: {holo_summary['video_frame_count']} video frames, "
+                        f"{holo_summary['eet_row_count']} EET samples -> "
+                        f"{holo_summary['recording_dir']}"
+                    ),
+                )
             )
+
+        shimmer_summary = self.device_manager.stop_shimmer_trial_recording(
+            trial_id=trial.trial_id,
+            reason=reason,
         )
+        if shimmer_summary is not None:
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.RECORDING_STOPPED,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        f"Shimmer GSR+PPG: {shimmer_summary['sample_count']} samples -> "
+                        f"{shimmer_summary['path']}"
+                    ),
+                )
+            )
 
     # --------------------------------------------------
 

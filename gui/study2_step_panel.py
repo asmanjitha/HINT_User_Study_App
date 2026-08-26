@@ -35,8 +35,10 @@ from models.enums import (
     FeedbackTiming,
     Modality,
     StepOverallStatus,
+    Study,
     WorkflowStep,
 )
+from models.trial import ExperimentCondition
 
 
 def _fmt_time(ts: float | None) -> str:
@@ -78,6 +80,7 @@ class Study2StepPanel(QWidget):
 
         self._participant_code: str | None = None
         self._active_run = None  # models.workflow.StepRun
+        self._active_trial_id: str | None = None
 
         self._elapsed_timer = QTimer(self)
         self._elapsed_timer.timeout.connect(self._tick_elapsed)
@@ -180,6 +183,9 @@ class Study2StepPanel(QWidget):
 
         summary = self._controller.workflow_manager.step_status(self._participant_code, self._step)
         self._active_run = summary.active_run
+        self._active_trial_id = (
+            None if self._active_run is None else self._active_run.trial_id
+        )
         blocking_run = self._controller.workflow_manager.has_active_run(self._participant_code)
 
         if self._active_run is not None:
@@ -259,22 +265,58 @@ class Study2StepPanel(QWidget):
                 return
 
         try:
-            run, _session = self._controller.workflow_manager.start_run(self._participant_code, self._step)
+            run, session = self._controller.workflow_manager.start_run(
+                self._participant_code, self._step
+            )
+            condition = ExperimentCondition(
+                study=Study.STUDY_2,
+                environment=Environment[self._env_combo.currentData()],
+                feedback_timing=FeedbackTiming[self._timing_combo.currentData()],
+                modality=Modality[self._modality_combo.currentData()],
+            )
+            trial = self._controller.start_tracked_trial(
+                session.session_id,
+                condition,
+                practice=True,
+            )
+            self._controller.workflow_manager.attach_trial(run.run_id, trial.trial_id)
         except Exception as exc:
+            # If the workflow row was created but its practice Trial could not
+            # start, close the workflow attempt as aborted rather than leaving
+            # a permanently active Study 2 Training run.
+            try:
+                if 'run' in locals():
+                    self._controller.workflow_manager.end_run(
+                        run.run_id, completed=False, notes=f"Trial start failed: {exc}"
+                    )
+            except Exception:
+                pass
             QMessageBox.critical(self, "Could not start run", str(exc))
             return
 
         self._notes_input.clear()
         self._active_run = run
+        self._active_trial_id = trial.trial_id
         self.refresh()
 
     def _stop_run(self, completed: bool) -> None:
         if self._active_run is None:
             return
+
+        active_trial = self._controller.active_trial
+        if active_trial is not None and (
+            active_trial.trial_id == self._active_trial_id
+            or active_trial.session_id == self._active_run.session_id
+        ):
+            self._controller.stop_active_trial(completed=completed)
+
         self._controller.workflow_manager.end_run(
-            self._active_run.run_id, completed=completed, notes=self._notes_input.toPlainText().strip()
+            self._active_run.run_id,
+            completed=completed,
+            notes=self._notes_input.toPlainText().strip(),
         )
         self._active_run = None
+        self._active_trial_id = None
         self.refresh()
         if self._on_step_changed:
             self._on_step_changed()

@@ -1,0 +1,2 @@
+participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,step,selected_step,pause_step,steps_back,feedback_timing,modality,requested,skipped,timeout,state_row,state_col,action,action_name,request_timestamp,pause_timestamp,response_timestamp,response_latency_ms
+P001,P001_S01,P001_S01_ST1TR_TR08_R02,TR08,R02,Gridworld_Anytime_Gaze,1,24,4,4,5,1,Anytime Feedback,Keyboard,0,0,0,2,0,3,RIGHT,,1787751095.038455,1787751106.073534,11035.079

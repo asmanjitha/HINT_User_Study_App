@@ -1,0 +1,13 @@
+{
+  "session_id": "P001_S01",
+  "participant_code": "P001",
+  "scope": "Study 1 + Study 2",
+  "status": "In Progress",
+  "created_at": 1787750983.8798742,
+  "started_at": 1787750983.894395,
+  "ended_at": null,
+  "session_max_minutes": 60,
+  "continuous_task_max_minutes": 20,
+  "modality_order": null,
+  "notes": ""
+}

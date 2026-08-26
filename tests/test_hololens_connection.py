@@ -84,3 +84,106 @@ def test_nearest_eye_sample_uses_camera_timestamp():
     ]
     selected = HoloLensDevice._nearest_eye_sample(samples, 218)
     assert selected["timestamp"] == 200
+
+
+def test_hololens_trial_recording_accepts_training_and_saves_under_run_folder(tmp_path, monkeypatch):
+    import json
+    from models.enums import Environment, FeedbackTiming, Modality, Study
+    from models.trial import ExperimentCondition, Trial
+
+    class FakeVideoWriter:
+        def __init__(self, *args, **kwargs):
+            self.frames = []
+            self.released = False
+
+        def isOpened(self):
+            return True
+
+        def write(self, frame):
+            self.frames.append(frame.copy())
+
+        def release(self):
+            self.released = True
+
+    fake_writer = FakeVideoWriter()
+    monkeypatch.setattr("devices.hololens_device.cv2.VideoWriter", lambda *a, **k: fake_writer)
+    monkeypatch.setattr("devices.hololens_device.cv2.VideoWriter_fourcc", lambda *a: 0)
+
+    device = HoloLensDevice()
+    device._width = 64
+    device._height = 48
+    device._camera_fps = 30
+    device._eye_fps = 60
+    monkeypatch.setattr(device, "is_stream_healthy", lambda max_age_s=1.0: True)
+
+    run_dir = tmp_path / "P001" / "S01" / "Training" / "Study1" / "TR01_Gridworld_Anytime_Gaze" / "R01"
+    trial = Trial(
+        trial_id="P001_S01_ST1TR_TR01_R01",
+        session_id="P001_S01",
+        participant_code="P001",
+        condition=ExperimentCondition(
+            study=Study.STUDY_1,
+            environment=Environment.GRIDWORLD,
+            feedback_timing=FeedbackTiming.ANYTIME,
+            modality=Modality.EYE_GAZE,
+        ),
+        practice=True,
+        condition_code="TR01",
+        run_code="R01",
+        condition_name="Gridworld_Anytime_Gaze",
+        started_at=1000.0,
+        trial_dir=str(run_dir),
+    )
+
+    paths = device.start_trial_recording(trial)
+    assert paths["video"] == run_dir / "sensors" / "hololens" / "hololens_pv_gaze_overlay.mp4"
+    assert paths["pointer_csv"].exists()
+    assert paths["eet_csv"].exists()
+
+    eye = {
+        "timestamp": 1_000_000,
+        "pose": np.eye(4),
+        "calibration_valid": True,
+        "combined_valid": True,
+        "combined": {"origin": (0.0, 0.0, 0.0), "direction": (0.0, 0.0, -1.0)},
+        "left_valid": True,
+        "left": {"origin": (-0.01, 0.0, 0.0), "direction": (0.0, 0.0, -1.0)},
+        "right_valid": True,
+        "right": {"origin": (0.01, 0.0, 0.0), "direction": (0.0, 0.0, -1.0)},
+    }
+    with device._lock:
+        device._eye_history.append(eye)
+
+    camera = {
+        "timestamp": 1_000_000,
+        "pose": np.eye(4),
+        "focal_length": (40.0, 40.0),
+        "principal_point": (32.0, 24.0),
+        "width": 64,
+        "height": 48,
+    }
+    frame = np.zeros((48, 64, 3), dtype=np.uint8)
+    device._record_eet_sample(eye, host_monotonic=10.0)
+    device._record_pv_frame(frame, camera, host_monotonic=10.1)
+    summary = device.stop_trial_recording(trial_id=trial.trial_id, reason="trial_valid")
+
+    assert summary["video_frame_count"] == 1
+    assert summary["pointer_row_count"] == 1
+    assert summary["eet_row_count"] == 1
+    assert len(fake_writer.frames) == 1
+    assert fake_writer.released is True
+    # The overlay should modify at least a few pixels near the projected center.
+    assert int(fake_writer.frames[0].sum()) > 0
+
+    pointer_lines = paths["pointer_csv"].read_text(encoding="utf-8").strip().splitlines()
+    eet_lines = paths["eet_csv"].read_text(encoding="utf-8").strip().splitlines()
+    assert len(pointer_lines) == 2
+    assert len(eet_lines) == 2
+
+    metadata = json.loads(paths["metadata"].read_text(encoding="utf-8"))
+    assert metadata["practice"] is True
+    assert metadata["condition_code"] == "TR01"
+    assert metadata["run_code"] == "R01"
+    assert metadata["camera"]["video_frame_count"] == 1
+    assert metadata["eye_tracking"]["eet_sample_count"] == 1
+    assert metadata["stop_reason"] == "trial_valid"

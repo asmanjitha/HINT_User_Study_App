@@ -149,6 +149,19 @@ class DeviceManager(QObject):
     def check_hololens(self) -> tuple[bool, str]:
         return self.hololens_device.check_connection()
 
+    def hololens_stream_healthy(self, max_age_s: float = 1.0) -> bool:
+        return self.hololens_device.is_stream_healthy(max_age_s=max_age_s)
+
+    def start_hololens_trial_recording(self, trial: Trial) -> dict[str, Path]:
+        return self.hololens_device.start_trial_recording(trial)
+
+    def stop_hololens_trial_recording(
+        self, trial_id: str | None = None, reason: str = "trial_ended"
+    ) -> dict | None:
+        return self.hololens_device.stop_trial_recording(
+            trial_id=trial_id, reason=reason
+        )
+
     def hololens_client_dir_valid(self, path: str | Path | None) -> bool:
         return HoloLensDevice.client_dir_valid(path)
 

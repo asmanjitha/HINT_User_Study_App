@@ -15,24 +15,62 @@ window does not stop acquisition.
 
 from __future__ import annotations
 
+import csv
 import importlib
+import json
 import logging
 import socket
 import sys
 import threading
 import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from collections import deque
 from pathlib import Path
 from typing import Any
 
+import cv2
 import numpy as np
 
 from PySide6.QtCore import Signal
 
 from devices.base_device import BaseDevice
 from models.enums import DeviceStatus, DeviceType
+from models.trial import Trial
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _HoloLensTrialRecording:
+    trial_id: str
+    participant_code: str
+    session_id: str
+    condition_code: str
+    run_code: str
+    condition_name: str
+    study: str
+    environment: str
+    feedback_timing: str
+    modality: str
+    practice: bool
+    trial_started_at: float
+    recording_started_at: float
+    recording_dir: Path
+    video_path: Path
+    pointer_csv_path: Path
+    eet_csv_path: Path
+    metadata_path: Path
+    video_writer: Any
+    pointer_handle: Any
+    pointer_writer: Any
+    eet_handle: Any
+    eet_writer: Any
+    video_frame_count: int = 0
+    pointer_row_count: int = 0
+    eet_row_count: int = 0
+    last_flush_monotonic: float = 0.0
+    smoothed_gaze: tuple[float, float] | None = None
 
 
 class HoloLensDevice(BaseDevice):
@@ -83,6 +121,13 @@ class HoloLensDevice(BaseDevice):
         self._camera_ready = False
         self._eye_ready = False
         self._last_stats_emit = 0.0
+
+        # Trial-scoped study recording. The live HL2SS streams remain open
+        # continuously; these sinks are opened only while a Training/Study R##
+        # run is active, so reconnecting the headset is not required between runs.
+        self._recording_lock = threading.RLock()
+        self._trial_recording: _HoloLensTrialRecording | None = None
+        self._gaze_projection_distance_m = 1.5
 
     # ------------------------------------------------------------------
     # Configuration / dependency discovery
@@ -170,6 +215,14 @@ class HoloLensDevice(BaseDevice):
         thread.start()
 
     def disconnect_device(self) -> None:
+        # Finalize files first so an unplug/disconnect does not leave an MP4 or
+        # CSV handle open. The controller will receive None if it later tries to
+        # stop the already-finalized trial recording.
+        try:
+            self.stop_trial_recording(reason="hololens_disconnected")
+        except Exception:
+            logger.exception("Could not finalize HoloLens trial recording during disconnect")
+
         self._stop_event.set()
         self._progress(0, "Disconnecting HoloLens streams...")
 
@@ -321,6 +374,15 @@ class HoloLensDevice(BaseDevice):
                     self._camera_frame_count += 1
                     first = not self._camera_ready
                     self._camera_ready = True
+                try:
+                    self._record_pv_frame(frame, camera_meta, host_monotonic=now)
+                except Exception as exc:
+                    logger.exception("HoloLens PV trial recording failed")
+                    self._log(f"HoloLens trial recording stopped after PV write error: {exc}")
+                    try:
+                        self.stop_trial_recording(reason="pv_recording_error")
+                    except Exception:
+                        logger.exception("Could not finalize failed HoloLens PV recording")
                 if first:
                     self._log("First HoloLens PV camera frame received.")
                     self._progress(65, "PV camera verified; waiting for live eye-gaze data...")
@@ -371,6 +433,15 @@ class HoloLensDevice(BaseDevice):
                     self._eye_packet_count += 1
                     first = not self._eye_ready
                     self._eye_ready = True
+                try:
+                    self._record_eet_sample(eye, host_monotonic=now)
+                except Exception as exc:
+                    logger.exception("HoloLens EET trial recording failed")
+                    self._log(f"HoloLens trial recording stopped after EET write error: {exc}")
+                    try:
+                        self.stop_trial_recording(reason="eet_recording_error")
+                    except Exception:
+                        logger.exception("Could not finalize failed HoloLens EET recording")
                 if first:
                     self._log("First HoloLens Extended Eye Tracking packet received.")
                     if not eye.get("calibration_valid", False):
@@ -592,6 +663,360 @@ class HoloLensDevice(BaseDevice):
         overlay = self.project_gaze_to_pv(eye or {}, camera, distance_m=distance_m)
         return {"frame": frame, "camera": camera, "eye": eye or {}, "gaze_overlay": overlay}
 
+    # ------------------------------------------------------------------
+    # Trial-scoped HoloLens recording
+
+    @staticmethod
+    def _iso_utc(epoch_s: float) -> str:
+        return datetime.fromtimestamp(epoch_s, tz=timezone.utc).isoformat()
+
+    @staticmethod
+    def _ray_components(eye: dict[str, Any], key: str) -> tuple[Any, Any, Any, Any, Any, Any]:
+        ray = eye.get(key) or {}
+        origin = ray.get("origin") or (None, None, None)
+        direction = ray.get("direction") or (None, None, None)
+        return (*origin, *direction)
+
+    def is_stream_healthy(self, max_age_s: float = 1.0) -> bool:
+        stats = self.stats()
+        camera_age = stats.get("last_camera_age_s")
+        eye_age = stats.get("last_eye_age_s")
+        return bool(
+            stats.get("camera_ready")
+            and stats.get("eye_ready")
+            and camera_age is not None
+            and eye_age is not None
+            and float(camera_age) <= float(max_age_s)
+            and float(eye_age) <= float(max_age_s)
+        )
+
+    def start_trial_recording(self, trial: Trial) -> dict[str, Path]:
+        """Record annotated PV video + synchronized gaze data for one R## run.
+
+        Unlike Shimmer, HoloLens recording is intentionally enabled for both
+        Training (practice=True) and primary Study trials. All files remain
+        underneath the already-allocated readable trial directory.
+        """
+        if trial.trial_path is None:
+            raise ValueError("Trial has no storage directory")
+        if trial.started_at is None:
+            raise ValueError("Trial must be started before HoloLens recording begins")
+        if not self.is_stream_healthy():
+            raise RuntimeError(
+                "HoloLens PV/EET streams are not currently fresh. Use Devices -> "
+                "Validate Connection before starting the activity."
+            )
+
+        recording_dir = trial.trial_path / "sensors" / "hololens"
+        recording_dir.mkdir(parents=True, exist_ok=True)
+        video_path = recording_dir / "hololens_pv_gaze_overlay.mp4"
+        pointer_csv_path = recording_dir / "hololens_gaze_pointer.csv"
+        eet_csv_path = recording_dir / "hololens_eet_raw.csv"
+        metadata_path = recording_dir / "hololens_recording_metadata.json"
+        started = time.time()
+
+        with self._recording_lock:
+            if self._trial_recording is not None:
+                if self._trial_recording.trial_id == trial.trial_id:
+                    return {
+                        "video": self._trial_recording.video_path,
+                        "pointer_csv": self._trial_recording.pointer_csv_path,
+                        "eet_csv": self._trial_recording.eet_csv_path,
+                        "metadata": self._trial_recording.metadata_path,
+                    }
+                raise RuntimeError(
+                    f"HoloLens is already recording trial {self._trial_recording.trial_id}"
+                )
+
+            pointer_handle = open(pointer_csv_path, "w", newline="", encoding="utf-8")
+            eet_handle = open(eet_csv_path, "w", newline="", encoding="utf-8")
+            pointer_writer = csv.writer(pointer_handle)
+            eet_writer = csv.writer(eet_handle)
+
+            pointer_writer.writerow([
+                "participant_code", "session_id", "trial_id", "condition_code",
+                "run_code", "condition_name", "study", "environment",
+                "feedback_timing", "modality", "practice",
+                "trial_started_at_epoch", "host_time_epoch", "host_time_iso_utc",
+                "trial_elapsed_s", "host_monotonic", "pv_frame_index",
+                "pv_timestamp_hl2ss", "eet_timestamp_hl2ss", "pv_eet_delta_ms",
+                "eye_calibration_valid", "combined_gaze_valid",
+                "projection_valid", "pointer_in_frame", "gaze_pixel_x_raw",
+                "gaze_pixel_y_raw", "overlay_pixel_x_drawn",
+                "overlay_pixel_y_drawn", "assumed_projection_distance_m",
+                "combined_origin_x", "combined_origin_y", "combined_origin_z",
+                "combined_direction_x", "combined_direction_y", "combined_direction_z",
+            ])
+            eet_writer.writerow([
+                "participant_code", "session_id", "trial_id", "condition_code",
+                "run_code", "condition_name", "study", "environment",
+                "feedback_timing", "modality", "practice",
+                "trial_started_at_epoch", "host_time_epoch", "host_time_iso_utc",
+                "trial_elapsed_s", "host_monotonic", "eet_sample_index",
+                "eet_timestamp_hl2ss", "calibration_valid",
+                "combined_valid", "combined_origin_x", "combined_origin_y",
+                "combined_origin_z", "combined_direction_x", "combined_direction_y",
+                "combined_direction_z", "left_valid", "left_origin_x",
+                "left_origin_y", "left_origin_z", "left_direction_x",
+                "left_direction_y", "left_direction_z", "right_valid",
+                "right_origin_x", "right_origin_y", "right_origin_z",
+                "right_direction_x", "right_direction_y", "right_direction_z",
+            ])
+
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            video_writer = cv2.VideoWriter(
+                str(video_path),
+                fourcc,
+                float(self._camera_fps),
+                (int(self._width), int(self._height)),
+            )
+            if not video_writer.isOpened():
+                pointer_handle.close()
+                eet_handle.close()
+                raise RuntimeError(
+                    "OpenCV could not open the MP4 video writer for the HoloLens overlay recording."
+                )
+
+            self._trial_recording = _HoloLensTrialRecording(
+                trial_id=trial.trial_id,
+                participant_code=trial.participant_code,
+                session_id=trial.session_id,
+                condition_code=trial.condition_code,
+                run_code=trial.run_code,
+                condition_name=trial.condition_name,
+                study=trial.condition.study.value,
+                environment=trial.condition.environment.value,
+                feedback_timing=trial.condition.feedback_timing.value,
+                modality=trial.condition.modality.value,
+                practice=trial.practice,
+                trial_started_at=float(trial.started_at),
+                recording_started_at=started,
+                recording_dir=recording_dir,
+                video_path=video_path,
+                pointer_csv_path=pointer_csv_path,
+                eet_csv_path=eet_csv_path,
+                metadata_path=metadata_path,
+                video_writer=video_writer,
+                pointer_handle=pointer_handle,
+                pointer_writer=pointer_writer,
+                eet_handle=eet_handle,
+                eet_writer=eet_writer,
+                last_flush_monotonic=time.monotonic(),
+            )
+            self._write_recording_metadata_locked(ended_at=None, reason="recording_started")
+
+        self._log(
+            f"HOLOLENS RECORDING STARTED: {trial.trial_id} -> {recording_dir}"
+        )
+        self._emit_stats(force=True)
+        return {
+            "video": video_path,
+            "pointer_csv": pointer_csv_path,
+            "eet_csv": eet_csv_path,
+            "metadata": metadata_path,
+        }
+
+    def stop_trial_recording(
+        self, trial_id: str | None = None, reason: str = "trial_ended"
+    ) -> dict[str, Any] | None:
+        """Flush and close the active HoloLens trial recording."""
+        with self._recording_lock:
+            rec = self._trial_recording
+            if rec is None:
+                return None
+            if trial_id is not None and rec.trial_id != trial_id:
+                return None
+
+            ended = time.time()
+            for handle in (rec.pointer_handle, rec.eet_handle):
+                try:
+                    handle.flush()
+                    handle.close()
+                except Exception:
+                    logger.exception("Could not close HoloLens recording CSV")
+            try:
+                rec.video_writer.release()
+            except Exception:
+                logger.exception("Could not finalize HoloLens MP4 writer")
+
+            self._write_recording_metadata_locked(ended_at=ended, reason=reason)
+            summary = {
+                "trial_id": rec.trial_id,
+                "recording_dir": str(rec.recording_dir),
+                "video_path": str(rec.video_path),
+                "pointer_csv_path": str(rec.pointer_csv_path),
+                "eet_csv_path": str(rec.eet_csv_path),
+                "metadata_path": str(rec.metadata_path),
+                "video_frame_count": rec.video_frame_count,
+                "pointer_row_count": rec.pointer_row_count,
+                "eet_row_count": rec.eet_row_count,
+                "started_at": rec.recording_started_at,
+                "ended_at": ended,
+                "reason": reason,
+            }
+            self._trial_recording = None
+
+        self._log(
+            f"HOLOLENS RECORDING STOPPED: {summary['trial_id']} — "
+            f"{summary['video_frame_count']} video frames, "
+            f"{summary['eet_row_count']} EET samples -> {summary['recording_dir']}"
+        )
+        self._emit_stats(force=True)
+        return summary
+
+    def _record_eet_sample(self, eye: dict[str, Any], *, host_monotonic: float) -> None:
+        host_epoch = time.time()
+        with self._recording_lock:
+            rec = self._trial_recording
+            if rec is None:
+                return
+            combined = self._ray_components(eye, "combined")
+            left = self._ray_components(eye, "left")
+            right = self._ray_components(eye, "right")
+            rec.eet_row_count += 1
+            rec.eet_writer.writerow([
+                rec.participant_code, rec.session_id, rec.trial_id, rec.condition_code,
+                rec.run_code, rec.condition_name, rec.study, rec.environment,
+                rec.feedback_timing, rec.modality, int(rec.practice),
+                rec.trial_started_at, host_epoch, self._iso_utc(host_epoch),
+                max(0.0, host_epoch - rec.trial_started_at), host_monotonic,
+                rec.eet_row_count, eye.get("timestamp"), int(bool(eye.get("calibration_valid"))),
+                int(bool(eye.get("combined_valid"))), *combined,
+                int(bool(eye.get("left_valid"))), *left,
+                int(bool(eye.get("right_valid"))), *right,
+            ])
+            self._flush_recording_if_needed_locked(host_monotonic)
+
+    def _record_pv_frame(
+        self, frame: np.ndarray, camera: dict[str, Any], *, host_monotonic: float
+    ) -> None:
+        host_epoch = time.time()
+        # Copy the short history outside the recorder lock so stream ingestion is
+        # never blocked by MP4 encoding while holding the live-data lock.
+        with self._lock:
+            eye_history = list(self._eye_history)
+        eye = self._nearest_eye_sample(eye_history, camera.get("timestamp")) or {}
+        overlay = self.project_gaze_to_pv(
+            eye, camera, distance_m=self._gaze_projection_distance_m
+        )
+
+        with self._recording_lock:
+            rec = self._trial_recording
+            if rec is None:
+                return
+
+            drawn_x = drawn_y = None
+            raw_pixel = overlay.get("pixel")
+            if overlay.get("valid") and overlay.get("in_frame") and raw_pixel:
+                raw_x, raw_y = float(raw_pixel[0]), float(raw_pixel[1])
+                if rec.smoothed_gaze is None:
+                    drawn_x, drawn_y = raw_x, raw_y
+                else:
+                    alpha = 0.42
+                    drawn_x = alpha * raw_x + (1.0 - alpha) * rec.smoothed_gaze[0]
+                    drawn_y = alpha * raw_y + (1.0 - alpha) * rec.smoothed_gaze[1]
+                rec.smoothed_gaze = (drawn_x, drawn_y)
+            else:
+                raw_x = raw_y = None
+                rec.smoothed_gaze = None
+
+            annotated = self._draw_recording_gaze_overlay(
+                frame, drawn_x=drawn_x, drawn_y=drawn_y
+            )
+            # Guard against an unexpected stream resolution change.
+            if annotated.shape[1] != self._width or annotated.shape[0] != self._height:
+                annotated = cv2.resize(annotated, (self._width, self._height))
+            rec.video_writer.write(annotated)
+            rec.video_frame_count += 1
+            rec.pointer_row_count += 1
+
+            combined = self._ray_components(eye, "combined")
+            rec.pointer_writer.writerow([
+                rec.participant_code, rec.session_id, rec.trial_id, rec.condition_code,
+                rec.run_code, rec.condition_name, rec.study, rec.environment,
+                rec.feedback_timing, rec.modality, int(rec.practice),
+                rec.trial_started_at, host_epoch, self._iso_utc(host_epoch),
+                max(0.0, host_epoch - rec.trial_started_at), host_monotonic,
+                rec.video_frame_count, camera.get("timestamp"), eye.get("timestamp"),
+                overlay.get("timestamp_delta_ms"), int(bool(eye.get("calibration_valid"))),
+                int(bool(eye.get("combined_valid"))), int(bool(overlay.get("valid"))),
+                int(bool(overlay.get("in_frame"))), raw_x, raw_y, drawn_x, drawn_y,
+                self._gaze_projection_distance_m, *combined,
+            ])
+            self._flush_recording_if_needed_locked(host_monotonic)
+
+    @staticmethod
+    def _draw_recording_gaze_overlay(
+        frame: np.ndarray, *, drawn_x: float | None, drawn_y: float | None
+    ) -> np.ndarray:
+        annotated = frame.copy()
+        if drawn_x is None or drawn_y is None:
+            return annotated
+        x, y = int(round(drawn_x)), int(round(drawn_y))
+        radius = max(10, int(min(annotated.shape[0], annotated.shape[1]) * 0.018))
+        # BGR cyan ring + white crosshair, matching the validation window.
+        cv2.circle(annotated, (x, y), radius, (255, 255, 0), 4, cv2.LINE_AA)
+        cross = max(5, int(radius * 0.55))
+        cv2.line(annotated, (x - cross, y), (x + cross, y), (255, 255, 255), 2, cv2.LINE_AA)
+        cv2.line(annotated, (x, y - cross), (x, y + cross), (255, 255, 255), 2, cv2.LINE_AA)
+        return annotated
+
+    def _flush_recording_if_needed_locked(self, host_monotonic: float) -> None:
+        rec = self._trial_recording
+        if rec is None or host_monotonic - rec.last_flush_monotonic < 1.0:
+            return
+        rec.pointer_handle.flush()
+        rec.eet_handle.flush()
+        rec.last_flush_monotonic = host_monotonic
+
+    def _write_recording_metadata_locked(
+        self, *, ended_at: float | None, reason: str
+    ) -> None:
+        rec = self._trial_recording
+        if rec is None:
+            return
+        payload = {
+            "participant_code": rec.participant_code,
+            "session_id": rec.session_id,
+            "trial_id": rec.trial_id,
+            "condition_code": rec.condition_code,
+            "run_code": rec.run_code,
+            "condition_name": rec.condition_name,
+            "study": rec.study,
+            "environment": rec.environment,
+            "feedback_timing": rec.feedback_timing,
+            "modality": rec.modality,
+            "practice": rec.practice,
+            "trial_started_at_epoch": rec.trial_started_at,
+            "recording_started_at_epoch": rec.recording_started_at,
+            "recording_ended_at_epoch": ended_at,
+            "stop_reason": reason,
+            "camera": {
+                "width": self._width,
+                "height": self._height,
+                "configured_fps": self._camera_fps,
+                "video_codec": "mp4v",
+                "video_frame_count": rec.video_frame_count,
+                "overlay": "combined EET gaze direction; cyan circle + white crosshair",
+            },
+            "eye_tracking": {
+                "configured_fps": self._eye_fps,
+                "eet_sample_count": rec.eet_row_count,
+                "pointer_row_count": rec.pointer_row_count,
+                "projection_distance_m": self._gaze_projection_distance_m,
+                "projection_note": (
+                    "The pointer is a pose-registered gaze-direction projection at a fixed "
+                    "distance, not a depth-resolved physical surface intersection."
+                ),
+            },
+            "files": {
+                "annotated_video": rec.video_path.name,
+                "gaze_pointer_csv": rec.pointer_csv_path.name,
+                "raw_eet_csv": rec.eet_csv_path.name,
+            },
+        }
+        rec.metadata_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
     def _update_connected_status(self) -> None:
         with self._lock:
             camera_ready = self._camera_ready
@@ -667,6 +1092,10 @@ class HoloLensDevice(BaseDevice):
                 "camera_ready": self._camera_ready,
                 "eye_ready": self._eye_ready,
                 "last_error": self._last_error,
+                "trial_recording_active": self._trial_recording is not None,
+                "trial_recording_id": (
+                    None if self._trial_recording is None else self._trial_recording.trial_id
+                ),
             }
 
     def check_connection(self, max_age_s: float = 2.0) -> tuple[bool, str]:
