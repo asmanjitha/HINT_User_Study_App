@@ -158,6 +158,9 @@ class RLTrialRecorder:
             ],
         )
 
+        self._gaze_debug_file = None
+        self._gaze_debug_writer = None
+
         self._closed = False
 
         self._event_bus.event_published.connect(
@@ -501,6 +504,62 @@ class RLTrialRecorder:
 
         self._intervention_file.flush()
 
+    @staticmethod
+    def _parse_event_value(value: str | None) -> dict[str, str]:
+        parsed: dict[str, str] = {}
+        for part in str(value or "").split(";"):
+            if "=" not in part:
+                continue
+            key, item = part.split("=", 1)
+            parsed[key.strip()] = item.strip()
+        return parsed
+
+    def _record_gaze_direction_debug_event(self, event: StudyEvent) -> None:
+        if self._gaze_debug_writer is None:
+            (
+                self._gaze_debug_file,
+                self._gaze_debug_writer,
+            ) = self._open_writer(
+                self.trial.trial_path / "sensors" / "hololens" / "gaze_direction_debug.csv",
+                [
+                    "event_timestamp",
+                    "eye_timestamp",
+                    "status",
+                    "reason",
+                    "sample_age_seconds",
+                    "calibration_valid",
+                    "combined_valid",
+                    "left_valid",
+                    "right_valid",
+                    "raw_x", "raw_y", "raw_z",
+                    "coordinate_frame", "camera_x", "camera_y", "camera_z",
+                    "horizontal_deg", "vertical_deg",
+                    "center_horizontal_deg", "center_vertical_deg",
+                    "delta_horizontal_deg", "delta_vertical_deg",
+                    "instant_direction",
+                    "rolling_direction",
+                    "rolling_confidence",
+                    "rolling_runner_up",
+                    "rolling_margin",
+                    "prob_left", "prob_right", "prob_up", "prob_down", "prob_center",
+                    "instant_prob_left", "instant_prob_right",
+                    "instant_prob_up", "instant_prob_down", "instant_prob_center",
+                    "valid_samples", "required_samples",
+                ],
+            )
+
+        payload = self._parse_event_value(event.value)
+        row = {
+            "event_timestamp": f"{event.timestamp:.6f}",
+            "eye_timestamp": payload.get("timestamp", payload.get("last_timestamp", "")),
+        }
+        for key in self._gaze_debug_writer.fieldnames:
+            if key in row:
+                continue
+            row[key] = payload.get(key, "")
+        self._gaze_debug_writer.writerow(row)
+        self._gaze_debug_file.flush()
+
     def _on_event(
         self,
         event: StudyEvent,
@@ -517,6 +576,9 @@ class RLTrialRecorder:
         )
 
         self._event_file.flush()
+
+        if event.event_type.value == "GAZE_DIRECTION_DEBUG":
+            self._record_gaze_direction_debug_event(event)
 
     def close(self) -> None:
 

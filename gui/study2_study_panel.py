@@ -2,12 +2,12 @@
 
 Study 2 is presented as a modality-comparison study rather than repeating
 Study 1's environment flow.  Completion is tracked once per required
-modality: Keyboard, Joystick, Voice, and implicit Gaze/Physiological input.
+modality: Keyboard, Joystick, Voice, and Eye Gaze.
 
-Keyboard and Voice Gridworld input paths are live Actor-Critic integrations.
-Joystick and implicit feedback remain tracked Trials until their dedicated
-input adapters are connected. Voice commands use the microphone selected on
-the Devices page and are never synthesized from keyboard input.
+Keyboard, Voice, and Eye Gaze Gridworld input paths are live Actor-Critic
+integrations. Joystick remains a tracked Trial until its dedicated feedback
+path is connected. Voice commands use the selected microphone; Eye Gaze uses
+the connected HoloLens 2 EET stream. Neither is synthesized from keyboard input.
 """
 
 from __future__ import annotations
@@ -97,7 +97,7 @@ class Study2StudyPanel(QWidget):
         note = QLabel(
             "Study 2 focuses on feedback-modality tradeoffs in the 2D Gridworld. "
             "Complete the Gridworld task with Keyboard, Joystick, Voice, and "
-            "Implicit (gaze/physiological) feedback. Feedback timing is recorded "
+            "Eye Gaze feedback. Feedback timing is recorded "
             "for each run but modality completion is tracked independently."
         )
         note.setWordWrap(True)
@@ -405,6 +405,12 @@ class Study2StudyPanel(QWidget):
                 "Requested mode: say a direction. Anytime mode: say STOP, then "
                 "the state-box number, then a direction."
             )
+        elif modality == Modality.EYE_GAZE:
+            text = (
+                "Live Actor-Critic Gridworld + HoloLens 2 eye tracking. Requested: "
+                "look in the same direction twice. Anytime: double blink to pause, "
+                "close eyes ~1 s, blink N times for state N, then double-look direction."
+            )
         else:
             text = (
                 f"Tracked/external run: the real {modality.value} adapter is not integrated "
@@ -423,7 +429,7 @@ class Study2StudyPanel(QWidget):
             modality=modality,
             rl_algorithm=(
                 "actor_critic_gridworld"
-                if modality in (Modality.KEYBOARD, Modality.VOICE)
+                if modality in (Modality.KEYBOARD, Modality.VOICE, Modality.EYE_GAZE)
                 else "external_multimodal_gridworld"
             ),
             random_seed=self._seed_spin.value(),
@@ -506,6 +512,20 @@ class Study2StudyPanel(QWidget):
                 )
                 return
 
+        if modality == Modality.EYE_GAZE:
+            ok, message = self._controller.device_manager.check_hololens()
+            eye = self._controller.device_manager.hololens_latest_eye_data()
+            calibrated = bool(eye.get("calibration_valid", False))
+            if not ok or not calibrated:
+                QMessageBox.warning(
+                    self,
+                    "HoloLens eye gaze unavailable",
+                    "The Eye Gaze condition needs a connected HoloLens 2 with fresh "
+                    "Extended Eye Tracking data and valid eye calibration.\n\n"
+                    f"{message}\n\nCalibrate eye tracking on the headset, then start again.",
+                )
+                return
+
         if not self._controller.device_manager.shimmer_stream_healthy():
             answer = QMessageBox.question(
                 self,
@@ -535,7 +555,7 @@ class Study2StudyPanel(QWidget):
             QMessageBox.critical(self, "Could not start run", str(exc))
             return
 
-        self._active_live_rl = modality in (Modality.KEYBOARD, Modality.VOICE)
+        self._active_live_rl = modality in (Modality.KEYBOARD, Modality.VOICE, Modality.EYE_GAZE)
 
         try:
             if self._active_live_rl:

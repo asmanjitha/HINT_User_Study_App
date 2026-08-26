@@ -162,7 +162,7 @@ STUDY2_REQUIRED_MODALITIES: tuple[Modality, ...] = (
     Modality.KEYBOARD,
     Modality.JOYSTICK,
     Modality.VOICE,
-    Modality.IMPLICIT,
+    Modality.EYE_GAZE,
 )
 STUDY2_REQUIRED_CONDITION_COUNT = len(STUDY2_REQUIRED_MODALITIES)
 
@@ -555,7 +555,12 @@ class WorkflowManager:
 
         summaries: list[Study2ConditionSummary] = []
         for modality in STUDY2_REQUIRED_MODALITIES:
-            matching = [row for row in rows if row["modality"] == modality.value]
+            accepted_values = {modality.value}
+            if modality == Modality.EYE_GAZE:
+                # v1.1.5 labeled this Study 2 column as Implicit; preserve those
+                # historical runs while new collections use the explicit Eye Gaze label.
+                accepted_values.add(Modality.IMPLICIT.value)
+            matching = [row for row in rows if row["modality"] in accepted_values]
             completed = [
                 row for row in matching if self._row_is_valid_completion(row)
             ]

@@ -4,7 +4,48 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
-## What's in this version (V1.1.5 — Study 2 offline voice feedback)
+## What's in this version (V1.1.13 — PV-camera gaze-axis fix)
+
+### Eye-gaze tracker-axis correction (V1.1.13)
+- Raw Extended Eye Tracking rays are no longer interpreted directly as screen X/Y.
+- Each gaze ray is transformed from tracker space into the PV camera frame before LEFT/RIGHT/UP/DOWN classification.
+- PV-camera semantics are: +X RIGHT, -X LEFT, -Y UP, +Y DOWN.
+- Direction-debug CSV now records camera-frame gaze components and coordinate-frame name.
+- If a PV transform is temporarily unavailable, that sample is ignored instead of being classified in the wrong frame.
+
+
+- Fixes the real HoloLens EET forward-axis sign bug that caused positive-Z gaze rays to be rejected as `gaze_not_forward`.
+- Keeps the v1.1.11 live gaze debug overlay and `gaze_direction_debug.csv` troubleshooting log.
+- Windowed likelihood direction recognition now accepts both positive-Z and negative-Z tracker conventions by using the forward-axis magnitude.
+
+- Eye Gaze direction feedback now logs every fresh troubleshooting sample as `GAZE_DIRECTION_DEBUG`.
+- A dedicated `sensors/hololens/gaze_direction_debug.csv` is created lazily during Eye Gaze direction feedback, with raw gaze vector, yaw/pitch, local-center angles, relative angular offsets, instantaneous label, rolling direction/confidence/margin, per-class probabilities, sample counts, and invalid/stale reasons.
+- The HoloLens camera/gaze preview now includes a live Direction Debug line showing `Δyaw`, `Δpitch`, instantaneous direction, rolling direction, confidence, margin, sample count, and LEFT/RIGHT/UP/DOWN/CENTER probabilities.
+- Stale or invalid EET input is displayed explicitly instead of silently waiting.
+- Requested-feedback instructions now tell the participant to look normally at the agent/maze first so the local gaze center is captured before looking toward the intended direction.
+- The v1.1.10 windowed gaze-likelihood classifier itself is unchanged so the new diagnostics can reveal exactly which part of the recognition pipeline is failing.
+
+## What's in this version (V1.1.10 — windowed gaze-likelihood direction feedback)
+
+- Eye-gaze direction commands no longer require an uninterrupted 0.40-second hold.
+- Direction is estimated from the **likelihood of recent valid gaze samples** inside a configurable time window.
+- Missing/invalid EET direction samples are ignored during direction recognition instead of resetting the gesture.
+- The default classifier uses a 0.70-second evidence window, requires at least 5 valid samples, accepts a direction at >=70% confidence, and requires a >=20% lead over the next-best class.
+- LEFT/RIGHT/UP/DOWN/CENTER sample likelihoods are computed relative to the participant's local gaze center using angular Gaussian prototypes.
+- The participant window shows the current best direction, confidence, and valid-sample count while evidence is being accumulated.
+- The existing confirmation beep is retained and is played only after a direction passes the confidence checks and is accepted.
+- Double-blink pause, one-second eye-close delimiter, N-blink state selection, HoloLens camera/gaze preview, and the HoloLens recording/path fixes remain unchanged.
+
+## What's in this version (V1.1.7 — feedback-window camera + eye-gaze preview)
+
+- Eye Gaze feedback interactions now show the already-running HoloLens PV/front-camera stream directly inside the participant Human Feedback panel.
+- The live preview overlays the projected combined-eye gaze cursor, matching the validation/recording overlay.
+- The preview activates only while Eye Gaze feedback is actively being given: on a system-requested feedback prompt, or after an Anytime pause has opened state selection.
+- The preview remains active through Anytime state-number selection and corrective direction entry, then stops and hides when feedback resolves or the trial stops.
+- Stream/calibration health is shown under the preview (eye calibration, gaze visibility, PV age, EET age).
+- The preview reuses the existing HoloLens connection and does not create a second HL2SS camera or eye-tracking stream.
+
+## What's in this version (V1.1.6 — Study 2 eye-gaze feedback)
 
 The console uses a single process-oriented workflow on the existing data
 model and Actor-Critic Gridworld integration. V0.9 retains the IRB-aligned
@@ -43,21 +84,32 @@ can be identified directly from the filesystem:
   work). Study 1 Training keeps its existing practice matrix. Study 1 Study
   now tracks the three protocol settings (with two Gridworld timing
   conditions), and Study 2 Study centers its progress view on multimodal
-  Gridworld feedback. Keyboard **and Voice** Gridworld runs now launch the live
-  Actor-Critic integration in both Study 2 Training and Study 2 Study. Voice
-  uses the microphone selected on the Devices page and local Vosk speech
-  recognition. Joystick/implicit conditions remain tracked until their dedicated
-  live adapters are connected.
+  Gridworld feedback. Keyboard, **Voice, and Eye Gaze** Gridworld runs now
+  launch the live Actor-Critic integration in both Study 2 Training and Study 2
+  Study. Voice uses the microphone selected on the Devices page and local Vosk
+  speech recognition. Eye Gaze uses the existing live HoloLens 2 Extended Eye
+  Tracking stream. Joystick remains tracked until its dedicated feedback adapter
+  is connected.
 
 - **Event Log** — live event feed + disk usage, for monitoring/debugging.
   Device status and current-session context now live on the Devices and
   Workflow pages instead.
 
 The participant-facing second window (maze view + feedback controls) opens
-automatically for live Keyboard and Voice Gridworld trials. In Voice Requested
-Feedback, the participant says **UP / DOWN / LEFT / RIGHT**. In Voice Anytime
-Feedback, the participant says **STOP**, then the number of one of the displayed
-recent-state boxes, then **UP / DOWN / LEFT / RIGHT**.
+automatically for live Keyboard, Voice, and Eye Gaze Gridworld trials. In Voice
+Requested Feedback, the participant says **UP / DOWN / LEFT / RIGHT**. In Voice
+Anytime Feedback, the participant says **STOP**, then the number of one of the
+displayed recent-state boxes, then **UP / DOWN / LEFT / RIGHT**.
+
+In Eye Gaze Requested Feedback, the participant looks clearly in the desired
+direction until the system has accumulated enough valid gaze evidence and plays
+the confirmation beep. Missing EET direction samples do not reset the evidence.
+In Eye Gaze Anytime Feedback, **two blinks** pause the agent; the participant then
+closes both eyes for about one second, opens them, blinks **N** times to choose
+state box N, and finally looks clearly in the corrective direction until the
+beep confirms recognition. Direction likelihood is computed relative to the
+participant's fixation when the feedback stage begins, rather than assuming the
+display is perfectly aligned with the headset.
 
 Voice recognition is local through Vosk. If no English Vosk model is already
 cached, Vosk can obtain its small English model on first initialization; for a
@@ -72,10 +124,10 @@ The existing naming convention is unchanged. For example:
 data/P001/S01/Training/Study1/
   TR01_Gridworld_Anytime_Gaze/R01/
     sensors/hololens/
-      hololens_pv_gaze_overlay.mp4
-      hololens_gaze_pointer.csv
-      hololens_eet_raw.csv
-      hololens_recording_metadata.json
+      pv_gaze.mp4
+      gaze.csv
+      eet.csv
+      meta.json
 
 data/P001/S01/Study1_ExplicitFeedback/
   T02_Gridworld_Anytime_Joystick/R01/
@@ -162,6 +214,7 @@ hint_study_console/
 │   ├── shimmer_device.py       # real Bluetooth/serial GSR+PPG streaming
 │   ├── input_devices.py        # keyboard/joystick/microphone adapters + PCM phrase capture
 │   ├── voice_recognizer.py     # local Vosk STOP/number/direction recognition
+│   ├── gaze_gesture_recognizer.py # HoloLens blink/count/windowed-gaze gestures
 │   └── device_manager.py       # owns one device per DeviceType
 ├── gui/                       # PySide6 widgets
 │   ├── main_window.py          # left nav (Devices / Workflow / Event Log)
@@ -169,9 +222,9 @@ hint_study_console/
 │   ├── workflow_page.py        # participant selector + step menu + detail panels
 │   ├── registration_panel.py   # Registration step detail
 │   ├── study1_step_panel.py    # Study 1 Training/Study (real RL trial)
-│   ├── study2_step_panel.py    # Study 2 Training; live Gridworld Keyboard/Voice
+│   ├── study2_step_panel.py    # Study 2 Training; live Keyboard/Voice/Eye Gaze
 │   ├── participant_dialog.py   # "New Participant" dialog
-│   ├── participant_window.py   # participant maze + keyboard/voice feedback state machine
+│   ├── participant_window.py   # participant maze + multimodal feedback state machine
 │   └── event_log_page.py
 ├── rl/, recording/            # Actor-Critic Gridworld experiment + CSV recorder (unchanged)
 ├── config/                    # app.yaml, study.yaml, logging.yaml

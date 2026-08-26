@@ -1,4 +1,4 @@
-study_version: "HINT_v0.6_irb_aligned_study_flow"
+study_version: "HINT_v0.7_multimodal_gaze_feedback_v112"
 
 timing:
   session_max_minutes: 60
@@ -45,7 +45,7 @@ studies:
       - "Keyboard"
       - "Joystick"
       - "Voice"
-      - "Implicit (Gaze/Physiological)"
+      - "Eye Gaze"
 
     counterbalancing_method: "latin_square"
 
@@ -63,6 +63,34 @@ voice_recognition:
   phrase_time_limit_seconds: 2.5
   silence_seconds: 0.40
   activation_peak: 0.012
+
+eye_gaze_recognition:
+  # Uses the live HoloLens 2 Extended Eye Tracking stream already connected
+  # from the Devices page. All thresholds are intentionally configurable for
+  # headset/user-study calibration without changing code.
+  poll_interval_ms: 20
+  min_blink_seconds: 0.06
+  max_blink_seconds: 0.45
+  long_close_seconds: 0.85
+  double_blink_window_seconds: 1.10
+  blink_count_finish_gap_seconds: 1.15
+  direction_threshold_deg: 12.0
+  direction_neutral_deg: 6.0
+  direction_dominance_margin_deg: 2.0
+  # Direction recognition integrates only VALID gaze samples inside this
+  # recent wall-clock window. Missing EET samples are ignored, not treated as
+  # a failed/aborted direction gesture.
+  direction_window_seconds: 0.70
+  direction_min_valid_samples: 5
+  # The highest window-averaged direction likelihood must reach this value and
+  # beat the next-best class (including CENTER) by this margin.
+  direction_probability_threshold: 0.70
+  direction_probability_margin: 0.20
+  center_adaptation_alpha: 0.05
+  # Troubleshooting: log detailed direction samples to events/events.csv as
+  # GAZE_DIRECTION_DEBUG and show the latest values beside the camera preview.
+  direction_debug_enabled: true
+  direction_debug_stale_seconds: 0.25
 
 critical_state:
   detection_method: "oscillation_pattern"

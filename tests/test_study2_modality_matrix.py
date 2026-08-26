@@ -91,7 +91,7 @@ def test_study2_focuses_on_four_gridworld_modalities() -> None:
         Modality.KEYBOARD,
         Modality.JOYSTICK,
         Modality.VOICE,
-        Modality.IMPLICIT,
+        Modality.EYE_GAZE,
     )
 
 
@@ -114,3 +114,13 @@ def test_all_modalities_complete_study2_step(tmp_path: Path) -> None:
     assert summary.completed_count == 4
     assert summary.overall_status == StepOverallStatus.COMPLETED
     assert manager.next_incomplete_study2_condition("P001") is None
+
+
+def test_legacy_implicit_row_counts_as_eye_gaze_completion(tmp_path: Path) -> None:
+    manager, db = _manager(tmp_path)
+    _insert_trial(db, "G_LEGACY", Modality.IMPLICIT, FeedbackTiming.REQUESTED)
+
+    gaze = manager.study2_condition_status("P001", Modality.EYE_GAZE)
+    assert gaze.status == "Completed"
+    assert gaze.completed_trials == 1
+    assert gaze.last_trial_id == "G_LEGACY"

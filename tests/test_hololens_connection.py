@@ -136,7 +136,10 @@ def test_hololens_trial_recording_accepts_training_and_saves_under_run_folder(tm
     )
 
     paths = device.start_trial_recording(trial)
-    assert paths["video"] == run_dir / "sensors" / "hololens" / "hololens_pv_gaze_overlay.mp4"
+    assert paths["video"] == run_dir / "sensors" / "hololens" / "pv_gaze.mp4"
+    assert paths["pointer_csv"].name == "gaze.csv"
+    assert paths["eet_csv"].name == "eet.csv"
+    assert paths["metadata"].name == "meta.json"
     assert paths["pointer_csv"].exists()
     assert paths["eet_csv"].exists()
 
@@ -187,3 +190,82 @@ def test_hololens_trial_recording_accepts_training_and_saves_under_run_folder(tm
     assert metadata["camera"]["video_frame_count"] == 1
     assert metadata["eye_tracking"]["eet_sample_count"] == 1
     assert metadata["stop_reason"] == "trial_valid"
+
+
+def test_hololens_stop_is_idempotent_when_final_metadata_write_fails(tmp_path, monkeypatch):
+    from models.enums import Environment, FeedbackTiming, Modality, Study
+    from models.trial import ExperimentCondition, Trial
+
+    class FakeVideoWriter:
+        def __init__(self, *args, **kwargs):
+            self.released = False
+
+        def isOpened(self):
+            return True
+
+        def write(self, frame):
+            pass
+
+        def release(self):
+            self.released = True
+
+    fake_writer = FakeVideoWriter()
+    monkeypatch.setattr("devices.hololens_device.cv2.VideoWriter", lambda *a, **k: fake_writer)
+    monkeypatch.setattr("devices.hololens_device.cv2.VideoWriter_fourcc", lambda *a: 0)
+
+    device = HoloLensDevice()
+    device._width = 64
+    device._height = 48
+    monkeypatch.setattr(device, "is_stream_healthy", lambda max_age_s=1.0: True)
+
+    run_dir = tmp_path / "P001" / "S01" / "Training" / "Study1" / "TR01_Gridworld_Requested_Gaze" / "R01"
+    trial = Trial(
+        trial_id="P001_S01_ST1TR_TR01_R01",
+        session_id="P001_S01",
+        participant_code="P001",
+        condition=ExperimentCondition(
+            study=Study.STUDY_1,
+            environment=Environment.GRIDWORLD,
+            feedback_timing=FeedbackTiming.REQUESTED,
+            modality=Modality.EYE_GAZE,
+        ),
+        practice=True,
+        condition_code="TR01",
+        run_code="R01",
+        condition_name="Gridworld_Requested_Gaze",
+        started_at=1000.0,
+        trial_dir=str(run_dir),
+    )
+
+    device.start_trial_recording(trial)
+    rec = device._trial_recording
+    assert rec is not None
+
+    original = device._write_recording_metadata_for
+
+    def fail_only_on_final(target, *, ended_at, reason):
+        if ended_at is not None:
+            raise FileNotFoundError("simulated final metadata path failure")
+        return original(target, ended_at=ended_at, reason=reason)
+
+    monkeypatch.setattr(device, "_write_recording_metadata_for", fail_only_on_final)
+    summary = device.stop_trial_recording(trial_id=trial.trial_id, reason="trial_valid")
+
+    assert summary is not None
+    assert summary["metadata_finalized"] is False
+    assert device._trial_recording is None
+    assert rec.pointer_handle.closed is True
+    assert rec.eet_handle.closed is True
+    assert fake_writer.released is True
+    # A second stop cannot re-close/re-flush the half-failed recorder.
+    assert device.stop_trial_recording(trial_id=trial.trial_id, reason="again") is None
+
+    # Worker-side record calls after finalization are harmless no-ops.
+    eye = {
+        "timestamp": 1,
+        "calibration_valid": False,
+        "combined_valid": False,
+        "left_valid": False,
+        "right_valid": False,
+    }
+    device._record_eet_sample(eye, host_monotonic=10.0)

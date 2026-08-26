@@ -663,6 +663,72 @@ class HoloLensDevice(BaseDevice):
         overlay = self.project_gaze_to_pv(eye or {}, camera, distance_m=distance_m)
         return {"frame": frame, "camera": camera, "eye": eye or {}, "gaze_overlay": overlay}
 
+    @classmethod
+    def gaze_direction_to_pv_camera(
+        cls, eye: dict[str, Any], camera: dict[str, Any]
+    ) -> tuple[float, float, float] | None:
+        """Transform one EET combined gaze direction into the PV camera frame.
+
+        Extended Eye Tracking rays are expressed in the eye tracker's own
+        coordinate system.  Their raw X/Y components therefore must not be
+        interpreted directly as screen horizontal/vertical directions.  This
+        method uses the EET tracker pose and PV camera pose to express the gaze
+        direction in the same camera frame used by the live preview, where
+        +X is image-right, +Y is image-down, and +Z is camera-forward.
+        """
+        if not eye or not camera or not bool(eye.get("combined_valid", False)):
+            return None
+        ray = eye.get("combined") or {}
+        origin = ray.get("origin")
+        direction = ray.get("direction")
+        eye_pose = eye.get("pose")
+        pv_pose = camera.get("pose")
+        if origin is None or direction is None or eye_pose is None or pv_pose is None:
+            return None
+        try:
+            o = np.asarray(origin, dtype=np.float64).reshape(3)
+            d = np.asarray(direction, dtype=np.float64).reshape(3)
+            eye_pose = np.asarray(eye_pose, dtype=np.float64).reshape((4, 4))
+            pv_pose = np.asarray(pv_pose, dtype=np.float64).reshape((4, 4))
+            norm = float(np.linalg.norm(d))
+            if (not np.isfinite(norm)) or norm < 1e-9:
+                return None
+            d /= norm
+
+            # Transform two points rather than assuming the tracker axes line up
+            # with the PV camera axes. Translation cancels when we subtract.
+            tracker_o = o
+            tracker_p = o + d
+            world_o = cls._transform_point(tracker_o, eye_pose)
+            world_p = cls._transform_point(tracker_p, eye_pose)
+            pv_inv = np.linalg.inv(pv_pose)
+            pv_ref_o = cls._transform_point(world_o, pv_inv)
+            pv_ref_p = cls._transform_point(world_p, pv_inv)
+            pv_ref_d = pv_ref_p - pv_ref_o
+
+            # Match project_gaze_to_pv()/hl2ss_3dcv.pv_fix_calibration():
+            # PV image-camera convention flips reference-space Y and Z.
+            pv_d = np.asarray(
+                [pv_ref_d[0], -pv_ref_d[1], -pv_ref_d[2]], dtype=np.float64
+            )
+            pv_norm = float(np.linalg.norm(pv_d))
+            if (not np.isfinite(pv_norm)) or pv_norm < 1e-9:
+                return None
+            pv_d /= pv_norm
+            if float(pv_d[2]) <= 1e-6:
+                return None
+            return (float(pv_d[0]), float(pv_d[1]), float(pv_d[2]))
+        except Exception:
+            return None
+
+    def latest_eye_direction_in_pv_camera(
+        self, eye: dict[str, Any]
+    ) -> tuple[float, float, float] | None:
+        """Return ``eye`` direction in the latest PV camera coordinate frame."""
+        with self._lock:
+            camera = dict(self._latest_camera_meta)
+        return self.gaze_direction_to_pv_camera(eye, camera)
+
     # ------------------------------------------------------------------
     # Trial-scoped HoloLens recording
 
@@ -709,10 +775,15 @@ class HoloLensDevice(BaseDevice):
 
         recording_dir = trial.trial_path / "sensors" / "hololens"
         recording_dir.mkdir(parents=True, exist_ok=True)
-        video_path = recording_dir / "hololens_pv_gaze_overlay.mp4"
-        pointer_csv_path = recording_dir / "hololens_gaze_pointer.csv"
-        eet_csv_path = recording_dir / "hololens_eet_raw.csv"
-        metadata_path = recording_dir / "hololens_recording_metadata.json"
+        # Keep trial-scoped filenames deliberately short.  On Windows, the readable
+        # participant/condition hierarchy can already consume most of the legacy
+        # MAX_PATH budget (260 chars).  The previous descriptive filenames could
+        # push an otherwise valid recording path over that limit, causing pathlib
+        # or OpenCV writes to fail with a misleading FileNotFoundError.
+        video_path = recording_dir / "pv_gaze.mp4"
+        pointer_csv_path = recording_dir / "gaze.csv"
+        eet_csv_path = recording_dir / "eet.csv"
+        metadata_path = recording_dir / "meta.json"
         started = time.time()
 
         with self._recording_lock:
@@ -803,7 +874,33 @@ class HoloLensDevice(BaseDevice):
                 eet_writer=eet_writer,
                 last_flush_monotonic=time.monotonic(),
             )
-            self._write_recording_metadata_locked(ended_at=None, reason="recording_started")
+            try:
+                self._write_recording_metadata_locked(
+                    ended_at=None, reason="recording_started"
+                )
+            except Exception:
+                # Starting a recorder is transactional: if even the initial
+                # metadata cannot be created, detach and close every sink now.
+                # Otherwise the PV/EET workers would inherit a half-initialized
+                # recorder and repeatedly fail in the background.
+                self._trial_recording = None
+                for handle in (pointer_handle, eet_handle):
+                    try:
+                        if not getattr(handle, "closed", False):
+                            handle.close()
+                    except Exception:
+                        logger.debug(
+                            "Could not close HoloLens CSV after start failure",
+                            exc_info=True,
+                        )
+                try:
+                    video_writer.release()
+                except Exception:
+                    logger.debug(
+                        "Could not release HoloLens video writer after start failure",
+                        exc_info=True,
+                    )
+                raise
 
         self._log(
             f"HOLOLENS RECORDING STARTED: {trial.trial_id} -> {recording_dir}"
@@ -819,7 +916,12 @@ class HoloLensDevice(BaseDevice):
     def stop_trial_recording(
         self, trial_id: str | None = None, reason: str = "trial_ended"
     ) -> dict[str, Any] | None:
-        """Flush and close the active HoloLens trial recording."""
+        """Flush and close the active HoloLens trial recording safely.
+
+        Finalization is intentionally idempotent.  The active recording is
+        detached *before* handles are flushed/closed so that a metadata or file
+        system error cannot leave worker threads holding a half-closed recorder.
+        """
         with self._recording_lock:
             rec = self._trial_recording
             if rec is None:
@@ -827,11 +929,17 @@ class HoloLensDevice(BaseDevice):
             if trial_id is not None and rec.trial_id != trial_id:
                 return None
 
+            # Critical race-safety rule: once finalization starts, PV/EET worker
+            # calls must see no active recording.  The lock prevents a writer
+            # already inside _record_* from overlapping this detach.
+            self._trial_recording = None
             ended = time.time()
+
             for handle in (rec.pointer_handle, rec.eet_handle):
                 try:
-                    handle.flush()
-                    handle.close()
+                    if not getattr(handle, "closed", False):
+                        handle.flush()
+                        handle.close()
                 except Exception:
                     logger.exception("Could not close HoloLens recording CSV")
             try:
@@ -839,7 +947,21 @@ class HoloLensDevice(BaseDevice):
             except Exception:
                 logger.exception("Could not finalize HoloLens MP4 writer")
 
-            self._write_recording_metadata_locked(ended_at=ended, reason=reason)
+            metadata_finalized = True
+            try:
+                self._write_recording_metadata_for(
+                    rec, ended_at=ended, reason=reason
+                )
+            except Exception as exc:
+                # Do not re-arm a half-closed recorder if metadata cannot be
+                # written.  The CSV/MP4 data collected so far remain usable.
+                metadata_finalized = False
+                logger.exception("Could not write final HoloLens recording metadata")
+                self._log(
+                    f"HoloLens recording files were closed, but final metadata "
+                    f"could not be written: {exc}"
+                )
+
             summary = {
                 "trial_id": rec.trial_id,
                 "recording_dir": str(rec.recording_dir),
@@ -853,8 +975,8 @@ class HoloLensDevice(BaseDevice):
                 "started_at": rec.recording_started_at,
                 "ended_at": ended,
                 "reason": reason,
+                "metadata_finalized": metadata_finalized,
             }
-            self._trial_recording = None
 
         self._log(
             f"HOLOLENS RECORDING STOPPED: {summary['trial_id']} — "
@@ -975,6 +1097,15 @@ class HoloLensDevice(BaseDevice):
         rec = self._trial_recording
         if rec is None:
             return
+        self._write_recording_metadata_for(rec, ended_at=ended_at, reason=reason)
+
+    def _write_recording_metadata_for(
+        self,
+        rec: _HoloLensTrialRecording,
+        *,
+        ended_at: float | None,
+        reason: str,
+    ) -> None:
         payload = {
             "participant_code": rec.participant_code,
             "session_id": rec.session_id,

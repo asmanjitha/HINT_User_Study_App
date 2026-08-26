@@ -7,14 +7,18 @@ from PySide6.QtCore import (
 
 from PySide6.QtGui import (
     QColor,
+    QImage,
     QKeyEvent,
     QPainter,
     QPen,
+    QPixmap,
 )
 
 from PySide6.QtWidgets import (
+    QApplication,
     QGridLayout,
     QGroupBox,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,
@@ -31,6 +35,14 @@ from devices.voice_recognizer import (
     VOICE_CONTEXT_STATE_NUMBER,
     VOICE_CONTEXT_STOP,
     VoiceCommandRecognizer,
+)
+from devices.gaze_gesture_recognizer import (
+    GAZE_CONTEXT_BLINK_COUNT,
+    GAZE_CONTEXT_DIRECTION,
+    GAZE_CONTEXT_DOUBLE_BLINK,
+    GAZE_CONTEXT_IDLE,
+    GAZE_CONTEXT_LONG_CLOSE,
+    EyeGazeGestureRecognizer,
 )
 from models.enums import (
     AppMode,
@@ -384,6 +396,13 @@ class ParticipantWindow(QWidget):
 
         self._history_buttons = []
 
+        # Live HoloLens PV + projected gaze preview.  This reads snapshots
+        # from the already-running device connection; it never opens a second
+        # camera/EET stream.  The timer is only active while an Eye Gaze
+        # feedback interaction is on screen.
+        self._gaze_preview_last_pixmap: QPixmap | None = None
+        self._gaze_preview_smoothed: tuple[float, float] | None = None
+
         voice_cfg = (
             self._controller.config.study_raw
             .get("voice_recognition", {})
@@ -401,6 +420,28 @@ class ParticipantWindow(QWidget):
         )
         self._voice_recognizer.recognition_error.connect(
             self._on_voice_error
+        )
+
+        gaze_cfg = (
+            self._controller.config.study_raw
+            .get("eye_gaze_recognition", {})
+        )
+        self._gaze_recognizer = EyeGazeGestureRecognizer(
+            self._controller.device_manager.hololens_device,
+            config=gaze_cfg,
+            parent=self,
+        )
+        self._gaze_recognizer.gesture_observed.connect(
+            self._on_gaze_gesture
+        )
+        self._gaze_recognizer.command_recognized.connect(
+            self._on_gaze_command
+        )
+        self._gaze_recognizer.direction_debug.connect(
+            self._on_gaze_direction_debug
+        )
+        self._gaze_recognizer.recognition_error.connect(
+            self._on_gaze_error
         )
 
         self.setWindowTitle(
@@ -561,8 +602,60 @@ class ParticipantWindow(QWidget):
             1,
         )
 
+        feedback_body = QHBoxLayout()
+        feedback_body.addLayout(grid, 2)
+
+        self._gaze_preview_box = QGroupBox(
+            "HoloLens Camera + Eye Gaze"
+        )
+        gaze_preview_layout = QVBoxLayout(
+            self._gaze_preview_box
+        )
+
+        self._gaze_preview_camera = QLabel(
+            "Camera preview activates during Eye Gaze feedback."
+        )
+        self._gaze_preview_camera.setAlignment(
+            Qt.AlignmentFlag.AlignCenter
+        )
+        self._gaze_preview_camera.setMinimumSize(360, 203)
+        self._gaze_preview_camera.setStyleSheet(
+            "background: #111; color: #ddd; border: 1px solid #444;"
+        )
+        gaze_preview_layout.addWidget(
+            self._gaze_preview_camera,
+            1,
+        )
+
+        self._gaze_preview_status = QLabel(
+            "Preview inactive"
+        )
+        self._gaze_preview_status.setWordWrap(True)
+        self._gaze_preview_status.setStyleSheet(
+            "font-size: 11px; color: #666;"
+        )
+        gaze_preview_layout.addWidget(
+            self._gaze_preview_status
+        )
+
+        self._gaze_direction_debug = QLabel(
+            "Direction debug: waiting for gaze direction recognition…"
+        )
+        self._gaze_direction_debug.setWordWrap(True)
+        self._gaze_direction_debug.setStyleSheet(
+            "font-size: 12px; font-family: Consolas, monospace; "
+            "background: #f6f6f6; border: 1px solid #bbb; padding: 5px;"
+        )
+        gaze_preview_layout.addWidget(self._gaze_direction_debug)
+
+        self._gaze_preview_box.setVisible(False)
+        feedback_body.addWidget(
+            self._gaze_preview_box,
+            3,
+        )
+
         feedback_layout.addLayout(
-            grid
+            feedback_body
         )
 
         root.addWidget(
@@ -603,6 +696,12 @@ class ParticipantWindow(QWidget):
 
         self._countdown.timeout.connect(
             self._tick_countdown
+        )
+
+        self._gaze_preview_timer = QTimer(self)
+        self._gaze_preview_timer.setInterval(50)
+        self._gaze_preview_timer.timeout.connect(
+            self._refresh_gaze_preview
         )
 
         rl = (
@@ -668,6 +767,8 @@ class ParticipantWindow(QWidget):
         self._maze.clear_history()
         self._history_box.setVisible(False)
         self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
+        self._gaze_recognizer.set_context(GAZE_CONTEXT_IDLE)
+        self._set_gaze_preview_active(False)
         self._pause_feedback_btn.setText(
             "PAUSE & SELECT FEEDBACK  [SPACE]"
         )
@@ -693,6 +794,17 @@ class ParticipantWindow(QWidget):
                     'VOICE MODE — SAY "STOP" TO PAUSE'
                 )
                 self._pause_feedback_btn.setEnabled(False)
+            elif self._is_gaze_modality():
+                self._feedback_message.setText(
+                    "Eye-gaze feedback ready. BLINK TWICE to pause the agent. "
+                    "Keep your head generally forward so the gaze gesture is "
+                    "measured relative to the headset."
+                )
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_DOUBLE_BLINK)
+                self._pause_feedback_btn.setText(
+                    "EYE GAZE MODE — BLINK TWICE TO PAUSE"
+                )
+                self._pause_feedback_btn.setEnabled(False)
             else:
                 self._feedback_message.setText(
                     "When you want to give feedback, "
@@ -715,6 +827,13 @@ class ParticipantWindow(QWidget):
                 self._feedback_message.setText(
                     "Wait until the system requests feedback. Then say "
                     "UP, DOWN, LEFT, or RIGHT."
+                )
+                self._skip_btn.setVisible(False)
+            elif self._is_gaze_modality():
+                self._feedback_message.setText(
+                    "Wait until the system requests feedback. First look normally at the "
+                    "agent/maze so the local gaze center can be captured; then look clearly "
+                    "in the desired direction until you hear the confirmation sound."
                 )
                 self._skip_btn.setVisible(False)
             else:
@@ -806,6 +925,14 @@ class ParticipantWindow(QWidget):
                 f"to correct (1 to {max_box})."
             )
             self._voice_recognizer.set_context(VOICE_CONTEXT_STATE_NUMBER)
+        elif self._is_gaze_modality():
+            self._set_gaze_preview_active(True)
+            max_box = max(1, len(self._anytime_history))
+            self._feedback_message.setText(
+                "Agent paused. CLOSE BOTH EYES for about 1 second, then open them. "
+                f"After that, blink N times to choose box N (1 to {max_box})."
+            )
+            self._gaze_recognizer.set_context(GAZE_CONTEXT_LONG_CLOSE)
         else:
             self._feedback_message.setText(
                 "Agent paused. Select one of the "
@@ -842,6 +969,15 @@ class ParticipantWindow(QWidget):
             )
             self._set_controls(False)
             self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+        elif self._is_gaze_modality():
+            self._set_gaze_preview_active(True)
+            self._feedback_message.setText(
+                f"Feedback requested at cell {state}. Look clearly in the desired "
+                f"direction until you hear the confirmation sound. Missing gaze "
+                f"samples are ignored. Time remaining: {self._remaining_seconds} s"
+            )
+            self._set_controls(False)
+            self._gaze_recognizer.set_context(GAZE_CONTEXT_DIRECTION)
         else:
             self._feedback_message.setText(
                 (
@@ -878,6 +1014,7 @@ class ParticipantWindow(QWidget):
             self._clear_history_buttons()
             self._history_box.setVisible(False)
             self._maze.clear_history()
+            self._set_gaze_preview_active(False)
 
             if self._live_state_payload is not None:
                 self._maze.set_state(
@@ -894,6 +1031,16 @@ class ParticipantWindow(QWidget):
                     f"applied to step {payload.get('step')} "
                     f"({payload.get('steps_back', 0)} step(s) back). "
                     'Training resumed. Say "STOP" when you want to provide '
+                    "another correction."
+                )
+            elif self._is_gaze_modality():
+                self._pause_feedback_btn.setEnabled(False)
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_DOUBLE_BLINK)
+                self._feedback_message.setText(
+                    f"Feedback {payload.get('action_name')} "
+                    f"applied to step {payload.get('step')} "
+                    f"({payload.get('steps_back', 0)} step(s) back). "
+                    "Training resumed. BLINK TWICE when you want to provide "
                     "another correction."
                 )
             else:
@@ -913,6 +1060,7 @@ class ParticipantWindow(QWidget):
             "requested"
         ):
 
+            self._set_gaze_preview_active(False)
             self._waiting_for_feedback = (
                 False
             )
@@ -920,6 +1068,8 @@ class ParticipantWindow(QWidget):
             self._countdown.stop()
             if self._feedback_modality == Modality.VOICE:
                 self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
+            elif self._is_gaze_modality():
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_IDLE)
 
             if payload.get(
                 "skipped"
@@ -951,6 +1101,359 @@ class ParticipantWindow(QWidget):
                 self._set_controls(
                     False
                 )
+
+    # --------------------------------------------------
+    # Live HoloLens camera + gaze preview
+    # --------------------------------------------------
+
+    def _set_gaze_preview_active(self, active: bool) -> None:
+        """Show/refresh the preview only during an Eye Gaze feedback interaction."""
+        active = bool(active and self._is_gaze_modality())
+        self._gaze_preview_box.setVisible(active)
+
+        if active:
+            self._gaze_preview_smoothed = None
+            self._refresh_gaze_preview()
+            self._gaze_preview_timer.start()
+        else:
+            self._gaze_preview_timer.stop()
+            self._gaze_preview_smoothed = None
+            self._gaze_preview_last_pixmap = None
+            self._gaze_preview_camera.clear()
+            self._gaze_preview_camera.setText(
+                "Camera preview activates during Eye Gaze feedback."
+            )
+            self._gaze_preview_status.setText("Preview inactive")
+            self._gaze_direction_debug.setText(
+                "Direction debug: waiting for gaze direction recognition…"
+            )
+
+    def _refresh_gaze_preview(self) -> None:
+        if not self._gaze_preview_box.isVisible():
+            self._gaze_preview_timer.stop()
+            return
+
+        dm = self._controller.device_manager
+        try:
+            snapshot = dm.hololens_latest_camera_gaze_snapshot(distance_m=1.5)
+        except Exception as exc:
+            self._gaze_preview_camera.setText(
+                f"HoloLens preview unavailable: {exc}"
+            )
+            self._gaze_preview_status.setText(
+                "Check that the HoloLens is connected and receiving PV + EET data."
+            )
+            return
+
+        frame = snapshot.get("frame")
+        overlay = snapshot.get("gaze_overlay") or {}
+
+        if frame is not None:
+            try:
+                if len(frame.shape) == 3 and frame.shape[2] == 3:
+                    h, w, _ = frame.shape
+                    image = QImage(
+                        frame.data,
+                        w,
+                        h,
+                        int(frame.strides[0]),
+                        QImage.Format.Format_BGR888,
+                    ).copy()
+                elif len(frame.shape) == 2:
+                    h, w = frame.shape
+                    image = QImage(
+                        frame.data,
+                        w,
+                        h,
+                        int(frame.strides[0]),
+                        QImage.Format.Format_Grayscale8,
+                    ).copy()
+                else:
+                    image = QImage()
+
+                if not image.isNull():
+                    pixmap = QPixmap.fromImage(image)
+                    self._draw_gaze_preview_overlay(pixmap, overlay)
+                    self._gaze_preview_last_pixmap = pixmap
+                    self._apply_gaze_preview_pixmap()
+            except Exception as exc:
+                self._gaze_preview_camera.setText(
+                    f"Could not render HoloLens camera frame: {exc}"
+                )
+        elif self._gaze_preview_last_pixmap is None:
+            self._gaze_preview_camera.setText(
+                "Waiting for the first HoloLens PV camera frame…"
+            )
+
+        try:
+            stats = dm.hololens_stats()
+        except Exception:
+            stats = {}
+        eye = stats.get("latest_eye") or snapshot.get("eye") or {}
+        calibration_valid = bool(eye.get("calibration_valid", False))
+        camera_age = stats.get("last_camera_age_s")
+        eye_age = stats.get("last_eye_age_s")
+
+        if overlay.get("valid", False):
+            visibility = (
+                "gaze cursor visible"
+                if overlay.get("in_frame", False)
+                else "gaze is outside camera view"
+            )
+        else:
+            visibility = "gaze cursor unavailable"
+
+        camera_age_text = (
+            "—" if camera_age is None else f"{float(camera_age):.2f}s"
+        )
+        eye_age_text = (
+            "—" if eye_age is None else f"{float(eye_age):.2f}s"
+        )
+        calibration_text = "VALID" if calibration_valid else "NOT VALID"
+        self._gaze_preview_status.setText(
+            f"Eye calibration: {calibration_text} | {visibility} | "
+            f"PV age: {camera_age_text} | EET age: {eye_age_text}"
+        )
+        self._gaze_preview_status.setStyleSheet(
+            "font-size: 11px; font-weight: bold; color: #2e7d32;"
+            if calibration_valid
+            else "font-size: 11px; font-weight: bold; color: #c0392b;"
+        )
+
+    def _draw_gaze_preview_overlay(self, pixmap: QPixmap, overlay: dict) -> None:
+        if not overlay.get("valid", False) or not overlay.get("in_frame", False):
+            self._gaze_preview_smoothed = None
+            return
+
+        pixel = overlay.get("pixel")
+        if not pixel:
+            self._gaze_preview_smoothed = None
+            return
+
+        x, y = float(pixel[0]), float(pixel[1])
+        if self._gaze_preview_smoothed is None:
+            sx, sy = x, y
+        else:
+            alpha = 0.42
+            sx = alpha * x + (1.0 - alpha) * self._gaze_preview_smoothed[0]
+            sy = alpha * y + (1.0 - alpha) * self._gaze_preview_smoothed[1]
+        self._gaze_preview_smoothed = (sx, sy)
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        radius = max(10.0, min(pixmap.width(), pixmap.height()) * 0.018)
+        painter.setPen(QPen(QColor("#00e5ff"), 4.0))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(
+            int(sx - radius),
+            int(sy - radius),
+            int(radius * 2),
+            int(radius * 2),
+        )
+        painter.setPen(QPen(QColor("white"), 2.0))
+        cross = radius * 0.55
+        painter.drawLine(int(sx - cross), int(sy), int(sx + cross), int(sy))
+        painter.drawLine(int(sx), int(sy - cross), int(sx), int(sy + cross))
+        painter.end()
+
+    def _apply_gaze_preview_pixmap(self) -> None:
+        if self._gaze_preview_last_pixmap is None:
+            return
+        self._gaze_preview_camera.setPixmap(
+            self._gaze_preview_last_pixmap.scaled(
+                self._gaze_preview_camera.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    # --------------------------------------------------
+    # Eye-gaze feedback
+    # --------------------------------------------------
+
+    def _is_gaze_modality(self) -> bool:
+        # IMPLICIT is accepted for backward compatibility with v1.1.5 data,
+        # while new Study 2 runs use the explicit Eye Gaze label.
+        return self._feedback_modality in (Modality.EYE_GAZE, Modality.IMPLICIT)
+
+    def _publish_gaze_event(self, event_type: EventType, payload: dict) -> None:
+        trial = self._controller.active_trial
+        if trial is None:
+            return
+        value = ";".join(
+            f"{key}={value}" for key, value in payload.items()
+            if value is not None
+        )
+        self._controller.event_bus.publish(
+            StudyEvent(
+                event_type=event_type,
+                participant_id=trial.participant_code,
+                session_id=trial.session_id,
+                trial_id=trial.trial_id,
+                value=value,
+            )
+        )
+
+    def _on_gaze_direction_debug(self, payload: dict) -> None:
+        """Persist and display detailed gaze-direction troubleshooting data."""
+        if not self._is_gaze_modality():
+            return
+        self._publish_gaze_event(EventType.GAZE_DIRECTION_DEBUG, payload)
+
+        status = str(payload.get("status", ""))
+        reason = str(payload.get("reason", ""))
+        if status == "stale":
+            age = payload.get("sample_age_seconds")
+            age_text = "?" if age is None else f"{float(age):.2f}s"
+            self._gaze_direction_debug.setText(
+                f"Direction debug: STALE EET ({reason}); last fresh sample age={age_text}"
+            )
+            return
+        if status == "invalid":
+            self._gaze_direction_debug.setText(
+                "Direction debug: INVALID — " + reason +
+                f" | combined={int(bool(payload.get('combined_valid', False)))}" +
+                f" left={int(bool(payload.get('left_valid', False)))}" +
+                f" right={int(bool(payload.get('right_valid', False)))}"
+            )
+            return
+
+        instant = str(payload.get("instant_direction", "—")).upper()
+        rolling = str(payload.get("rolling_direction", "—")).upper()
+        dh = payload.get("delta_horizontal_deg")
+        dv = payload.get("delta_vertical_deg")
+        samples = int(payload.get("valid_samples", 0) or 0)
+        required = int(payload.get("required_samples", 0) or 0)
+        confidence = payload.get("rolling_confidence")
+        margin = payload.get("rolling_margin")
+        dh_text = "—" if dh is None else f"{float(dh):+.1f}°"
+        dv_text = "—" if dv is None else f"{float(dv):+.1f}°"
+        conf_text = "—" if confidence is None else f"{100.0*float(confidence):.0f}%"
+        margin_text = "—" if margin is None else f"{100.0*float(margin):.0f}%"
+        probs = []
+        for key, label in (("prob_left", "L"), ("prob_right", "R"),
+                           ("prob_up", "U"), ("prob_down", "D"),
+                           ("prob_center", "C")):
+            value = payload.get(key)
+            if value is not None:
+                probs.append(f"{label}:{100.0*float(value):.0f}%")
+        prob_text = " ".join(probs) if probs else "no rolling probabilities yet"
+        self._gaze_direction_debug.setText(
+            f"Direction debug: Δyaw={dh_text} Δpitch={dv_text} | "
+            f"instant={instant} | rolling={rolling} confidence={conf_text} "
+            f"margin={margin_text} | samples={samples}/{required} | {prob_text}"
+        )
+
+    def _on_gaze_gesture(self, payload: dict) -> None:
+        if not self._is_gaze_modality():
+            return
+        self._publish_gaze_event(EventType.GAZE_GESTURE, payload)
+
+        context = str(payload.get("context", ""))
+        gesture = str(payload.get("gesture", ""))
+        count = payload.get("count")
+        if context == GAZE_CONTEXT_DOUBLE_BLINK and gesture == "blink":
+            self._feedback_message.setText(
+                f"Pause gesture: blink {count}/2 detected."
+            )
+        elif context == GAZE_CONTEXT_BLINK_COUNT and gesture == "blink":
+            self._feedback_message.setText(
+                f"State selection: {count} blink(s) detected. Keep blinking until "
+                "you reach the desired box number, then keep your eyes open."
+            )
+        elif context == GAZE_CONTEXT_DIRECTION and gesture == "direction_window_update":
+            direction = str(payload.get("direction", "")).upper()
+            confidence = 100.0 * float(payload.get("confidence", 0.0))
+            samples = int(payload.get("valid_samples", 0))
+            required = int(payload.get("required_samples", 1))
+            self._feedback_message.setText(
+                f"Gaze evidence: {direction} {confidence:.0f}% "
+                f"({samples}/{required} valid samples minimum). "
+                "Keep looking clearly in the intended direction until you hear the beep."
+            )
+
+    def _play_gaze_direction_confirmation(self) -> None:
+        """Play a short acknowledgement when a gaze direction is accepted."""
+        try:
+            import winsound
+
+            # Short high tone: easy to distinguish from spoken study prompts and
+            # does not require shipping an external audio asset.
+            winsound.Beep(1200, 120)
+            return
+        except Exception:
+            pass
+        try:
+            QApplication.beep()
+        except Exception:
+            pass
+
+    def _on_gaze_command(self, payload: dict) -> None:
+        if not self._is_gaze_modality():
+            return
+        self._publish_gaze_event(EventType.GAZE_COMMAND, payload)
+
+        context = str(payload.get("context", ""))
+        command = str(payload.get("command", ""))
+
+        if context == GAZE_CONTEXT_DOUBLE_BLINK and command == "pause":
+            if not self._begin_anytime_feedback():
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_DOUBLE_BLINK)
+            return
+
+        if context == GAZE_CONTEXT_LONG_CLOSE and command == "begin_blink_count":
+            max_box = max(1, len(self._anytime_history))
+            self._feedback_message.setText(
+                "Eye-close confirmed. Now BLINK N TIMES for box N "
+                f"(1 to {max_box}); then keep your eyes open for about 1 second."
+            )
+            self._gaze_recognizer.set_context(GAZE_CONTEXT_BLINK_COUNT)
+            return
+
+        if context == GAZE_CONTEXT_BLINK_COUNT:
+            try:
+                box_number = int(command)
+            except ValueError:
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_BLINK_COUNT)
+                return
+            selected = next(
+                (
+                    item for item in self._anytime_history
+                    if int(item.get("history_index", -1)) == box_number
+                ),
+                None,
+            )
+            if selected is None:
+                max_box = max(1, len(self._anytime_history))
+                self._feedback_message.setText(
+                    f"{box_number} blinks does not match an available box. "
+                    f"Blink a new count from 1 to {max_box}."
+                )
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_BLINK_COUNT)
+                return
+            self._select_history_state(selected)
+            return
+
+        if context == GAZE_CONTEXT_DIRECTION:
+            action_map = {
+                "up": 0,
+                "down": 1,
+                "left": 2,
+                "right": 3,
+            }
+            action = action_map.get(command)
+            if action is None:
+                self._gaze_recognizer.set_context(GAZE_CONTEXT_DIRECTION)
+                return
+            self._play_gaze_direction_confirmation()
+            self._feedback_message.setText(
+                f"{command.upper()} detected. Applying feedback."
+            )
+            self._send_action(action, modality=Modality.EYE_GAZE)
+
+    def _on_gaze_error(self, message: str) -> None:
+        if self._is_gaze_modality():
+            self._feedback_message.setText(message)
 
     # --------------------------------------------------
     # Voice feedback
@@ -1060,6 +1563,8 @@ class ParticipantWindow(QWidget):
 
             self._countdown.stop()
             self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
+            self._gaze_recognizer.set_context(GAZE_CONTEXT_IDLE)
+            self._set_gaze_preview_active(False)
             self._anytime_feedback_active = False
             self._selected_history_step = None
             self._anytime_history = []
@@ -1182,9 +1687,9 @@ class ParticipantWindow(QWidget):
             button.setFocusPolicy(
                 Qt.FocusPolicy.NoFocus
             )
-            if self._feedback_modality == Modality.VOICE:
-                # Voice trials show the numbered boxes as visual references,
-                # but selection itself must be spoken rather than clicked.
+            if self._feedback_modality == Modality.VOICE or self._is_gaze_modality():
+                # Voice/gaze trials show numbered boxes as visual references,
+                # but selection itself must use the assigned modality.
                 button.setEnabled(False)
 
             button.clicked.connect(
@@ -1266,6 +1771,15 @@ class ParticipantWindow(QWidget):
                 "Now say UP, DOWN, LEFT, or RIGHT."
             )
             self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+        elif self._is_gaze_modality():
+            self._set_controls(False)
+            self._feedback_message.setText(
+                f"Selected box {item.get('history_index', '?')} — step "
+                f"{item['step']} at cell {tuple(item['state'])}. "
+                "Now look clearly in the corrective direction until "
+                "you hear the confirmation sound. Missing gaze samples are ignored."
+            )
+            self._gaze_recognizer.set_context(GAZE_CONTEXT_DIRECTION)
         else:
             self._set_controls(True)
             self._feedback_message.setText(
@@ -1327,6 +1841,12 @@ class ParticipantWindow(QWidget):
                 "Feedback requested. Say UP, DOWN, LEFT, or RIGHT. "
                 f"Time remaining: {self._remaining_seconds} s"
             )
+        elif self._is_gaze_modality():
+            self._feedback_message.setText(
+                "Feedback requested. Look normally at the agent/maze for the center sample, "
+                "then look clearly in the desired direction until you hear the beep. "
+                f"Time remaining: {self._remaining_seconds} s"
+            )
         else:
             self._feedback_message.setText(
                 (
@@ -1347,14 +1867,18 @@ class ParticipantWindow(QWidget):
     # Keyboard feedback
     # --------------------------------------------------
 
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._apply_gaze_preview_pixmap()
+
     def keyPressEvent(
         self,
         event: QKeyEvent,
     ) -> None:
 
-        if self._feedback_modality == Modality.VOICE:
-            # Do not silently turn keyboard presses into Voice observations.
-            # The Voice condition is controlled only by recognized speech.
+        if self._feedback_modality == Modality.VOICE or self._is_gaze_modality():
+            # Do not silently turn keyboard presses into Voice/Eye-Gaze observations.
+            # These conditions are controlled only by their assigned modality.
             if event.key() in (
                 Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Left, Qt.Key.Key_Right,
                 Qt.Key.Key_W, Qt.Key.Key_A, Qt.Key.Key_S, Qt.Key.Key_D,

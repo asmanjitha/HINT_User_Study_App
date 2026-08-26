@@ -506,6 +506,20 @@ class Study1StepPanel(QWidget):
             if answer != QMessageBox.StandardButton.Yes:
                 return
 
+        if modality == Modality.EYE_GAZE:
+            ok, message = self._controller.device_manager.check_hololens()
+            eye = self._controller.device_manager.hololens_latest_eye_data()
+            calibrated = bool(eye.get("calibration_valid", False))
+            if not ok or not calibrated:
+                QMessageBox.warning(
+                    self,
+                    "HoloLens eye gaze unavailable",
+                    "Eye Gaze training needs a connected HoloLens 2 with fresh "
+                    "Extended Eye Tracking data and valid eye calibration.\n\n"
+                    f"{message}\n\nCalibrate eye tracking on the headset, then try again.",
+                )
+                return
+
         if not self._controller.device_manager.all_connected():
             answer = QMessageBox.question(
                 self,

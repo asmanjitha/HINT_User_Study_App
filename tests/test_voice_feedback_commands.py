@@ -76,14 +76,16 @@ def test_requested_feedback_collision_resets_and_restarts_agent(tmp_path) -> Non
     from models.trial import ExperimentCondition, Trial
     from rl.actor_critic_gridworld.experiment import ActorCriticGridworldExperiment
 
-    # Training/study panels and Keyboard/Voice all route through this same
-    # experiment path. Exercise both study identities and both modalities so
-    # the shared regression cannot silently reappear in one condition.
+    # Training/study panels and Keyboard/Voice/Eye-Gaze all route through this
+    # same experiment path. Exercise both study identities so the shared reset
+    # regression cannot silently reappear in one multimodal condition.
     cases = [
         (Study.STUDY_1, Modality.KEYBOARD),
         (Study.STUDY_1, Modality.VOICE),
+        (Study.STUDY_1, Modality.EYE_GAZE),
         (Study.STUDY_2, Modality.KEYBOARD),
         (Study.STUDY_2, Modality.VOICE),
+        (Study.STUDY_2, Modality.EYE_GAZE),
     ]
 
     for case_index, (study, modality) in enumerate(cases):
