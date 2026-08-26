@@ -1,917 +1,451 @@
-2026-08-26 12:10:45 [DEBUG] core.logging_setup: Logging configured from D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.4_voice_feedback\hint_study_console_v1.1.4_voice_feedback\config\logging.yaml
-2026-08-26 12:10:45 [INFO] core.application_controller: Starting HINT Study Console v1.1.4 (mode=DEVELOPMENT)
-2026-08-26 12:10:45 [DEBUG] core.database: Database schema ready (identifiable=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.4_voice_feedback\hint_study_console_v1.1.4_voice_feedback\data\identifiable.sqlite3, experimental=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.4_voice_feedback\hint_study_console_v1.1.4_voice_feedback\data\experimental.sqlite3)
-2026-08-26 12:10:45 [INFO] core.event_bus: EVENT APP_STARTED participant=None session=None trial=None value=None
-2026-08-26 12:10:45 [DEBUG] urllib3.connectionpool: Starting new HTTPS connection (1): alphacephei.com:443
-2026-08-26 12:10:46 [DEBUG] urllib3.connectionpool: https://alphacephei.com:443 "GET /vosk/models/model-list.json HTTP/1.1" 200 None
-2026-08-26 12:11:30 [INFO] devices.device_manager: Device Microphone -> Connecting
-2026-08-26 12:11:30 [INFO] devices.device_manager: Device Microphone -> Connected
-2026-08-26 12:11:30 [INFO] core.event_bus: EVENT DEVICE_CONNECTED participant=None session=None trial=None value=Microphone
-2026-08-26 12:11:30 [INFO] devices.device_manager: Device Microphone -> Receiving Data
-2026-08-26 12:11:46 [INFO] core.participant_manager: Created participant P001
-2026-08-26 12:11:56 [INFO] core.session_manager: Created participant session P001_S01 for P001
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT SESSION_CREATED participant=P001 session=P001_S01 trial=None value=None
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT SESSION_STARTED participant=P001 session=P001_S01 trial=None value=None
-2026-08-26 12:11:56 [INFO] core.workflow_manager: Started run P001_S1TR_R01 (Study 1 - Training) for P001
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=practice; TR01/R01; Gridworld_Requested_Keyboard
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=TR01/R01
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
-2026-08-26 12:11:56 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 0)
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.0
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 3)
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, -1)
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, -1)
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
-2026-08-26 12:11:57 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, -1)
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.5
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, -1)
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 2)
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
-2026-08-26 12:11:58 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:59 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 2)
-2026-08-26 12:11:59 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-59.0
-2026-08-26 12:11:59 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:11:59 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 2)
-2026-08-26 12:11:59 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.0
-2026-08-26 12:11:59 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:00 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 0)
-2026-08-26 12:12:00 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
-2026-08-26 12:12:00 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:00 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:12:00 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, 2)
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-55.5
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(2, -1)
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.0
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(2, -1)
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.0
-2026-08-26 12:12:02 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(5, 0)
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 1)
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, -1)
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, -1)
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
-2026-08-26 12:12:03 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 0)
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
-2026-08-26 12:12:04 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Valid; TR01/R01
-2026-08-26 12:12:04 [INFO] core.workflow_manager: Ended run P001_S1TR_R01 -> Completed
-2026-08-26 12:12:09 [INFO] core.workflow_manager: Started run P001_S1TR_R02 (Study 1 - Training) for P001
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=practice; TR02/R01; Gridworld_Requested_Joystick
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=TR02/R01
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 0)
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.0
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 3)
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
-2026-08-26 12:12:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, -1)
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, -1)
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, -1)
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.5
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, -1)
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
-2026-08-26 12:12:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:11 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 3)
-2026-08-26 12:12:11 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
-2026-08-26 12:12:11 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:11 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, 2)
-2026-08-26 12:12:11 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.0
-2026-08-26 12:12:11 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-59.0
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.0
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 0)
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.0
-2026-08-26 12:12:12 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:13 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:12:13 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Keyboard:RIGHT
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Keyboard:RIGHT
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 3)
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.5
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(2, -1)
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.0
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(2, -1)
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.0
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(5, 0)
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.0
-2026-08-26 12:12:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 1)
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, -1)
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, -1)
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.5
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 0)
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
-2026-08-26 12:12:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:16 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(2, -1)
-2026-08-26 12:12:16 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.0
-2026-08-26 12:12:16 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:16 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
-2026-08-26 12:12:16 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Valid; TR02/R01
-2026-08-26 12:12:16 [INFO] core.workflow_manager: Ended run P001_S1TR_R02 -> Completed
-2026-08-26 12:12:21 [INFO] core.workflow_manager: Started run P001_S1TR_R03 (Study 1 - Training) for P001
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=practice; TR03/R01; Gridworld_Requested_Voice
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=TR03/R01
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 1)
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.5
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(-1, 0)
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-52.0
-2026-08-26 12:12:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(-1, 3)
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-51.5
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, -1)
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.0
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 1)
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.5
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, -1)
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.0
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, -1)
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-54.5
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, -1)
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.0
-2026-08-26 12:12:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 1)
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.5
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 3)
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-51.5
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(3, 2)
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-54.0
-2026-08-26 12:12:23 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 2)
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-59.0
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 2)
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-51.0
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(-1, 0)
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-54.0
-2026-08-26 12:12:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:25 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:12:25 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, 2)
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;transcript=left;parsed=left
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;command=left;transcript=left
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:LEFT
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:LEFT
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(-1, 1)
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-56.5
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(2, -1)
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-51.0
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(2, -1)
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-51.0
-2026-08-26 12:12:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(5, 0)
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-54.0
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(3, -1)
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-53.5
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, -1)
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.5
-2026-08-26 12:12:28 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 1)
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-52.5
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(-1, 0)
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-50.0
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(2, -1)
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-55.0
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(3, -1)
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-51.5
-2026-08-26 12:12:29 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:30 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 1)
-2026-08-26 12:12:30 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-52.5
-2026-08-26 12:12:30 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:30 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:12:30 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, 2)
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;transcript=left;parsed=left
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;command=left;transcript=left
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:LEFT
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:LEFT
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(-1, 1)
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-58.5
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:12:32 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, 2)
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;transcript=down;parsed=down
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;command=down;transcript=down
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 2)
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:DOWN
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:DOWN
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-55.0
-2026-08-26 12:12:35 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:13:05 [INFO] core.event_bus: EVENT TRIAL_RESUMED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:13:06 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:13:06 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(0, 2)
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;transcript=down;parsed=down
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=context=direction;command=down;transcript=down
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=(1, 2)
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:DOWN
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Voice:DOWN
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=reward=-55.0
-2026-08-26 12:13:08 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:13:11 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=None
-2026-08-26 12:13:11 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R01 value=Aborted; TR03/R01
-2026-08-26 12:13:11 [INFO] core.workflow_manager: Ended run P001_S1TR_R03 -> Aborted
-2026-08-26 12:13:18 [INFO] core.workflow_manager: Started run P001_S1TR_R04 (Study 1 - Training) for P001
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=practice; TR03/R02; Gridworld_Requested_Voice
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=TR03/R02
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 1)
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.5
-2026-08-26 12:13:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 0)
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-52.0
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 3)
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-51.5
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, -1)
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.0
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 1)
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.5
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, -1)
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.0
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, -1)
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-54.5
-2026-08-26 12:13:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, -1)
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.0
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 1)
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.5
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 3)
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-51.5
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(3, 2)
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-54.0
-2026-08-26 12:13:20 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 2)
-2026-08-26 12:13:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-59.0
-2026-08-26 12:13:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 2)
-2026-08-26 12:13:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-51.0
-2026-08-26 12:13:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 0)
-2026-08-26 12:13:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-54.0
-2026-08-26 12:13:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:22 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:13:22 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, 2)
-2026-08-26 12:13:23 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;transcript=left;parsed=left
-2026-08-26 12:13:23 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;command=left;transcript=left
-2026-08-26 12:13:23 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:23 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 1)
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-56.5
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(2, -1)
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-51.0
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(2, -1)
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-51.0
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(5, 0)
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-54.0
-2026-08-26 12:13:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(3, -1)
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-53.5
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, -1)
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.5
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 1)
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-52.5
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 0)
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.0
-2026-08-26 12:13:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(2, -1)
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-55.0
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(3, -1)
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-51.5
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, 1)
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-52.5
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:13:26 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, 2)
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;transcript=left;parsed=left
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;command=left;transcript=left
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 1)
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-58.5
-2026-08-26 12:13:28 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:29 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:13:29 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, 2)
-2026-08-26 12:13:31 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;transcript=left;parsed=left
-2026-08-26 12:13:31 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;command=left;transcript=left
-2026-08-26 12:13:31 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:31 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:32 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:13:32 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, 2)
-2026-08-26 12:13:34 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;transcript=left;parsed=left
-2026-08-26 12:13:34 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;command=left;transcript=left
-2026-08-26 12:13:34 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:34 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:LEFT
-2026-08-26 12:13:35 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(3, -1)
-2026-08-26 12:13:35 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-75.5
-2026-08-26 12:13:35 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(1, -1)
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-50.5
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(3, 1)
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-53.5
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(4, -1)
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-52.0
-2026-08-26 12:13:36 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:13:37 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:13:37 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, 2)
-2026-08-26 12:13:40 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;transcript=right;parsed=right
-2026-08-26 12:13:40 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;command=right;transcript=right
-2026-08-26 12:13:40 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:RIGHT
-2026-08-26 12:13:40 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:RIGHT
-2026-08-26 12:13:41 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=state=(0, 1);method=oscillation_pattern
-2026-08-26 12:13:41 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(0, 1)
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;transcript=up;parsed=up
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=context=direction;command=up;transcript=up
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=(-1, 1)
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:UP
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Voice:UP
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=reward=-64.5
-2026-08-26 12:13:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:14:12 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=None
-2026-08-26 12:14:12 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R02 value=Aborted; TR03/R02
-2026-08-26 12:14:13 [INFO] core.workflow_manager: Ended run P001_S1TR_R04 -> Aborted
-2026-08-26 12:14:26 [INFO] core.workflow_manager: Started run P001_S1TR_R05 (Study 1 - Training) for P001
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=practice; TR01/R02; Gridworld_Requested_Keyboard
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=TR01/R02
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 1)
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.5
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 0)
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-52.0
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 3)
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.5
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(0, -1)
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.0
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 1)
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.5
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(0, -1)
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.0
-2026-08-26 12:14:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, -1)
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.5
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(0, -1)
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.0
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 1)
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.5
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 3)
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.5
-2026-08-26 12:14:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:28 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, 2)
-2026-08-26 12:14:28 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.0
-2026-08-26 12:14:28 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:28 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 2)
-2026-08-26 12:14:28 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-59.0
-2026-08-26 12:14:28 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 2)
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.0
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 0)
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.0
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:14:29 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(0, 2)
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Keyboard:RIGHT
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Keyboard:RIGHT
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 3)
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-55.5
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(2, -1)
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.0
-2026-08-26 12:14:31 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(2, -1)
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.0
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(5, 0)
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.0
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 1)
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.5
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, -1)
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.5
-2026-08-26 12:14:32 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, -1)
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.5
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 1)
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-52.5
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 0)
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.0
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(2, -1)
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-55.0
-2026-08-26 12:14:33 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, -1)
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.5
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 1)
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-52.5
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 4)
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.0
-2026-08-26 12:14:34 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:35 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=state=(0, 3);method=oscillation_pattern
-2026-08-26 12:14:35 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(0, 3)
-2026-08-26 12:14:36 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Keyboard:RIGHT
-2026-08-26 12:14:36 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Keyboard:RIGHT
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 4)
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-64.0
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, -1)
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-59.5
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, -1)
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-50.5
-2026-08-26 12:14:37 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:38 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, 1)
-2026-08-26 12:14:38 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-53.5
-2026-08-26 12:14:38 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:38 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(4, -1)
-2026-08-26 12:14:38 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-52.0
-2026-08-26 12:14:38 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 4)
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.0
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 1)
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-53.5
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, 1)
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-53.5
-2026-08-26 12:14:39 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:40 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(-1, 5)
-2026-08-26 12:14:40 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.5
-2026-08-26 12:14:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:40 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(2, 4)
-2026-08-26 12:14:40 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-52.5
-2026-08-26 12:14:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(0, 6)
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-54.5
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, 1)
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-53.5
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, 1)
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-51.5
-2026-08-26 12:14:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:42 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(1, 2)
-2026-08-26 12:14:42 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-52.0
-2026-08-26 12:14:42 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:42 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=state=(4, 1);method=oscillation_pattern
-2026-08-26 12:14:42 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(4, 1)
-2026-08-26 12:14:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=(3, 1)
-2026-08-26 12:14:44 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Keyboard:UP
-2026-08-26 12:14:44 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Keyboard:UP
-2026-08-26 12:14:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=reward=-58.5
-2026-08-26 12:14:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:51 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=None
-2026-08-26 12:14:51 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R02 value=Valid; TR01/R02
-2026-08-26 12:14:51 [INFO] core.workflow_manager: Ended run P001_S1TR_R05 -> Completed
-2026-08-26 12:15:05 [INFO] core.workflow_manager: Started run P001_S1TR_R06 (Study 1 - Training) for P001
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=practice; TR03/R03; Gridworld_Requested_Voice
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=TR03/R03
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(1, 1)
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-50.5
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(-1, 0)
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-52.0
-2026-08-26 12:15:05 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(-1, 3)
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-51.5
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(0, -1)
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-50.0
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(1, 1)
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-50.5
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(0, -1)
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-50.0
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(1, -1)
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-54.5
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=(0, -1)
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=reward=-50.0
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=None
-2026-08-26 12:15:06 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR03_R03 value=Valid; TR03/R03
-2026-08-26 12:15:06 [INFO] core.workflow_manager: Ended run P001_S1TR_R06 -> Completed
-2026-08-26 12:15:09 [INFO] core.workflow_manager: Started run P001_S1TR_R07 (Study 1 - Training) for P001
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=practice; TR04/R01; Gridworld_Requested_Gaze
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=TR04/R01
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(1, 1)
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-50.5
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(-1, 0)
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-52.0
-2026-08-26 12:15:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(-1, 3)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-51.5
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(0, -1)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-50.0
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(1, 1)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-50.5
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(0, -1)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-50.0
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(1, -1)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-54.5
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(0, -1)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-50.0
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=(1, 1)
-2026-08-26 12:15:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=reward=-50.5
-2026-08-26 12:15:11 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:11 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=None
-2026-08-26 12:15:11 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR04_R01 value=Valid; TR04/R01
-2026-08-26 12:15:11 [INFO] core.workflow_manager: Ended run P001_S1TR_R07 -> Completed
-2026-08-26 12:15:13 [INFO] core.workflow_manager: Started run P001_S1TR_R08 (Study 1 - Training) for P001
-2026-08-26 12:15:13 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=practice; TR05/R01; Gridworld_Anytime_Keyboard
-2026-08-26 12:15:13 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=TR05/R01
-2026-08-26 12:15:13 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:13 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:13 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(1, 1)
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-50.5
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(-1, 0)
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-52.0
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(-1, 3)
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-51.5
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(0, -1)
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-50.0
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(1, 1)
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-50.5
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(0, -1)
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-50.0
-2026-08-26 12:15:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(1, -1)
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-54.5
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(0, -1)
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-50.0
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=(1, 1)
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=reward=-50.5
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=None
-2026-08-26 12:15:15 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR05_R01 value=Valid; TR05/R01
-2026-08-26 12:15:15 [INFO] core.workflow_manager: Ended run P001_S1TR_R08 -> Completed
-2026-08-26 12:15:17 [INFO] core.workflow_manager: Started run P001_S1TR_R09 (Study 1 - Training) for P001
-2026-08-26 12:15:17 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=practice; TR06/R01; Gridworld_Anytime_Joystick
-2026-08-26 12:15:17 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=TR06/R01
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, 1)
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-50.5
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(-1, 0)
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-52.0
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(-1, 3)
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-51.5
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(0, -1)
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-50.0
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, 1)
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-50.5
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(0, -1)
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-50.0
-2026-08-26 12:15:18 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, -1)
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-54.5
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(0, -1)
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-50.0
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, 1)
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-50.5
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, 3)
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-51.5
-2026-08-26 12:15:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:20 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(3, 2)
-2026-08-26 12:15:20 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-54.0
-2026-08-26 12:15:20 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, 2)
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-59.0
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(1, 2)
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-51.0
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(-1, 0)
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-54.0
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:21 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(-1, 2)
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-55.0
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=(2, -1)
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=reward=-51.0
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=None
-2026-08-26 12:15:22 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR06_R01 value=Valid; TR06/R01
-2026-08-26 12:15:22 [INFO] core.workflow_manager: Ended run P001_S1TR_R09 -> Completed
-2026-08-26 12:15:25 [INFO] core.workflow_manager: Started run P001_S1TR_R10 (Study 1 - Training) for P001
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=practice; TR07/R01; Gridworld_Anytime_Voice
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=TR07/R01
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(1, 1)
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-50.5
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(-1, 0)
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-52.0
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(-1, 3)
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-51.5
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(0, -1)
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-50.0
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(1, 1)
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-50.5
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(0, -1)
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-50.0
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(1, -1)
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-54.5
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:26 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(0, -1)
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-50.0
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(1, 1)
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-50.5
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=(1, 3)
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=reward=-51.5
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=None
-2026-08-26 12:15:27 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR07_R01 value=Valid; TR07/R01
-2026-08-26 12:15:27 [INFO] core.workflow_manager: Ended run P001_S1TR_R10 -> Completed
-2026-08-26 12:15:30 [INFO] core.workflow_manager: Started run P001_S1TR_R11 (Study 1 - Training) for P001
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=practice; TR08/R01; Gridworld_Anytime_Gaze
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=TR08/R01
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=(1, 1)
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=reward=-50.5
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=(-1, 0)
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=reward=-52.0
-2026-08-26 12:15:30 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=(-1, 3)
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=reward=-51.5
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=(0, -1)
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=reward=-50.0
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=(1, 1)
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=reward=-50.5
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=(0, -1)
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=reward=-50.0
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=None
-2026-08-26 12:15:31 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR08_R01 value=Valid; TR08/R01
-2026-08-26 12:15:31 [INFO] core.workflow_manager: Ended run P001_S1TR_R11 -> Completed
-2026-08-26 12:15:39 [INFO] core.workflow_manager: Started run P001_S1ST_R01 (Study 1 - Study) for P001
-2026-08-26 12:15:39 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=experimental; T01/R01; Gridworld_Requested_Keyboard
-2026-08-26 12:15:39 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=T01/R01
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
-2026-08-26 12:15:40 [WARNING] core.application_controller: Shimmer physiological recording NOT started: no fresh GSR/PPG stream was available when the experimental trial began. trial=P001_S01_ST1ST_T01_R01
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=Shimmer physiological recording NOT started: no fresh GSR/PPG stream was available when the experimental trial began.
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 1)
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.5
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(-1, 0)
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-52.0
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(-1, 3)
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.5
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(0, -1)
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.0
-2026-08-26 12:15:40 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 1)
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.5
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(0, -1)
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.0
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, -1)
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-54.5
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(0, -1)
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.0
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 1)
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.5
-2026-08-26 12:15:41 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:42 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 3)
-2026-08-26 12:15:42 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.5
-2026-08-26 12:15:42 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:42 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(3, 2)
-2026-08-26 12:15:42 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-54.0
-2026-08-26 12:15:42 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 2)
-2026-08-26 12:15:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-59.0
-2026-08-26 12:15:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 2)
-2026-08-26 12:15:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.0
-2026-08-26 12:15:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(-1, 0)
-2026-08-26 12:15:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-54.0
-2026-08-26 12:15:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:44 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=state=(0, 2);method=oscillation_pattern
-2026-08-26 12:15:44 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(0, 2)
-2026-08-26 12:15:45 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=Keyboard:RIGHT
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=Keyboard:RIGHT
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 3)
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-55.5
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(2, -1)
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.0
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(2, -1)
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.0
-2026-08-26 12:15:46 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(5, 0)
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-54.0
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(-1, 1)
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.5
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(3, -1)
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.5
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, -1)
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.5
-2026-08-26 12:15:47 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 1)
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-52.5
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(-1, 0)
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-50.0
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(2, -1)
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-55.0
-2026-08-26 12:15:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(3, -1)
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-51.5
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 1)
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-52.5
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 4)
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-54.0
-2026-08-26 12:15:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:15:50 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=state=(0, 3);method=oscillation_pattern
-2026-08-26 12:15:50 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(0, 3)
-2026-08-26 12:15:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=(1, 3)
-2026-08-26 12:15:51 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=Keyboard:DOWN
-2026-08-26 12:15:51 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=Keyboard:DOWN
-2026-08-26 12:15:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=reward=-57.5
-2026-08-26 12:15:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=None
-2026-08-26 12:16:04 [INFO] core.application_controller: Shutting down HINT Study Console
-2026-08-26 12:16:04 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1ST_T01_R01 value=Aborted; T01/R01
-2026-08-26 12:16:04 [INFO] devices.hololens_device: HoloLens disconnected.
-2026-08-26 12:16:04 [INFO] devices.device_manager: Device Microphone -> Disconnected
-2026-08-26 12:16:04 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=Microphone
+2026-08-26 12:22:30 [DEBUG] core.logging_setup: Logging configured from D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.5_requested_feedback_resume_fix\hint_study_console_v1.1.5_requested_feedback_resume_fix\config\logging.yaml
+2026-08-26 12:22:30 [INFO] core.application_controller: Starting HINT Study Console v1.1.5 (mode=DEVELOPMENT)
+2026-08-26 12:22:30 [DEBUG] core.database: Database schema ready (identifiable=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.5_requested_feedback_resume_fix\hint_study_console_v1.1.5_requested_feedback_resume_fix\data\identifiable.sqlite3, experimental=D:\Courses\Independent Study 2\User_Study\Desktop App\hint_study_console_v1.1.5_requested_feedback_resume_fix\hint_study_console_v1.1.5_requested_feedback_resume_fix\data\experimental.sqlite3)
+2026-08-26 12:22:30 [INFO] core.event_bus: EVENT APP_STARTED participant=None session=None trial=None value=None
+2026-08-26 12:22:41 [INFO] core.participant_manager: Created participant P001
+2026-08-26 12:22:48 [INFO] core.session_manager: Created participant session P001_S01 for P001
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT SESSION_CREATED participant=P001 session=P001_S01 trial=None value=None
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT SESSION_STARTED participant=P001 session=P001_S01 trial=None value=None
+2026-08-26 12:22:48 [INFO] core.workflow_manager: Started run P001_S1TR_R01 (Study 1 - Training) for P001
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=practice; TR01/R01; Gridworld_Requested_Keyboard
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=TR01/R01
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 0)
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.0
+2026-08-26 12:22:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 3)
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, -1)
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, -1)
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, -1)
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.5
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, -1)
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
+2026-08-26 12:22:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 2)
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
+2026-08-26 12:22:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 2)
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-59.0
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 2)
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.0
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 0)
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
+2026-08-26 12:22:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:52 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:22:52 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, 2)
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-55.5
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(2, -1)
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.0
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(2, -1)
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.0
+2026-08-26 12:22:53 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(5, 0)
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 1)
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, -1)
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, -1)
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:22:54 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 0)
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.0
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(2, -1)
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-55.0
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, -1)
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 1)
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:22:55 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:56 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 4)
+2026-08-26 12:22:56 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
+2026-08-26 12:22:56 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:56 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(0, 3);method=oscillation_pattern
+2026-08-26 12:22:56 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, 3)
+2026-08-26 12:22:57 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:22:57 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:DOWN
+2026-08-26 12:22:57 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:DOWN
+2026-08-26 12:22:57 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-57.5
+2026-08-26 12:22:57 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:58 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:22:58 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:22:58 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:22:58 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(2, 0);method=oscillation_pattern
+2026-08-26 12:22:58 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(2, 0)
+2026-08-26 12:23:02 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:DOWN
+2026-08-26 12:23:02 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:DOWN
+2026-08-26 12:23:02 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(5, 0)
+2026-08-26 12:23:02 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-62.0
+2026-08-26 12:23:02 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:03 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:23:03 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-53.5
+2026-08-26 12:23:03 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:03 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, -1)
+2026-08-26 12:23:03 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.0
+2026-08-26 12:23:03 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:04 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 1)
+2026-08-26 12:23:04 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-53.5
+2026-08-26 12:23:04 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:04 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 1)
+2026-08-26 12:23:04 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-56.5
+2026-08-26 12:23:04 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 1)
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-53.5
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.5
+2026-08-26 12:23:05 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:23:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:23:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(5, 0)
+2026-08-26 12:23:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
+2026-08-26 12:23:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, -1)
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-55.5
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 1)
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(4, 0);method=oscillation_pattern
+2026-08-26 12:23:07 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 0)
+2026-08-26 12:23:08 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
+2026-08-26 12:23:08 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(5, 2)
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-59.0
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(1, 3)
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-51.5
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 4)
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.0
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(-1, 1)
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-50.5
+2026-08-26 12:23:09 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, -1)
+2026-08-26 12:23:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-53.5
+2026-08-26 12:23:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(3, 1)
+2026-08-26 12:23:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:23:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:11 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(4, 1);method=oscillation_pattern
+2026-08-26 12:23:11 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 1)
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Keyboard:RIGHT
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-56.5
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:23:12 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:13 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:13 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.5
+2026-08-26 12:23:13 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:13 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:13 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:23:13 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-54.5
+2026-08-26 12:23:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:23:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(4, 2)
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=reward=-52.5
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=state=(0, 1);method=oscillation_pattern
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=(0, 1)
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=None
+2026-08-26 12:23:15 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR01_R01 value=Valid; TR01/R01
+2026-08-26 12:23:16 [INFO] core.workflow_manager: Ended run P001_S1TR_R01 -> Completed
+2026-08-26 12:23:31 [INFO] devices.device_manager: Device Microphone -> Connecting
+2026-08-26 12:23:31 [INFO] devices.device_manager: Device Microphone -> Connected
+2026-08-26 12:23:31 [INFO] core.event_bus: EVENT DEVICE_CONNECTED participant=None session=None trial=None value=Microphone
+2026-08-26 12:23:31 [INFO] devices.device_manager: Device Microphone -> Receiving Data
+2026-08-26 12:23:43 [INFO] core.workflow_manager: Started run P001_S1TR_R02 (Study 1 - Training) for P001
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT TRIAL_CREATED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=practice; TR02/R01; Gridworld_Requested_Voice
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT TRIAL_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=TR02/R01
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT PRACTICE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EXPERIMENTER_NOTE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=HoloLens recording NOT started: fresh PV + EET streams were not available when this activity began.
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 0)
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.0
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 3)
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, -1)
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
+2026-08-26 12:23:43 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, -1)
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, -1)
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.5
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, -1)
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 3)
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
+2026-08-26 12:23:44 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:45 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, 2)
+2026-08-26 12:23:45 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.0
+2026-08-26 12:23:45 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-59.0
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.0
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 0)
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.0
+2026-08-26 12:23:46 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:47 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:23:47 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=left;parsed=left
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=left;transcript=left
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 1)
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.5
+2026-08-26 12:23:48 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(2, -1)
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.0
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(2, -1)
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.0
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(5, 0)
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.0
+2026-08-26 12:23:49 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, -1)
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-53.5
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, -1)
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.5
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 0)
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.0
+2026-08-26 12:23:50 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(2, -1)
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.0
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, -1)
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.5
+2026-08-26 12:23:51 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:52 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:23:52 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=left;parsed=left
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=left;transcript=left
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 1)
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-58.5
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:23:54 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:23:56 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=left;parsed=left
+2026-08-26 12:23:56 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=left;transcript=left
+2026-08-26 12:23:56 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:56 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:57 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:23:57 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:23:58 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=left;parsed=left
+2026-08-26 12:23:58 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=left;transcript=left
+2026-08-26 12:23:58 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:58 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:23:59 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, -1)
+2026-08-26 12:23:59 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-75.5
+2026-08-26 12:23:59 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:23:59 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, -1)
+2026-08-26 12:23:59 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-50.5
+2026-08-26 12:23:59 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, 1)
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-53.5
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(4, -1)
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.0
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:00 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:02 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=left;parsed=left
+2026-08-26 12:24:02 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=left;transcript=left
+2026-08-26 12:24:02 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:24:02 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:LEFT
+2026-08-26 12:24:02 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:02 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=up;parsed=up
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=up;transcript=up
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 2)
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:UP
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:UP
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-63.0
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:04 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=down;parsed=down
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=down;transcript=down
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:DOWN
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:DOWN
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.0
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:06 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=down;parsed=down
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=down;transcript=down
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:DOWN
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:DOWN
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.0
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:08 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=right;parsed=right
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=right;transcript=right
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 6)
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.5
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.5
+2026-08-26 12:24:10 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:11 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:11 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=right;parsed=right
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=right;transcript=right
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 5)
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.5
+2026-08-26 12:24:13 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:14 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:24:14 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-57.5
+2026-08-26 12:24:14 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:14 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:14 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=right;parsed=right
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=right;transcript=right
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 4)
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.0
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(4, -1)
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.0
+2026-08-26 12:24:16 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:17 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:17 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=right;parsed=right
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=right;transcript=right
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(-1, 4)
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.0
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 2)
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.0
+2026-08-26 12:24:19 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:20 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, 1)
+2026-08-26 12:24:20 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
+2026-08-26 12:24:20 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:20 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 2);method=oscillation_pattern
+2026-08-26 12:24:20 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 2)
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=right;parsed=right
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=right;transcript=right
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 3)
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-63.5
+2026-08-26 12:24:22 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:23 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(3, 1)
+2026-08-26 12:24:23 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-51.5
+2026-08-26 12:24:23 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:23 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 1)
+2026-08-26 12:24:23 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.5
+2026-08-26 12:24:23 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(4, 2)
+2026-08-26 12:24:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-56.5
+2026-08-26 12:24:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:24 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(5, 0)
+2026-08-26 12:24:24 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-55.0
+2026-08-26 12:24:24 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(4, 2)
+2026-08-26 12:24:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-54.5
+2026-08-26 12:24:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:25 [INFO] core.event_bus: EVENT COLLISION participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(1, 4)
+2026-08-26 12:24:25 [INFO] core.event_bus: EVENT EPISODE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=reward=-52.0
+2026-08-26 12:24:25 [INFO] core.event_bus: EVENT EPISODE_STARTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:26 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 1);method=oscillation_pattern
+2026-08-26 12:24:26 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 1)
+2026-08-26 12:24:28 [INFO] core.event_bus: EVENT VOICE_TRANSCRIPT participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;transcript=right;parsed=right
+2026-08-26 12:24:28 [INFO] core.event_bus: EVENT VOICE_COMMAND participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=context=direction;command=right;transcript=right
+2026-08-26 12:24:28 [INFO] core.event_bus: EVENT FEEDBACK_RECEIVED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:28 [INFO] core.event_bus: EVENT FEEDBACK_APPLIED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Voice:RIGHT
+2026-08-26 12:24:29 [INFO] core.event_bus: EVENT CRITICAL_STATE participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=state=(0, 1);method=oscillation_pattern
+2026-08-26 12:24:29 [INFO] core.event_bus: EVENT FEEDBACK_REQUESTED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=(0, 1)
+2026-08-26 12:24:32 [INFO] core.event_bus: EVENT PRACTICE_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=None
+2026-08-26 12:24:32 [INFO] core.event_bus: EVENT TRIAL_ENDED participant=P001 session=P001_S01 trial=P001_S01_ST1TR_TR02_R01 value=Valid; TR02/R01
+2026-08-26 12:24:32 [INFO] core.workflow_manager: Ended run P001_S1TR_R02 -> Completed
+2026-08-26 12:24:35 [INFO] core.application_controller: Shutting down HINT Study Console
+2026-08-26 12:24:35 [INFO] devices.hololens_device: HoloLens disconnected.
+2026-08-26 12:24:35 [INFO] devices.device_manager: Device Microphone -> Disconnected
+2026-08-26 12:24:35 [INFO] core.event_bus: EVENT DEVICE_DISCONNECTED participant=None session=None trial=None value=Microphone

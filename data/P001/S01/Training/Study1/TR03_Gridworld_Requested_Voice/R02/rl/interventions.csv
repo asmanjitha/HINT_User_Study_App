@@ -1,7 +1,0 @@
-participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,step,selected_step,pause_step,steps_back,feedback_timing,modality,requested,skipped,timeout,state_row,state_col,action,action_name,request_timestamp,pause_timestamp,response_timestamp,response_latency_ms
-P001,P001_S01,P001_S01_ST1TR_TR03_R02,TR03,R02,Gridworld_Requested_Voice,1,15,6,6,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787760802.396731,,1787760803.940280,1543.548
-P001,P001_S01,P001_S01_ST1TR_TR03_R02,TR03,R02,Gridworld_Requested_Voice,1,26,6,6,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787760806.981143,,1787760808.741720,1760.577
-P001,P001_S01,P001_S01_ST1TR_TR03_R02,TR03,R02,Gridworld_Requested_Voice,1,27,6,6,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787760809.335864,,1787760811.848809,2512.945
-P001,P001_S01,P001_S01_ST1TR_TR03_R02,TR03,R02,Gridworld_Requested_Voice,1,27,12,12,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787760812.200918,,1787760814.950923,2750.005
-P001,P001_S01,P001_S01_ST1TR_TR03_R02,TR03,R02,Gridworld_Requested_Voice,1,31,8,8,,,Requested Feedback,Voice,1,0,0,0,2,3,RIGHT,1787760817.255717,,1787760820.921722,3666.006
-P001,P001_S01,P001_S01_ST1TR_TR03_R02,TR03,R02,Gridworld_Requested_Voice,1,31,15,15,,,Requested Feedback,Voice,1,0,0,0,1,0,UP,1787760821.329957,,1787760823.404084,2074.127

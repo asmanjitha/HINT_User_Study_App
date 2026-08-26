@@ -1,7 +1,0 @@
-timestamp,participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,steps,total_reward,target_reached,human_feedback_given
-1787760930.643965,P001,P001_S01,P001_S01_ST1TR_TR08_R01,TR08,R01,Gridworld_Anytime_Gaze,1,1,2,-50.5,0,0
-1787760930.886839,P001,P001_S01,P001_S01_ST1TR_TR08_R01,TR08,R01,Gridworld_Anytime_Gaze,1,2,3,-52.0,0,0
-1787760931.197782,P001,P001_S01,P001_S01_ST1TR_TR08_R01,TR08,R01,Gridworld_Anytime_Gaze,1,3,4,-51.5,0,0
-1787760931.266000,P001,P001_S01,P001_S01_ST1TR_TR08_R01,TR08,R01,Gridworld_Anytime_Gaze,1,4,1,-50.0,0,0
-1787760931.395867,P001,P001_S01,P001_S01_ST1TR_TR08_R01,TR08,R01,Gridworld_Anytime_Gaze,1,5,2,-50.5,0,0
-1787760931.522863,P001,P001_S01,P001_S01_ST1TR_TR08_R01,TR08,R01,Gridworld_Anytime_Gaze,1,6,1,-50.0,0,0

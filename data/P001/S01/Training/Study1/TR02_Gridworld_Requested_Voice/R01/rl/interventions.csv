@@ -1,0 +1,15 @@
+participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,step,selected_step,pause_step,steps_back,feedback_timing,modality,requested,skipped,timeout,state_row,state_col,action,action_name,request_timestamp,pause_timestamp,response_timestamp,response_latency_ms
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,15,6,6,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787761427.037982,,1787761428.868899,1830.917
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,26,6,6,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787761432.111011,,1787761434.117404,2006.393
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,27,6,6,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787761434.725896,,1787761436.710033,1984.137
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,27,12,12,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787761437.049027,,1787761438.524877,1475.850
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,31,8,8,,,Requested Feedback,Voice,1,0,0,0,2,2,LEFT,1787761440.914148,,1787761442.395104,1480.957
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,31,14,14,,,Requested Feedback,Voice,1,0,0,0,2,0,UP,1787761442.739802,,1787761444.207920,1468.118
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,32,6,6,,,Requested Feedback,Voice,1,0,0,0,2,1,DOWN,1787761444.625239,,1787761446.071751,1446.512
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,33,6,6,,,Requested Feedback,Voice,1,0,0,0,2,1,DOWN,1787761446.514829,,1787761448.089771,1574.942
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,34,6,6,,,Requested Feedback,Voice,1,0,0,0,2,3,RIGHT,1787761448.513912,,1787761450.129124,1615.212
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,36,6,6,,,Requested Feedback,Voice,1,0,0,0,2,3,RIGHT,1787761451.279055,,1787761453.402532,2123.477
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,38,6,6,,,Requested Feedback,Voice,1,0,0,0,2,3,RIGHT,1787761454.672832,,1787761456.432685,1759.853
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,40,6,6,,,Requested Feedback,Voice,1,0,0,0,2,3,RIGHT,1787761457.337227,,1787761459.093061,1755.834
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,43,6,6,,,Requested Feedback,Voice,1,0,0,0,2,3,RIGHT,1787761460.538202,,1787761462.157758,1619.557
+P001,P001_S01,P001_S01_ST1TR_TR02_R01,TR02,R01,Gridworld_Requested_Voice,1,50,9,9,,,Requested Feedback,Voice,1,0,0,0,1,3,RIGHT,1787761466.307605,,1787761468.875750,2568.145

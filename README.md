@@ -4,7 +4,7 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
-## What's in this version (V1.1.4 — Study 2 offline voice feedback)
+## What's in this version (V1.1.5 — Study 2 offline voice feedback)
 
 The console uses a single process-oriented workflow on the existing data
 model and Actor-Critic Gridworld integration. V0.9 retains the IRB-aligned

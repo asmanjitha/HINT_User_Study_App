@@ -67,3 +67,68 @@ def test_requested_voice_feedback_executes_the_spoken_direction(tmp_path) -> Non
     assert experiment.state == (1, 0)
     assert experiment.env.steps == 1
     experiment.stop()
+
+
+def test_requested_feedback_collision_resets_and_restarts_agent(tmp_path) -> None:
+    import time
+
+    from models.enums import Environment, FeedbackTiming, Modality, Study
+    from models.trial import ExperimentCondition, Trial
+    from rl.actor_critic_gridworld.experiment import ActorCriticGridworldExperiment
+
+    # Training/study panels and Keyboard/Voice all route through this same
+    # experiment path. Exercise both study identities and both modalities so
+    # the shared regression cannot silently reappear in one condition.
+    cases = [
+        (Study.STUDY_1, Modality.KEYBOARD),
+        (Study.STUDY_1, Modality.VOICE),
+        (Study.STUDY_2, Modality.KEYBOARD),
+        (Study.STUDY_2, Modality.VOICE),
+    ]
+
+    for case_index, (study, modality) in enumerate(cases):
+        trial_dir = tmp_path / f"trial_collision_{case_index}"
+        (trial_dir / "rl").mkdir(parents=True)
+        condition = ExperimentCondition(
+            study=study,
+            environment=Environment.GRIDWORLD,
+            feedback_timing=FeedbackTiming.REQUESTED,
+            modality=modality,
+            random_seed=42,
+        )
+        trial = Trial(
+            trial_id=f"requested_collision_{case_index}",
+            session_id="session",
+            participant_code="P001",
+            condition=condition,
+            trial_dir=str(trial_dir),
+        )
+        experiment = ActorCriticGridworldExperiment(
+            trial=trial,
+            config={"step_interval_ms": 1000, "feedback_timeout_seconds": 10},
+        )
+
+        # Reproduce the reported bug: requested feedback is active at (0, 0),
+        # and UP is an invalid move that ends the episode with a wall/boundary
+        # collision. Requested feedback has already stopped the normal timer.
+        experiment._running = True
+        experiment._waiting_for_feedback = True
+        experiment._pending_ambiguity = (0, 0)
+        experiment._pending_request_timestamp = time.time()
+
+        starts = []
+        experiment._step_timer.start = lambda *args: starts.append(args)
+
+        assert experiment.submit_human_feedback(0, modality) is True
+
+        # The collision ends episode 1 and resets to episode 2 at the maze start.
+        assert experiment.current_episode == 2
+        assert experiment.state == (0, 0)
+        assert experiment.env.steps == 0
+        assert experiment._waiting_for_feedback is False
+
+        # Regression check: the stopped RL timer must be restarted after reset,
+        # otherwise the participant sees the agent frozen at the start position.
+        assert starts == [(experiment.step_interval_ms,)]
+        experiment.stop()
+

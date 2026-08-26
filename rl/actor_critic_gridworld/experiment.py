@@ -1193,6 +1193,25 @@ class ActorCriticGridworldExperiment(
 
         self._emit_view()
 
+        # An episode can finish while the regular RL step timer is stopped.
+        # In requested-feedback mode we stop that timer while waiting for the
+        # participant, and an immediately executed human action may itself end
+        # the episode (for example by colliding with a wall).  After resetting
+        # the environment, make sure the next episode actually continues.
+        if (
+            self._running
+            and not self._paused_by_user
+            and not self._waiting_for_feedback
+            and not self._selecting_anytime_feedback
+        ):
+            self.status_changed.emit(
+                "Running"
+            )
+
+            self._step_timer.start(
+                self.step_interval_ms
+            )
+
     # ------------------------------------------------------
     # Snapshots
     # ------------------------------------------------------
