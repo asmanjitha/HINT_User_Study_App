@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 from core.application_controller import ApplicationController
 from core.workflow_manager import (
     STEP_LABELS,
+    STUDY1_TRAINING_QUICK_PASS_NOTE,
     STUDY1_REQUIRED_CONDITION_COUNT,
     STUDY1_REQUIRED_MODALITIES,
     STUDY1_REQUIRED_TIMINGS,
@@ -123,6 +124,14 @@ class Study1StepPanel(QWidget):
         top.addWidget(self._matrix_summary_label)
         top.addStretch()
 
+        self._quick_pass_btn = QPushButton("Quick Pass All Tests")
+        self._quick_pass_btn.setToolTip(
+            "For participants already familiar with all feedback modalities and HoloLens use. "
+            "Marks all 8 training requirements as passed without creating synthetic RL trials."
+        )
+        self._quick_pass_btn.clicked.connect(self._quick_pass_all_training)
+        top.addWidget(self._quick_pass_btn)
+
         self._next_condition_btn = QPushButton("Select Next Incomplete")
         self._next_condition_btn.clicked.connect(self._select_next_incomplete)
         top.addWidget(self._next_condition_btn)
@@ -170,8 +179,12 @@ class Study1StepPanel(QWidget):
                 for col in range(self._condition_table.columnCount()):
                     self._condition_table.setItem(row, col, QTableWidgetItem("⬜ Not Started"))
             self._next_condition_btn.setEnabled(False)
+            self._quick_pass_btn.setEnabled(False)
             return
 
+        quick_passed = self._controller.workflow_manager.study1_training_quick_passed(
+            self._participant_code
+        )
         summaries = self._controller.workflow_manager.study1_condition_statuses(
             self._participant_code,
             practice=self._practice,
@@ -188,29 +201,46 @@ class Study1StepPanel(QWidget):
                 if summary.status == "Completed":
                     completed += 1
 
-                text = f"{_STATUS_SYMBOL[summary.status]} {summary.status}"
-                if summary.completed_trials > 1:
+                if quick_passed:
+                    text = "✅ Passed\nQuick Pass"
+                else:
+                    text = f"{_STATUS_SYMBOL[summary.status]} {summary.status}"
+                if not quick_passed and summary.completed_trials > 1:
                     text += f"\n{summary.completed_trials} completed runs"
                 elif summary.total_trials > 1 and summary.status != "Completed":
                     text += f"\n{summary.total_trials} attempts"
 
                 item = QTableWidgetItem(text)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                item.setToolTip(
-                    f"{timing.value} / {modality.value}\n"
-                    f"Completed trials: {summary.completed_trials}\n"
-                    f"Total attempts: {summary.total_trials}\n"
-                    f"Last trial: {summary.last_trial_id or '--'}"
-                )
+                if quick_passed:
+                    item.setToolTip(
+                        f"{timing.value} / {modality.value}\n"
+                        "Training requirement satisfied by Quick Pass.\n"
+                        "No synthetic RL trial was created for this condition."
+                    )
+                else:
+                    item.setToolTip(
+                        f"{timing.value} / {modality.value}\n"
+                        f"Completed trials: {summary.completed_trials}\n"
+                        f"Total attempts: {summary.total_trials}\n"
+                        f"Last trial: {summary.last_trial_id or '--'}"
+                    )
                 self._condition_table.setItem(row, col, item)
 
         remaining = STUDY1_REQUIRED_CONDITION_COUNT - completed
         if completed == STUDY1_REQUIRED_CONDITION_COUNT:
-            self._matrix_summary_label.setText(
-                f"✅ {completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions completed — "
-                f"Study 1 {'Training' if self._practice else 'Study'} complete"
-            )
+            if quick_passed:
+                self._matrix_summary_label.setText(
+                    f"✅ {completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions passed — "
+                    "Training Quick Pass applied"
+                )
+            else:
+                self._matrix_summary_label.setText(
+                    f"✅ {completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions completed — "
+                    f"Study 1 {'Training' if self._practice else 'Study'} complete"
+                )
             self._next_condition_btn.setEnabled(False)
+            self._quick_pass_btn.setEnabled(False)
         else:
             self._matrix_summary_label.setText(
                 f"{completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions completed "
@@ -367,6 +397,7 @@ class Study1StepPanel(QWidget):
             self._status_label.setText("Select or register a participant first.")
             self._set_running_controls(False)
             self._start_btn.setEnabled(False)
+            self._quick_pass_btn.setEnabled(False)
             self._history_table.setRowCount(0)
             return
 
@@ -377,6 +408,10 @@ class Study1StepPanel(QWidget):
 
         blocking_run = self._controller.workflow_manager.has_active_run(
             self._participant_code
+        )
+        self._quick_pass_btn.setEnabled(
+            blocking_run is None
+            and summary.completed_count < STUDY1_REQUIRED_CONDITION_COUNT
         )
 
         if self._active_run is not None:
@@ -450,6 +485,11 @@ class Study1StepPanel(QWidget):
         for row, run in enumerate(reversed(runs)):
             timing = "--"
             modality = "--"
+            status_text = run.status.value
+            if run.notes == STUDY1_TRAINING_QUICK_PASS_NOTE:
+                timing = "All"
+                modality = "All"
+                status_text = f"{run.status.value} — Quick Pass"
             if run.trial_id:
                 trial = self._controller.trial_manager.get_trial(run.trial_id)
                 if trial is not None:
@@ -459,7 +499,7 @@ class Study1StepPanel(QWidget):
             self._history_table.setItem(row, 0, QTableWidgetItem(run.run_id))
             self._history_table.setItem(row, 1, QTableWidgetItem(timing))
             self._history_table.setItem(row, 2, QTableWidgetItem(modality))
-            self._history_table.setItem(row, 3, QTableWidgetItem(run.status.value))
+            self._history_table.setItem(row, 3, QTableWidgetItem(status_text))
             self._history_table.setItem(row, 4, QTableWidgetItem(_fmt_time(run.started_at)))
             self._history_table.setItem(row, 5, QTableWidgetItem(_fmt_time(run.ended_at)))
             self._history_table.setItem(
@@ -467,6 +507,58 @@ class Study1StepPanel(QWidget):
             )
 
     # -- Actions ------------------------------------------------------------
+    def _quick_pass_all_training(self) -> None:
+        if self._participant_code is None:
+            return
+
+        summary = self._controller.workflow_manager.step_status(
+            self._participant_code, WorkflowStep.STUDY1_TRAINING
+        )
+        if summary.completed_count == STUDY1_REQUIRED_CONDITION_COUNT:
+            QMessageBox.information(
+                self,
+                "Training already complete",
+                "All Study 1 training requirements are already satisfied.",
+            )
+            return
+
+        blocking = self._controller.workflow_manager.has_active_run(self._participant_code)
+        if blocking is not None:
+            QMessageBox.warning(
+                self,
+                "Run in progress",
+                f"Finish or abort {blocking.run_id} before using Quick Pass.",
+            )
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Quick Pass all Study 1 training tests?",
+            "Use this only when the participant is already familiar with the feedback "
+            "modalities and HoloLens eye-gaze interaction.\n\n"
+            "This will mark all 8 Study 1 training conditions as PASSED and allow the "
+            "participant to proceed to the study. No synthetic RL training trials will "
+            "be created; one Quick Pass entry will be kept in workflow history.\n\n"
+            "Apply Quick Pass now?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            self._controller.workflow_manager.quick_pass_study1_training(
+                self._participant_code
+            )
+        except Exception as exc:
+            QMessageBox.critical(self, "Could not Quick Pass training", str(exc))
+            return
+
+
+        self.refresh()
+        if self._on_step_changed:
+            self._on_step_changed()
+
     def _start_run(self) -> None:
         if self._participant_code is None:
             return

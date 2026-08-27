@@ -1,2 +1,0 @@
-participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,step,selected_step,pause_step,steps_back,feedback_timing,modality,requested,skipped,timeout,state_row,state_col,action,action_name,request_timestamp,pause_timestamp,response_timestamp,response_latency_ms
-P001,P001_S01,P001_S01_ST1TR_TR04_R01,TR04,R01,Gridworld_Requested_Gaze,1,15,6,6,,,Requested Feedback,Eye Gaze,1,0,0,0,2,3,RIGHT,1787856680.040889,,1787856683.688661,3647.773

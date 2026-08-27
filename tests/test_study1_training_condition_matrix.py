@@ -196,3 +196,53 @@ def test_all_eight_training_conditions_complete_training_only(tmp_path: Path) ->
     assert training.overall_status == StepOverallStatus.COMPLETED
     assert manager.next_incomplete_study1_condition("P001", practice=True) is None
     assert all(item.status == "Not Started" for item in study)
+
+
+def test_quick_pass_marks_all_training_conditions_without_fake_trials(tmp_path: Path) -> None:
+    db = Database(
+        tmp_path / "identifiable.sqlite3",
+        tmp_path / "experimental.sqlite3",
+    )
+
+    class _FakeSessionManager:
+        def get_or_create_active_session(self, participant_code: str):
+            from models.session import Session
+
+            return Session(
+                session_id=f"{participant_code}_S01",
+                participant_code=participant_code,
+                study=Study.COMBINED_SESSION,
+            )
+
+    manager = WorkflowManager(
+        db,
+        session_manager=_FakeSessionManager(),  # type: ignore[arg-type]
+        event_bus=None,  # type: ignore[arg-type]
+    )
+
+    run = manager.quick_pass_study1_training("P001")
+
+    assert run.status == StepRunStatus.COMPLETED
+    assert manager.study1_training_quick_passed("P001") is True
+
+    statuses = manager.study1_condition_statuses("P001", practice=True)
+    assert len(statuses) == STUDY1_REQUIRED_CONDITION_COUNT
+    assert all(item.status == "Completed" for item in statuses)
+    assert all(item.completed_trials == 0 for item in statuses)
+
+    summary = manager.step_status("P001", WorkflowStep.STUDY1_TRAINING)
+    assert summary.completed_count == STUDY1_REQUIRED_CONDITION_COUNT
+    assert summary.overall_status == StepOverallStatus.COMPLETED
+    assert manager.next_incomplete_study1_condition("P001", practice=True) is None
+
+    trial_count = db.experimental_conn.execute("SELECT COUNT(*) AS n FROM trials").fetchone()["n"]
+    assert trial_count == 0
+
+    # Re-applying via the manager is idempotent and does not add another marker run.
+    same_run = manager.quick_pass_study1_training("P001")
+    assert same_run.run_id == run.run_id
+    run_count = db.experimental_conn.execute(
+        "SELECT COUNT(*) AS n FROM workflow_runs WHERE participant_code = ? AND step = ?",
+        ("P001", WorkflowStep.STUDY1_TRAINING.value),
+    ).fetchone()["n"]
+    assert run_count == 1

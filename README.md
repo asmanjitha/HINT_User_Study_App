@@ -4,7 +4,7 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
-## What's in this version (V1.2.1 — Study 1(b) Ubuntu continuous navigation)
+## What's in this version (V1.2.2 — Study 1 Training Quick Pass + Ubuntu continuous navigation)
 
 - **Study 1(b) Continuous Action-Space Room Navigation is now live-integrated.** The existing `Continuous Room Navigation` placeholder now connects to the Ubuntu `HINT_ContinuousNav_Ubuntu_v1` worker over WebSocket/HTTP.
 - The Windows Console remains authoritative for participant/session/trial IDs, HoloLens recording, Shimmer recording, participant input, and master events. Ubuntu remains authoritative for GA3C, simulator state, collision detection, rewind snapshots, N-step human control, and RL continuation.

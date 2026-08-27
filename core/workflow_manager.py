@@ -173,6 +173,10 @@ _ACTIVE_TRIAL_STATUSES = {
     TrialStatus.PAUSED.value,
 }
 
+# Stored in workflow_runs.notes so a training bypass is persistent and auditable
+# without manufacturing eight synthetic RL trials.
+STUDY1_TRAINING_QUICK_PASS_NOTE = "QUICK_PASS_ALL_STUDY1_TRAINING_TESTS"
+
 
 class Study1TrainingConditionSummary(NamedTuple):
     feedback_timing: FeedbackTiming
@@ -286,6 +290,74 @@ class WorkflowManager:
         logger.info("Ended run %s -> %s", run.run_id, run.status.value)
         return run
 
+    def study1_training_quick_passed(self, participant_code: str) -> bool:
+        """Return True when Study 1 training was explicitly bypassed.
+
+        Quick Pass is represented by one completed workflow run with a marker
+        in ``notes``.  We deliberately do not create fake training trials, so
+        the RL/trial dataset remains an honest record of what the participant
+        actually performed.
+        """
+        row = self._db.experimental_conn.execute(
+            """
+            SELECT 1
+            FROM workflow_runs
+            WHERE participant_code = ?
+              AND step = ?
+              AND status = ?
+              AND notes = ?
+            LIMIT 1
+            """,
+            (
+                participant_code,
+                WorkflowStep.STUDY1_TRAINING.value,
+                StepRunStatus.COMPLETED.value,
+                STUDY1_TRAINING_QUICK_PASS_NOTE,
+            ),
+        ).fetchone()
+        return row is not None
+
+    def quick_pass_study1_training(self, participant_code: str) -> StepRun:
+        """Mark all Study 1 training requirements as passed without RL trials."""
+        if self.study1_training_quick_passed(participant_code):
+            rows = self.list_runs(participant_code, WorkflowStep.STUDY1_TRAINING)
+            for run in reversed(rows):
+                if (
+                    run.status == StepRunStatus.COMPLETED
+                    and run.notes == STUDY1_TRAINING_QUICK_PASS_NOTE
+                ):
+                    return run
+
+        blocking = self.has_active_run(participant_code)
+        if blocking is not None:
+            raise ValueError(
+                f"Cannot Quick Pass training while run {blocking.run_id} is in progress."
+            )
+
+        # If the participant genuinely completed the matrix, do not add a
+        # redundant bypass marker.
+        actual_completed = sum(
+            1
+            for item in self.study1_condition_statuses(participant_code, practice=True)
+            if item.status == "Completed"
+        )
+        if actual_completed == STUDY1_TRAINING_REQUIRED_CONDITION_COUNT:
+            raise ValueError("Study 1 Training is already complete.")
+
+        run, _session = self.start_run(participant_code, WorkflowStep.STUDY1_TRAINING)
+        completed_run = self.end_run(
+            run.run_id,
+            completed=True,
+            notes=STUDY1_TRAINING_QUICK_PASS_NOTE,
+        )
+        assert completed_run is not None
+        logger.info(
+            "Quick-passed all Study 1 training conditions for %s via %s",
+            participant_code,
+            completed_run.run_id,
+        )
+        return completed_run
+
     # -- Queries -------------------------------------------------------------
     def get_run(self, run_id: str) -> Optional[StepRun]:
         row = self._db.experimental_conn.execute(
@@ -393,6 +465,8 @@ class WorkflowManager:
         but experimental Study 1 completion is now determined by
         :meth:`study1_study_condition_statuses`.
         """
+        quick_passed = practice and self.study1_training_quick_passed(participant_code)
+
         rows = self._db.experimental_conn.execute(
             """
             SELECT trial_id, feedback_timing, modality, status, collection_status, created_at
@@ -427,7 +501,11 @@ class WorkflowManager:
                     (row for row in reversed(matching) if row["status"] in _ACTIVE_TRIAL_STATUSES),
                     None,
                 )
-                status = self._condition_status_label(matching, completed, active)
+                status = (
+                    "Completed"
+                    if quick_passed
+                    else self._condition_status_label(matching, completed, active)
+                )
                 summaries.append(
                     Study1TrainingConditionSummary(
                         feedback_timing=timing,
