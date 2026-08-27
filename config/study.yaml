@@ -1,4 +1,4 @@
-study_version: "HINT_v0.7_multimodal_gaze_feedback_v112"
+study_version: "HINT_v0.8_study1b_ubuntu_continuous_nav"
 
 timing:
   session_max_minutes: 60
@@ -29,7 +29,7 @@ studies:
       - key: "grid_anytime"
         label: "2D Gridworld - Anytime feedback"
       - key: "room_navigation"
-        label: "Indoor room navigation - Explicit feedback"
+        label: "Study 1(b) - Continuous action-space room navigation (Ubuntu HINT worker)"
       - key: "baseline_navigation"
         label: "Baseline - Experimenter virtual navigation"
 
@@ -94,6 +94,19 @@ eye_gaze_recognition:
 
 critical_state:
   detection_method: "oscillation_pattern"
+
+# Study 1(b): continuous action-space room navigation runs on the Ubuntu
+# HINT worker. The Console remains authoritative for trial identity, Shimmer,
+# HoloLens, participant input, and the participant-facing room visualization.
+continuous_room_navigation:
+  worker_host: "127.0.0.1"
+  worker_port: 8875
+  hil_correction_length: 10
+  feedback_timeout_seconds: 10
+  agents: 1
+  predictors: 1
+  trainers: 1
+  visualize_on_ubuntu: false
 
 rl:
   actor_critic_gridworld:

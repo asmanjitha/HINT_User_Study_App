@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QInputDialog,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QPushButton,
     QSpinBox,
@@ -91,6 +92,7 @@ class Study1StudyPanel(QWidget):
         self._participant_code: str | None = None
         self._active_run = None
         self._active_live_rl = False
+        self._active_remote_room = False
 
         root = QVBoxLayout(self)
         title = QLabel(STEP_LABELS[self._step])
@@ -98,9 +100,9 @@ class Study1StudyPanel(QWidget):
         root.addWidget(title)
 
         note = QLabel(
-            "Study 1 uses explicit feedback only. Complete: (1) Gridworld with "
-            "system-requested feedback and anytime feedback, (2) indoor-room "
-            "navigation with Keyboard or Joystick, and (3) the experimenter "
+            "Study 1 uses explicit feedback only. Complete: (1a) Gridworld with "
+            "system-requested feedback and anytime feedback, (1b) continuous action-space "
+            "room navigation on the Ubuntu HINT worker with Keyboard or Joystick, and (3) the experimenter "
             "virtual-navigation baseline. Voice/gaze modalities are not Study 1 "
             "experimental conditions."
         )
@@ -116,6 +118,22 @@ class Study1StudyPanel(QWidget):
         self._controller.rl_manager.trial_started.connect(self._on_trial_started)
         self._controller.rl_manager.episode_finished.connect(self._on_episode_finished)
         self._controller.rl_manager.status_changed.connect(self._on_rl_status_changed)
+        self._controller.continuous_nav_client.connection_status_changed.connect(
+            self._on_worker_connection_status
+        )
+        self._controller.continuous_nav_client.episode_ended.connect(
+            self._on_remote_episode_ended
+        )
+        self._controller.continuous_nav_client.task_started.connect(
+            self._on_remote_task_started
+        )
+        self._controller.continuous_nav_client.task_ended.connect(
+            self._on_remote_task_ended
+        )
+        self._controller.continuous_nav_client.remote_error.connect(
+            self._on_remote_error
+        )
+        self._on_task_changed()
 
     # ------------------------------------------------------------------
     def _build_protocol_table(self) -> QGroupBox:
@@ -170,10 +188,42 @@ class Study1StudyPanel(QWidget):
         form.addRow("Explicit input:", self._modality_combo)
 
         self._room_timing_combo = QComboBox()
-        for timing in (FeedbackTiming.REQUESTED, FeedbackTiming.ANYTIME):
-            self._room_timing_combo.addItem(timing.value, timing.name)
-        self._room_timing_combo.currentIndexChanged.connect(self._update_execution_hint)
+        self._room_timing_combo.addItem(FeedbackTiming.REQUESTED.value, FeedbackTiming.REQUESTED.name)
+        self._room_timing_combo.setEnabled(False)
         form.addRow("Room feedback timing:", self._room_timing_combo)
+
+        room_cfg = self._controller.config.study_raw.get("continuous_room_navigation", {})
+        worker_row = QWidget()
+        worker_layout = QHBoxLayout(worker_row)
+        worker_layout.setContentsMargins(0, 0, 0, 0)
+        self._worker_host = QLineEdit(str(room_cfg.get("worker_host", "127.0.0.1")))
+        self._worker_host.setPlaceholderText("Ubuntu IP, e.g. 192.168.1.50")
+        worker_layout.addWidget(self._worker_host, 1)
+        self._worker_port = QSpinBox()
+        self._worker_port.setRange(1, 65535)
+        self._worker_port.setValue(int(room_cfg.get("worker_port", 8875)))
+        self._worker_port.setToolTip("Ubuntu HINT worker TCP/WebSocket port")
+        worker_layout.addWidget(self._worker_port)
+        self._worker_connect_btn = QPushButton("Connect / Test")
+        self._worker_connect_btn.clicked.connect(self._connect_worker)
+        worker_layout.addWidget(self._worker_connect_btn)
+        form.addRow("Ubuntu worker:", worker_row)
+
+        self._worker_status_label = QLabel("Not connected")
+        self._worker_status_label.setWordWrap(True)
+        self._worker_status_label.setStyleSheet("color: #666;")
+        form.addRow("Worker status:", self._worker_status_label)
+
+        self._hil_steps_spin = QSpinBox()
+        self._hil_steps_spin.setRange(1, 100)
+        self._hil_steps_spin.setValue(int(room_cfg.get("hil_correction_length", 10)))
+        form.addRow("Study 1(b) rewind/control N:", self._hil_steps_spin)
+
+        self._room_timeout_spin = QSpinBox()
+        self._room_timeout_spin.setRange(1, 120)
+        self._room_timeout_spin.setValue(int(room_cfg.get("feedback_timeout_seconds", 10)))
+        self._room_timeout_spin.setSuffix(" s")
+        form.addRow("Study 1(b) action timeout:", self._room_timeout_spin)
 
         self._seed_spin = QSpinBox()
         self._seed_spin.setRange(0, 2_147_483_647)
@@ -425,9 +475,11 @@ class Study1StudyPanel(QWidget):
         is_room = req.environment == Environment.CONTINUOUS_ROOM
         is_grid = req.environment == Environment.GRIDWORLD
         self._modality_combo.setEnabled(not is_baseline)
-        self._room_timing_combo.setEnabled(is_room)
+        self._room_timing_combo.setEnabled(False)
         self._seed_spin.setEnabled(is_grid)
         self._warm_start.setEnabled(is_grid)
+        for widget in (self._worker_host, self._worker_port, self._worker_connect_btn, self._hil_steps_spin, self._room_timeout_spin):
+            widget.setEnabled(is_room and self._active_run is None)
         self._highlight_selected_task()
         self._update_execution_hint()
 
@@ -444,11 +496,56 @@ class Study1StudyPanel(QWidget):
                 "this build, so this condition is not silently substituted with keyboard input."
             )
         elif req.environment == Environment.CONTINUOUS_ROOM:
-            text = "Tracked/external run until the indoor-room simulator adapter is connected to the console."
+            client = self._controller.continuous_nav_client
+            state = "connected" if client.connected else "not connected"
+            text = (
+                "Study 1(b) runs on the Ubuntu HINT worker. The Console renders the live room/robot state, "
+                "records HoloLens + Shimmer, and forwards lock-step human actions. "
+                f"Worker is currently {state}."
+            )
         else:
             text = "Tracked baseline run; no participant feedback modality is recorded."
         self._execution_label.setText(text)
         self._update_data_folder_preview()
+
+    def _connect_worker(self) -> None:
+        host = self._worker_host.text().strip()
+        if not host:
+            QMessageBox.warning(self, "Ubuntu worker", "Enter the Ubuntu PC IP/hostname first.")
+            return
+        self._worker_connect_btn.setEnabled(False)
+        port = int(self._worker_port.value())
+        self._worker_status_label.setText(f"Connecting to {host}:{port}…")
+        try:
+            result = self._controller.connect_continuous_nav_worker(host, port)
+            status = result.get("status", {})
+            clock = result.get("clock_sync", {})
+            rtt_ms = float(clock.get("median_rtt_ns", 0)) / 1_000_000.0
+            offset_ms = float(clock.get("median_worker_minus_console_offset_ns", 0)) / 1_000_000.0
+            self._worker_status_label.setText(
+                f"Connected: {status.get('hostname', host)} | running={status.get('running')} | "
+                f"median RTT={rtt_ms:.2f} ms | Ubuntu−Console clock offset={offset_ms:.2f} ms"
+            )
+        except Exception as exc:
+            self._worker_status_label.setText(f"Connection failed: {exc}")
+            QMessageBox.critical(self, "Ubuntu worker connection failed", str(exc))
+        finally:
+            self._worker_connect_btn.setEnabled(True)
+            self._update_execution_hint()
+
+    def _on_worker_connection_status(self, status: str) -> None:
+        if hasattr(self, "_worker_status_label"):
+            if status.startswith("Connected"):
+                clock = self._controller.continuous_nav_client.clock_sync
+                if clock:
+                    rtt_ms = float(clock.get("median_rtt_ns", 0)) / 1_000_000.0
+                    offset_ms = float(clock.get("median_worker_minus_console_offset_ns", 0)) / 1_000_000.0
+                    status = (
+                        f"{status} | median RTT={rtt_ms:.2f} ms | "
+                        f"Ubuntu−Console clock offset={offset_ms:.2f} ms"
+                    )
+            self._worker_status_label.setText(status)
+            self._update_execution_hint()
 
     def _condition_from_selection(self) -> ExperimentCondition:
         req = self._selected_required()
@@ -456,7 +553,7 @@ class Study1StudyPanel(QWidget):
             timing = FeedbackTiming.NOT_APPLICABLE
             modality = Modality.NONE
         elif req.environment == Environment.CONTINUOUS_ROOM:
-            timing = FeedbackTiming[self._room_timing_combo.currentData()]
+            timing = FeedbackTiming.REQUESTED
             modality = Modality[self._modality_combo.currentData()]
         else:
             assert req.feedback_timing is not None
@@ -465,7 +562,7 @@ class Study1StudyPanel(QWidget):
 
         algorithm = {
             Environment.GRIDWORLD: "actor_critic_gridworld",
-            Environment.CONTINUOUS_ROOM: "external_room_navigation",
+            Environment.CONTINUOUS_ROOM: "ubuntu_ga3c_continuous_room",
             Environment.HUMAN_AGENT_BASELINE: "experimenter_virtual_baseline",
         }[req.environment]
 
@@ -569,6 +666,7 @@ class Study1StudyPanel(QWidget):
         self._active_live_rl = (
             req.environment == Environment.GRIDWORLD and modality == Modality.KEYBOARD
         )
+        self._active_remote_room = req.environment == Environment.CONTINUOUS_ROOM
 
         try:
             if self._active_live_rl:
@@ -577,6 +675,18 @@ class Study1StudyPanel(QWidget):
                     condition=condition,
                     practice=False,
                     use_maze_qinit=self._warm_start.isChecked(),
+                )
+            elif self._active_remote_room:
+                if not self._controller.continuous_nav_client.connected:
+                    self._controller.connect_continuous_nav_worker(
+                        self._worker_host.text().strip(), self._worker_port.value()
+                    )
+                trial = self._controller.start_continuous_room_trial(
+                    session_id=session.session_id,
+                    condition=condition,
+                    practice=False,
+                    hil_correction_length=self._hil_steps_spin.value(),
+                    feedback_timeout_seconds=self._room_timeout_spin.value(),
                 )
             else:
                 trial = self._controller.start_tracked_trial(
@@ -640,6 +750,7 @@ class Study1StudyPanel(QWidget):
         )
         self._active_run = None
         self._active_live_rl = False
+        self._active_remote_room = False
         self.refresh()
         if outcome == CollectionRunStatus.VALID:
             self._select_next_incomplete()
@@ -657,6 +768,10 @@ class Study1StudyPanel(QWidget):
         self._invalid_btn.setEnabled(running)
         self._abort_btn.setEnabled(running)
         self._next_btn.setEnabled(not running)
+        if hasattr(self, "_worker_host"):
+            room_selected = self._selected_required().environment == Environment.CONTINUOUS_ROOM
+            for widget in (self._worker_host, self._worker_port, self._worker_connect_btn, self._hil_steps_spin, self._room_timeout_spin):
+                widget.setEnabled(room_selected and not running)
 
     # ------------------------------------------------------------------
     def _is_mine(self, trial) -> bool:
@@ -683,6 +798,38 @@ class Study1StudyPanel(QWidget):
             label = trial.readable_run_label if trial is not None else self._active_run.run_id
             self._status_label.setText(f"In progress: {label} — {status}")
 
+    def _on_remote_task_started(self, payload: dict) -> None:
+        trial = self._controller.active_trial
+        if self._is_mine(trial) and trial.condition.environment == Environment.CONTINUOUS_ROOM:
+            self._active_remote_room = True
+            self._status_label.setText(f"In progress: {trial.readable_run_label} — Ubuntu RL running")
+            self._set_running_controls(True)
+
+    def _on_remote_task_ended(self, payload: dict) -> None:
+        trial = self._controller.active_trial
+        if self._is_mine(trial) and trial.condition.environment == Environment.CONTINUOUS_ROOM:
+            self._status_label.setText(
+                f"Ubuntu task ended ({payload.get('status') or payload.get('type')}). "
+                "Mark this run Valid, Invalid/Repeat, or Abort."
+            )
+
+    def _on_remote_error(self, message: str) -> None:
+        trial = self._controller.active_trial
+        if trial is not None and self._is_mine(trial) and trial.condition.environment == Environment.CONTINUOUS_ROOM:
+            self._status_label.setText("Ubuntu RL failure — see error dialog/log; mark the run Invalid/Repeat.")
+        QMessageBox.critical(self, "Ubuntu Study 1(b) RL failure", str(message))
+
+    def _on_remote_episode_ended(self, payload: dict) -> None:
+        trial = self._controller.active_trial
+        if self._is_mine(trial) and trial.condition.environment == Environment.CONTINUOUS_ROOM:
+            self._episode_label.setText(f"Episode: {payload.get('episode', '--')}")
+            reward = payload.get("total_reward")
+            if reward is not None:
+                try:
+                    self._reward_label.setText(f"Last reward: {float(reward):.2f}")
+                except (TypeError, ValueError):
+                    self._reward_label.setText(f"Last reward: {reward}")
+
     @staticmethod
     def _timing_text(timing: FeedbackTiming | None) -> str:
         return "Requested or Anytime (recorded per run)" if timing is None else timing.value
@@ -695,7 +842,7 @@ class Study1StudyPanel(QWidget):
             if condition.feedback_timing == FeedbackTiming.ANYTIME:
                 return "1B. Gridworld — Anytime"
         if condition.environment == Environment.CONTINUOUS_ROOM:
-            return "2. Indoor room navigation"
+            return "1(b). Continuous action-space room navigation"
         if condition.environment == Environment.HUMAN_AGENT_BASELINE:
             return "3. Experimenter baseline"
         return condition.environment.value

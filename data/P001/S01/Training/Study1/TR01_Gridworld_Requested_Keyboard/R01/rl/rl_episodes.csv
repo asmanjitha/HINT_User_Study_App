@@ -1,0 +1,10 @@
+timestamp,participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,steps,total_reward,target_reached,human_feedback_given
+1787856664.653761,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,1,2,-50.5,0,0
+1787856664.834587,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,2,3,-52.0,0,0
+1787856665.089769,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,3,4,-51.5,0,0
+1787856665.152798,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,4,1,-50.0,0,0
+1787856665.276798,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,5,2,-50.5,0,0
+1787856665.337364,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,6,1,-50.0,0,0
+1787856665.716464,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,7,6,-54.5,0,0
+1787856665.777767,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,8,1,-50.0,0,0
+1787856665.897711,P001,P001_S01,P001_S01_ST1TR_TR01_R01,TR01,R01,Gridworld_Requested_Keyboard,1,9,2,-50.5,0,0

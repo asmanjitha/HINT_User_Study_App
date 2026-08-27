@@ -130,18 +130,27 @@ def test_gridworld_study1_accepts_only_explicit_keyboard_or_joystick(tmp_path: P
     assert requested.last_modality == Modality.JOYSTICK
 
 
-def test_room_condition_accepts_explicit_feedback_with_either_timing(tmp_path: Path) -> None:
+def test_room_condition_requires_collision_requested_explicit_feedback(tmp_path: Path) -> None:
     manager, db = _manager(tmp_path)
     _insert_trial(
         db,
-        "ROOM01",
+        "ROOM_ANYTIME",
         Environment.CONTINUOUS_ROOM,
         FeedbackTiming.ANYTIME,
         Modality.KEYBOARD,
     )
+    assert manager.study1_study_condition_status("P001", "room_navigation").status == "Not Started"
+
+    _insert_trial(
+        db,
+        "ROOM_REQUESTED",
+        Environment.CONTINUOUS_ROOM,
+        FeedbackTiming.REQUESTED,
+        Modality.KEYBOARD,
+    )
     room = manager.study1_study_condition_status("P001", "room_navigation")
     assert room.status == "Completed"
-    assert room.last_feedback_timing == FeedbackTiming.ANYTIME
+    assert room.last_feedback_timing == FeedbackTiming.REQUESTED
 
 
 def test_baseline_requires_no_participant_feedback_marker(tmp_path: Path) -> None:

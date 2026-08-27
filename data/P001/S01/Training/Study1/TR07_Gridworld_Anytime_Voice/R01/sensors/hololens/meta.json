@@ -1,0 +1,37 @@
+{
+  "participant_code": "P001",
+  "session_id": "P001_S01",
+  "trial_id": "P001_S01_ST1TR_TR07_R01",
+  "condition_code": "TR07",
+  "run_code": "R01",
+  "condition_name": "Gridworld_Anytime_Voice",
+  "study": "Study 1",
+  "environment": "Gridworld",
+  "feedback_timing": "Anytime Feedback",
+  "modality": "Voice",
+  "practice": true,
+  "trial_started_at_epoch": 1787856699.104859,
+  "recording_started_at_epoch": 1787856699.176905,
+  "recording_ended_at_epoch": 1787856700.4046853,
+  "stop_reason": "trial_valid",
+  "camera": {
+    "width": 1280,
+    "height": 720,
+    "configured_fps": 30,
+    "video_codec": "mp4v",
+    "video_frame_count": 14,
+    "overlay": "combined EET gaze direction; cyan circle + white crosshair"
+  },
+  "eye_tracking": {
+    "configured_fps": 90,
+    "eet_sample_count": 109,
+    "pointer_row_count": 14,
+    "projection_distance_m": 1.5,
+    "projection_note": "The pointer is a pose-registered gaze-direction projection at a fixed distance, not a depth-resolved physical surface intersection."
+  },
+  "files": {
+    "annotated_video": "pv_gaze.mp4",
+    "gaze_pointer_csv": "gaze.csv",
+    "raw_eet_csv": "eet.csv"
+  }
+}

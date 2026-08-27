@@ -140,9 +140,9 @@ STUDY1_STUDY_REQUIRED_CONDITIONS: tuple[Study1ProtocolCondition, ...] = (
     ),
     Study1ProtocolCondition(
         "room_navigation",
-        "2. Indoor room navigation — Explicit feedback",
+        "1(b). Continuous action-space room navigation — Collision-triggered HIL",
         Environment.CONTINUOUS_ROOM,
-        None,  # timing is recorded, but either Requested/Anytime can satisfy this sub-step
+        FeedbackTiming.REQUESTED,
         EXPLICIT_STUDY1_MODALITIES,
     ),
     Study1ProtocolCondition(

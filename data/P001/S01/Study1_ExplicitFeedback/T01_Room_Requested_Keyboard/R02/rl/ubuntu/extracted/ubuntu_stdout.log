@@ -1,0 +1,98 @@
+-> Load world: ../Simulation2d/world/roblab.world
+Env ../Simulation2d/world/roblab for Agent -1 started.
+[DEBUG] Creating Agent 0
+[DEBUG] Starting Agent 0
+[DEBUG] Agent 0 process started.
+-> Load world: /home/akhita/Independent_Study_2/User_Study/HINT_ContinuousNav_Ubuntu_v1.1/Simulation2d/world/room.world
+Env /home/akhita/Independent_Study_2/User_Study/HINT_ContinuousNav_Ubuntu_v1.1/Simulation2d/world/room for Agent 0 started.
+[DEBUG] Agent 0 started. pid=1683843, alive=True, exitcode=None
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Not enough history to rewind. Continuing normally.
+[Time:       19] [Episode:        1 Agent:  0 Score:  -156.4292] [HIL: 1 Interventions: 2 HumanSteps: 20] [RScore:  -156.4292 RPPS:     2] [PPS:     3 TPS:     0] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Not enough history to rewind. Continuing normally.
+[Time:       20] [Episode:        2 Agent:  0 Score:   -21.1414] [HIL: 0 Interventions: 0 HumanSteps: 0] [RScore:   -88.7853 RPPS:     2] [PPS:     3 TPS:     0] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+[Time:       51] [Episode:        3 Agent:  0 Score:   245.3166] [HIL: 1 Interventions: 4 HumanSteps: 40] [RScore:    22.5820 RPPS:     7] [PPS:     8 TPS:   131] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Not enough history to rewind. Continuing normally.
+[Time:       68] [Episode:        4 Agent:  0 Score:   119.0540] [HIL: 1 Interventions: 2 HumanSteps: 20] [RScore:    46.7000 RPPS:     7] [PPS:     8 TPS:   155] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Not enough history to rewind. Continuing normally.
+[Time:       83] [Episode:        5 Agent:  0 Score:   209.2216] [HIL: 1 Interventions: 2 HumanSteps: 20] [RScore:    79.2043 RPPS:     6] [PPS:     7 TPS:   168] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Not enough history to rewind. Continuing normally.
+[Time:       91] [Episode:        6 Agent:  0 Score:   -40.6243] [HIL: 1 Interventions: 1 HumanSteps: 10] [RScore:    59.2329 RPPS:     6] [PPS:     7 TPS:   173] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Not enough history to rewind. Continuing normally.
+[Time:       91] [Episode:        7 Agent:  0 Score:   -34.6838] [HIL: 0 Interventions: 0 HumanSteps: 0] [RScore:    45.8162 RPPS:     6] [PPS:     7 TPS:   173] [NT:  1 NP:  1 NA:  1]
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.
+[HINT] Stop requested by HINT worker.
+[HIL] No human feedback received within 10 seconds. Continuing training without human feedback.
+[HIL] Human control finished. Continuing training.
+
+
+[HIL] Collision detected in Agent 0.
+[HIL] Restoring to critical state from 10 steps before collision.

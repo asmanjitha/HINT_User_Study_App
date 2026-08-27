@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 
 from core.application_controller import ApplicationController
 from gui.devices_page import DevicesPage
+from gui.continuous_nav_window import ContinuousNavParticipantWindow
 from gui.event_log_page import EventLogPage
 from gui.participant_window import ParticipantWindow
 from gui.workflow_page import WorkflowPage
@@ -51,6 +52,7 @@ class MainWindow(QMainWindow):
         # signals directly and pops up whenever a Study 1 trial starts,
         # regardless of which researcher-console tab is showing.
         self._participant_window = ParticipantWindow(controller)
+        self._continuous_nav_window = ContinuousNavParticipantWindow(controller)
 
         self.setWindowTitle("HINT Study Console")
         self.resize(1280, 840)
@@ -99,5 +101,6 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:
         self._participant_window.close()
+        self._continuous_nav_window.close()
         self._controller.shutdown()
         super().closeEvent(event)

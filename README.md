@@ -4,6 +4,65 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
+## What's in this version (V1.2.1 — Study 1(b) Ubuntu continuous navigation)
+
+- **Study 1(b) Continuous Action-Space Room Navigation is now live-integrated.** The existing `Continuous Room Navigation` placeholder now connects to the Ubuntu `HINT_ContinuousNav_Ubuntu_v1` worker over WebSocket/HTTP.
+- The Windows Console remains authoritative for participant/session/trial IDs, HoloLens recording, Shimmer recording, participant input, and master events. Ubuntu remains authoritative for GA3C, simulator state, collision detection, rewind snapshots, N-step human control, and RL continuation.
+- Study 1(b) uses the collision-triggered **Requested Feedback** mechanism: collision → rewind `N` steps → request exactly one action for each restored human-control state → apply `N` human steps → resume RL from the final human-controlled state.
+- A new participant-facing room window renders the Ubuntu `.world` geometry locally and streams the current robot pose and goal. No VNC/screen capture is required.
+- Keyboard controls match the original Ubuntu popup: `W/S` straight, `A/D` medium turn, `Q/E` slight turn, `Shift+A/Shift+D` sharp turn, `Esc` skip. A selected joystick can also provide the seven discrete steering actions.
+- The Study 1 researcher panel now includes Ubuntu worker IP/hostname, **Connect / Test**, measured median network RTT / clock offset, rewind-control `N`, and feedback timeout.
+- Trial start order is synchronized: Ubuntu `PREPARE_TRIAL` → start HoloLens/Shimmer → Ubuntu `START_TRIAL`. Trial stop reverses this: stop Ubuntu task → close HINT trial/sensors → finalize/download Ubuntu data.
+- Console-side remote logs add `console_receive_timestamp_utc_ns` to every Ubuntu event and save `continuous_nav_state_stream.csv` and `continuous_nav_actions.csv`.
+- Ubuntu's finalized ZIP is downloaded to the same HINT `R##/rl/ubuntu/` folder and extracted there; immutable worker-v1 files are SHA-256 verified.
+- The previous Gridworld, voice, gaze, Shimmer, HoloLens, workflow, and readable folder naming behavior is retained.
+
+### Study 1(b) setup
+
+1. On Ubuntu, start the previously prepared worker:
+
+   ```bash
+   cd HINT_ContinuousNav_Ubuntu
+   bash scripts/run_worker.sh
+   ```
+
+2. On Ubuntu, find its LAN address with `hostname -I`. Keep TCP port `8875` reachable from the Windows study PC; port `8766` stays local to Ubuntu.
+3. On Windows, install/update dependencies with `pip install -r requirements.txt`, start `python main.py`, open **Workflow → Study 1 — Study**, select **1(b). Continuous action-space room navigation**, enter the Ubuntu IP, then press **Connect / Test**.
+4. Connect HoloLens, Shimmer, and the selected Keyboard or Joystick before starting the run.
+5. When the run starts, the participant room window opens automatically. The participant watches the live agent; after collision/rewind, it switches to Human Control for the configured `N` steps.
+
+### Study 1(b) synchronized files
+
+For example:
+
+```text
+data/P001/S01/Study1_ExplicitFeedback/
+  T03_Room_Requested_Keyboard/R01/
+    sensors/
+      hololens/...
+      shimmer/...
+    input/
+      continuous_nav_actions.csv
+    events/
+      ubuntu_remote_events.jsonl
+      ...
+    rl/
+      continuous_nav_console_config.json
+      continuous_nav_state_stream.csv
+      ubuntu/
+        ubuntu_trial_bundle.zip
+        extracted/
+          manifest.json
+          config_snapshot.json
+          world_geometry.json
+          worker_events.jsonl
+          hil_events.jsonl
+          rl_steps.csv
+          ubuntu_stdout.log
+          ubuntu_stderr.log
+          checksums.json
+```
+
 ## What's in this version (V1.1.13 — PV-camera gaze-axis fix)
 
 ### Eye-gaze tracker-axis correction (V1.1.13)
@@ -208,6 +267,8 @@ hint_study_console/
 ├── models/                    # plain dataclasses/enums, no Qt dependency
 │   ├── enums.py                # DeviceStatus, SessionStatus, WorkflowStep, ...
 │   ├── event.py, participant.py, session.py, trial.py, workflow.py
+├── remote/                    # Ubuntu worker communication + synchronized remote logs
+│   └── continuous_nav_client.py
 ├── devices/                   # device interfaces + hardware adapters
 │   ├── base_device.py          # BaseDevice interface, MockDevice
 │   ├── shimmer_protocol.py     # Shimmer3 LiteProtocol helpers + packet parser
@@ -218,6 +279,7 @@ hint_study_console/
 │   └── device_manager.py       # owns one device per DeviceType
 ├── gui/                       # PySide6 widgets
 │   ├── main_window.py          # left nav (Devices / Workflow / Event Log)
+│   ├── continuous_nav_window.py # Study 1(b) live room + lock-step feedback
 │   ├── devices_page.py, device_status_strip.py
 │   ├── workflow_page.py        # participant selector + step menu + detail panels
 │   ├── registration_panel.py   # Registration step detail
@@ -376,10 +438,9 @@ not need to change.
   guided connection workflow on the study Windows workstation before use.
 - The live Actor-Critic Gridworld feedback adapter is Keyboard-only. It can be
   launched from Study 1 Gridworld and Study 2 Keyboard conditions.
-- The input devices and HoloLens can now be connected/verified, but routing each
-  modality into its final Study 1/2 trial recorder still remains a separate
-  implementation layer. Indoor-room and baseline task adapters also remain to be
-  connected to their final task implementations.
+- The Ubuntu indoor-room adapter is now integrated for Study 1(b). The experimenter
+  baseline remains a tracked task, and modality-specific limitations described in
+  their individual panels still apply.
 - `STUDY` mode config locking is read but not yet enforced in the UI.
 - Session/task time-limit **enforcement** (vs. display) is not yet wired
   into the workflow steps.
@@ -387,11 +448,11 @@ not need to change.
 ## IRB-aligned study flow (v0.6)
 
 - **Study 1 — Training:** existing 2 x 4 familiarization matrix remains unchanged.
-- **Study 1 — Study:** 4 required protocol conditions across three settings: Gridworld Requested, Gridworld Anytime, Indoor Room explicit feedback, and Experimenter Baseline. Experimental Study 1 uses Keyboard/Joystick only.
+- **Study 1 — Study:** 4 required protocol conditions across three settings: Gridworld Requested, Gridworld Anytime, Study 1(b) Continuous Room collision-triggered Requested feedback, and Experimenter Baseline. Experimental Study 1 uses Keyboard/Joystick only.
 - **Study 2 — Training:** existing training/session-tracking window remains in place.
 - **Study 2 — Study:** Gridworld-focused multimodal tracker with Keyboard, Joystick, Voice, and Implicit (Gaze/Physiological) conditions.
 
-The live integrated RL path is currently Actor-Critic Gridworld + Keyboard. Non-integrated modalities/environments use tracked Trials rather than being silently simulated with keyboard input. See `IRB_FLOW_ALIGNMENT_CHANGELOG.md`.
+Live integrated RL paths now include the local Actor-Critic Gridworld and the Ubuntu Study 1(b) continuous-room worker. Remaining non-integrated modalities/environments use tracked Trials rather than being silently substituted. See `IRB_FLOW_ALIGNMENT_CHANGELOG.md` and `UBUNTU_STUDY1B_INTEGRATION_CHANGELOG.md`.
 
 
 ## Selectable keyboard, joystick, and microphone hardware (v1.0)

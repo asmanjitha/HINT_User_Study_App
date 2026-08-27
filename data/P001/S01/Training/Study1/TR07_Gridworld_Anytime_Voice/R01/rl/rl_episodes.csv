@@ -1,0 +1,3 @@
+timestamp,participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,steps,total_reward,target_reached,human_feedback_given
+1787856699.504495,P001,P001_S01,P001_S01_ST1TR_TR07_R01,TR07,R01,Gridworld_Anytime_Voice,1,1,2,-50.5,0,0
+1787856700.084277,P001,P001_S01,P001_S01_ST1TR_TR07_R01,TR07,R01,Gridworld_Anytime_Voice,1,2,3,-52.0,0,0

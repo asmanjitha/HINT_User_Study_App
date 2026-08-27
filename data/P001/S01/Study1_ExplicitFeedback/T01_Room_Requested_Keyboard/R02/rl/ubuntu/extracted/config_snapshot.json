@@ -1,0 +1,15 @@
+{
+  "agents": 1,
+  "feedback_timeout_seconds": 10.0,
+  "hil_correction_length": 10,
+  "predictors": 1,
+  "rl_preflight": {
+    "reported_python": "/home/akhita/miniconda3/envs/python311/bin/python3",
+    "returncode": 0,
+    "rl_python": "/home/akhita/miniconda3/envs/python311/bin/python3"
+  },
+  "rl_python": "/home/akhita/miniconda3/envs/python311/bin/python3",
+  "trainers": 1,
+  "visualize_on_ubuntu": false,
+  "world_path": "/home/akhita/Independent_Study_2/User_Study/HINT_ContinuousNav_Ubuntu_v1.1/Simulation2d/world/room"
+}

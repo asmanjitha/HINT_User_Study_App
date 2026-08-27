@@ -1,0 +1,14 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "config_snapshot.json": "8358b46976d5163d4e2df45f7a32bc17839bf860e88929c6d1208318507cb316",
+    "hil_events.jsonl": "d4887349d8c3850b40e9d37c94b294f8c8916fd290fd144e0e388e0f9f2d5e15",
+    "manifest.json": "74192d1e3d448111cf89bd337bd50b3f4104e320cdd8a19ad7fcfd4dcb9a850d",
+    "rl_steps.csv": "e9ae81cde46fdc487101e6151658cd7813c4268457f778f5eff1df71c8f5f367",
+    "stop.request": "301c98c0a370add71c0adfce787e59078350776468b7cf4f7b03bb282e318ef6",
+    "ubuntu_stderr.log": "ee90b141c6abdb1dea2a1cf901777a996f7344046c90015f8fb9c834bfd0831f",
+    "ubuntu_stdout.log": "08c6ef26ec9ce24164b42a1d0c01084bb989d3156d10b46a84780d2f2d793bf2",
+    "worker_events.jsonl": "7329f7b4533c0f13e61a0fc61026511d204f9a97907a71ec7a4a329d84f7adb0",
+    "world_geometry.json": "1ebbecbeae33b52917707c14c338fc65165a0718c6638ec1b9bdf8b97d1ee8b0"
+  }
+}

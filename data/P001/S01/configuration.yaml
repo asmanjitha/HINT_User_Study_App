@@ -1,0 +1,98 @@
+study_version: HINT_v0.8_study1b_ubuntu_continuous_nav
+timing:
+  session_max_minutes: 60
+  continuous_task_max_minutes: 20
+  feedback_timeout_seconds: 10
+  practice_duration_minutes: 5
+studies:
+  study_1:
+    label: Explicit Feedback for Agent Learning
+    feedback_timings:
+    - Requested Feedback
+    - Anytime Feedback
+    environments:
+    - Gridworld
+    - Continuous Room Navigation
+    - Human-Agent Navigation (Baseline)
+    modalities:
+    - Keyboard
+    - Joystick
+    protocol_substeps:
+    - key: grid_requested
+      label: 2D Gridworld - System-requested feedback
+    - key: grid_anytime
+      label: 2D Gridworld - Anytime feedback
+    - key: room_navigation
+      label: Study 1(b) - Continuous action-space room navigation (Ubuntu HINT worker)
+    - key: baseline_navigation
+      label: Baseline - Experimenter virtual navigation
+  study_2:
+    label: Feedback Modality Tradeoffs
+    primary_environment: Gridworld
+    environments:
+    - Gridworld
+    modalities:
+    - Keyboard
+    - Joystick
+    - Voice
+    - Eye Gaze
+    counterbalancing_method: latin_square
+random_seed: 42
+voice_recognition:
+  engine: vosk
+  language: en-us
+  model_path: ''
+  listen_window_seconds: 0.75
+  phrase_time_limit_seconds: 2.5
+  silence_seconds: 0.4
+  activation_peak: 0.012
+eye_gaze_recognition:
+  poll_interval_ms: 20
+  min_blink_seconds: 0.06
+  max_blink_seconds: 0.45
+  long_close_seconds: 0.85
+  double_blink_window_seconds: 1.1
+  blink_count_finish_gap_seconds: 1.15
+  direction_threshold_deg: 12.0
+  direction_neutral_deg: 6.0
+  direction_dominance_margin_deg: 2.0
+  direction_window_seconds: 0.7
+  direction_min_valid_samples: 5
+  direction_probability_threshold: 0.7
+  direction_probability_margin: 0.2
+  center_adaptation_alpha: 0.05
+  direction_debug_enabled: true
+  direction_debug_stale_seconds: 0.25
+critical_state:
+  detection_method: oscillation_pattern
+continuous_room_navigation:
+  worker_host: 127.0.0.1
+  worker_port: 8875
+  hil_correction_length: 10
+  feedback_timeout_seconds: 10
+  agents: 1
+  predictors: 1
+  trainers: 1
+  visualize_on_ubuntu: false
+rl:
+  actor_critic_gridworld:
+    step_interval_ms: 50
+    anytime_history_length: 10
+    feedback_timeout_seconds: 10
+    random_seed: 42
+    ambiguity:
+      detection_method: oscillation_pattern
+      history_size: 20
+      prompt_cooldown_steps: 6
+    actor:
+      actor_lr: 0.02
+      critic_lr: 0.1
+      discount_factor: 0.99
+      entropy_coef: 0.05
+      entropy_decay: 0.9995
+      entropy_min: 0.002
+      logit_clip: 10.0
+    human_guidance:
+      actor_boost: 3.0
+      actor_reduce: 1.0
+      critic_bonus: 5.0
