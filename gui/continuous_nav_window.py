@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from models.enums import Environment, Modality
+from models.enums import Environment, FeedbackTiming, Modality
 
 
 class ContinuousNavCanvas(QWidget):
@@ -185,6 +185,11 @@ class ContinuousNavParticipantWindow(QWidget):
             buttons.addWidget(button)
         root.addLayout(buttons)
 
+        self._anytime_btn = QPushButton("INTERVENE NOW  [SPACE]")
+        self._anytime_btn.clicked.connect(self._begin_anytime_feedback)
+        self._anytime_btn.setVisible(False)
+        root.addWidget(self._anytime_btn)
+
         self._skip_btn = QPushButton("Skip / No Feedback")
         self._skip_btn.clicked.connect(lambda: self._submit_action(None, "skip_button"))
         root.addWidget(self._skip_btn)
@@ -220,6 +225,12 @@ class ContinuousNavParticipantWindow(QWidget):
             return None
         return trial.condition.modality
 
+    def _current_timing(self) -> FeedbackTiming | None:
+        trial = self._controller.active_trial
+        if trial is None:
+            return None
+        return trial.condition.feedback_timing
+
     def _set_feedback_controls_enabled(self, enabled: bool) -> None:
         # Mouse steering buttons are convenient during development, but Study
         # mode must preserve the selected feedback modality (Keyboard/Joystick).
@@ -239,6 +250,13 @@ class ContinuousNavParticipantWindow(QWidget):
         self._status.setText("Agent training is running on the Ubuntu PC.")
         self._waiting_request = None
         self._set_feedback_controls_enabled(False)
+        anytime = self._current_timing() == FeedbackTiming.ANYTIME and self._current_modality() == Modality.KEYBOARD
+        self._anytime_btn.setVisible(anytime)
+        self._anytime_btn.setEnabled(anytime)
+        if anytime:
+            self._control_hint.setText("Keyboard Anytime mode: press SPACE or INTERVENE NOW whenever you want to provide corrective feedback.")
+        elif self._current_modality() == Modality.NONE:
+            self._control_hint.setText("Observation mode: watch the RL agent learn. No participant feedback is accepted.")
         self.show()
         self.raise_()
         self.activateWindow()
@@ -280,7 +298,16 @@ class ContinuousNavParticipantWindow(QWidget):
     def _on_action_request(self, msg: dict) -> None:
         if not self._room_trial_active():
             return
+        if self._current_modality() == Modality.NONE:
+            # Defensive fallback: observation trials must never collect human feedback.
+            try:
+                self._controller.send_continuous_nav_action(str(msg.get("request_id") or ""), None, source_detail="observation_auto_skip")
+            except Exception:
+                pass
+            self._status.setText("Observation mode — human feedback request ignored; agent continues without participant input.")
+            return
         self._waiting_request = dict(msg)
+        self._anytime_btn.setEnabled(False)
         timeout_s = float(
             getattr(self._controller, "_continuous_nav_feedback_timeout_seconds", 10.0)
         )
@@ -322,7 +349,9 @@ class ContinuousNavParticipantWindow(QWidget):
             self._waiting_request = None
             self._set_feedback_controls_enabled(False)
             self._status.setText("Human correction finished — RL control resumed from the final corrected state.")
-            self._control_hint.setText("The RL agent is controlling the robot.")
+            anytime = self._current_timing() == FeedbackTiming.ANYTIME and self._current_modality() == Modality.KEYBOARD
+            self._anytime_btn.setEnabled(anytime)
+            self._control_hint.setText("Press SPACE to intervene again." if anytime else "The RL agent is controlling the robot.")
         elif kind == "HUMAN_ACTION_TIMEOUT" and self._room_trial_active():
             self._waiting_request = None
             self._set_feedback_controls_enabled(False)
@@ -330,7 +359,15 @@ class ContinuousNavParticipantWindow(QWidget):
 
     # ------------------------------------------------------------------
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if self._waiting_request is None or self._current_modality() != Modality.KEYBOARD:
+        if self._waiting_request is None:
+            if (event.key() == Qt.Key.Key_Space and self._current_modality() == Modality.KEYBOARD
+                    and self._current_timing() == FeedbackTiming.ANYTIME):
+                self._begin_anytime_feedback()
+                event.accept()
+                return
+            super().keyPressEvent(event)
+            return
+        if self._current_modality() != Modality.KEYBOARD:
             super().keyPressEvent(event)
             return
         key = event.key()
@@ -358,6 +395,18 @@ class ContinuousNavParticipantWindow(QWidget):
             event.accept()
             return
         super().keyPressEvent(event)
+
+    def _begin_anytime_feedback(self) -> None:
+        if self._waiting_request is not None:
+            return
+        if self._current_timing() != FeedbackTiming.ANYTIME or self._current_modality() != Modality.KEYBOARD:
+            return
+        try:
+            self._controller.begin_continuous_anytime_feedback()
+            self._anytime_btn.setEnabled(False)
+            self._status.setText("Anytime intervention requested — waiting for Ubuntu worker to expose the correction state…")
+        except Exception as exc:
+            self._status.setText(f"Could not start Anytime feedback: {exc}")
 
     def _poll_runtime_input(self) -> None:
         if self._waiting_request is None:

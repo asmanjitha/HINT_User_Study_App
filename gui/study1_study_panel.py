@@ -1,11 +1,8 @@
 """Researcher-facing Study 1 experimental panel aligned with the IRB flow.
 
-Study 1 is explicit feedback only.  The panel exposes the three protocol
-settings in order:
-
-1. 2D Gridworld HIL-RL (two required timing conditions: Requested/Anytime)
-2. Indoor room navigation (Keyboard or Joystick explicit feedback)
-3. Baseline experimenter virtual navigation (no participant feedback)
+Study 1 investigates WHEN a human should intervene. It uses Keyboard only
+and requires Requested/Anytime conditions in both Gridworld and the continuous
+action-space room environment.
 
 The existing Actor-Critic Gridworld integration is launched for Keyboard
 Gridworld trials.  Conditions that currently depend on an external/not-yet-
@@ -100,11 +97,8 @@ class Study1StudyPanel(QWidget):
         root.addWidget(title)
 
         note = QLabel(
-            "Study 1 uses explicit feedback only. Complete: (1a) Gridworld with "
-            "system-requested feedback and anytime feedback, (1b) continuous action-space "
-            "room navigation on the Ubuntu HINT worker with Keyboard or Joystick, and (3) the experimenter "
-            "virtual-navigation baseline. Voice/gaze modalities are not Study 1 "
-            "experimental conditions."
+            "Study 1 investigates WHEN a human should intervene. Keyboard is the only feedback modality. "
+            "Complete four conditions: Gridworld Requested, Gridworld Anytime, Continuous Requested, and Continuous Anytime."
         )
         note.setWordWrap(True)
         note.setStyleSheet("color: #666; font-size: 11px;")
@@ -185,12 +179,8 @@ class Study1StudyPanel(QWidget):
         for modality in EXPLICIT_STUDY1_MODALITIES:
             self._modality_combo.addItem(modality.value, modality.name)
         self._modality_combo.currentIndexChanged.connect(self._update_execution_hint)
-        form.addRow("Explicit input:", self._modality_combo)
+        form.addRow("Feedback input (fixed):", self._modality_combo)
 
-        self._room_timing_combo = QComboBox()
-        self._room_timing_combo.addItem(FeedbackTiming.REQUESTED.value, FeedbackTiming.REQUESTED.name)
-        self._room_timing_combo.setEnabled(False)
-        form.addRow("Room feedback timing:", self._room_timing_combo)
 
         room_cfg = self._controller.config.study_raw.get("continuous_room_navigation", {})
         worker_row = QWidget()
@@ -471,11 +461,9 @@ class Study1StudyPanel(QWidget):
 
     def _on_task_changed(self) -> None:
         req = self._selected_required()
-        is_baseline = req.environment == Environment.HUMAN_AGENT_BASELINE
         is_room = req.environment == Environment.CONTINUOUS_ROOM
         is_grid = req.environment == Environment.GRIDWORLD
-        self._modality_combo.setEnabled(not is_baseline)
-        self._room_timing_combo.setEnabled(False)
+        self._modality_combo.setEnabled(False)
         self._seed_spin.setEnabled(is_grid)
         self._warm_start.setEnabled(is_grid)
         for widget in (self._worker_host, self._worker_port, self._worker_connect_btn, self._hil_steps_spin, self._room_timeout_spin):
@@ -488,23 +476,16 @@ class Study1StudyPanel(QWidget):
             return
         req = self._selected_required()
         modality = Modality[self._modality_combo.currentData()]
-        if req.environment == Environment.GRIDWORLD and modality == Modality.KEYBOARD:
-            text = "Live Actor-Critic Gridworld is integrated in this console."
-        elif req.environment == Environment.GRIDWORLD and modality == Modality.JOYSTICK:
-            text = (
-                "Tracked/external run: the joystick hardware adapter is not integrated in "
-                "this build, so this condition is not silently substituted with keyboard input."
-            )
+        if req.environment == Environment.GRIDWORLD:
+            text = "Live Actor-Critic Gridworld with Keyboard feedback."
         elif req.environment == Environment.CONTINUOUS_ROOM:
             client = self._controller.continuous_nav_client
             state = "connected" if client.connected else "not connected"
             text = (
-                "Study 1(b) runs on the Ubuntu HINT worker. The Console renders the live room/robot state, "
-                "records HoloLens + Shimmer, and forwards lock-step human actions. "
+                f"Continuous room {req.feedback_timing.value} runs on the Ubuntu HINT worker. The Console renders the live room/robot state, "
+                "records HoloLens + Shimmer, and uses Keyboard feedback. "
                 f"Worker is currently {state}."
             )
-        else:
-            text = "Tracked baseline run; no participant feedback modality is recorded."
         self._execution_label.setText(text)
         self._update_data_folder_preview()
 
@@ -549,21 +530,11 @@ class Study1StudyPanel(QWidget):
 
     def _condition_from_selection(self) -> ExperimentCondition:
         req = self._selected_required()
-        if req.environment == Environment.HUMAN_AGENT_BASELINE:
-            timing = FeedbackTiming.NOT_APPLICABLE
-            modality = Modality.NONE
-        elif req.environment == Environment.CONTINUOUS_ROOM:
-            timing = FeedbackTiming.REQUESTED
-            modality = Modality[self._modality_combo.currentData()]
-        else:
-            assert req.feedback_timing is not None
-            timing = req.feedback_timing
-            modality = Modality[self._modality_combo.currentData()]
-
+        timing = req.feedback_timing
+        modality = Modality.KEYBOARD
         algorithm = {
             Environment.GRIDWORLD: "actor_critic_gridworld",
             Environment.CONTINUOUS_ROOM: "ubuntu_ga3c_continuous_room",
-            Environment.HUMAN_AGENT_BASELINE: "experimenter_virtual_baseline",
         }[req.environment]
 
         return ExperimentCondition(
@@ -663,9 +634,7 @@ class Study1StudyPanel(QWidget):
         condition = self._condition_from_selection()
         modality = condition.modality
 
-        self._active_live_rl = (
-            req.environment == Environment.GRIDWORLD and modality == Modality.KEYBOARD
-        )
+        self._active_live_rl = req.environment == Environment.GRIDWORLD
         self._active_remote_room = req.environment == Environment.CONTINUOUS_ROOM
 
         try:

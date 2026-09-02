@@ -30,6 +30,7 @@ _STEP_SHORT_CODE = {
     WorkflowStep.STUDY1_STUDY: "S1ST",
     WorkflowStep.STUDY2_TRAINING: "S2TR",
     WorkflowStep.STUDY2_STUDY: "S2ST",
+    WorkflowStep.AGENT_OBSERVATION: "OBS",
 }
 
 

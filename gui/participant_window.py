@@ -396,6 +396,13 @@ class ParticipantWindow(QWidget):
 
         self._history_buttons = []
 
+        # Joystick feedback is polled from the already-selected device in the
+        # researcher console.  A small latch prevents a held stick/button from
+        # being submitted repeatedly before it returns to neutral.
+        self._joystick_axis_latched = False
+        self._joystick_button_latched = False
+        self._joystick_history_cursor = 0
+
         # Live HoloLens PV + projected gaze preview.  This reads snapshots
         # from the already-running device connection; it never opens a second
         # camera/EET stream.  The timer is only active while an Eye Gaze
@@ -704,6 +711,11 @@ class ParticipantWindow(QWidget):
             self._refresh_gaze_preview
         )
 
+        self._joystick_timer = QTimer(self)
+        self._joystick_timer.setInterval(50)
+        self._joystick_timer.timeout.connect(self._poll_joystick_feedback)
+        self._joystick_timer.start()
+
         rl = (
             self._controller
             .rl_manager
@@ -762,6 +774,9 @@ class ParticipantWindow(QWidget):
         self._anytime_feedback_active = False
         self._anytime_history = []
         self._selected_history_step = None
+        self._joystick_axis_latched = False
+        self._joystick_button_latched = False
+        self._joystick_history_cursor = 0
         self._live_state_payload = None
         self._clear_history_buttons()
         self._maze.clear_history()
@@ -773,7 +788,14 @@ class ParticipantWindow(QWidget):
             "PAUSE & SELECT FEEDBACK  [SPACE]"
         )
 
-        if (
+        if self._feedback_modality == Modality.NONE:
+            self._feedback_message.setText(
+                "Observation phase — watch the agent learn. No human feedback is required."
+            )
+            self._set_controls(False)
+            self._skip_btn.setVisible(False)
+            self._pause_feedback_btn.setVisible(False)
+        elif (
             self._feedback_timing
             == FeedbackTiming.ANYTIME
         ):
@@ -792,6 +814,17 @@ class ParticipantWindow(QWidget):
                     )
                 self._pause_feedback_btn.setText(
                     'VOICE MODE — SAY "STOP" TO PAUSE'
+                )
+                self._pause_feedback_btn.setEnabled(False)
+            elif self._feedback_modality == Modality.JOYSTICK:
+                self._feedback_message.setText(
+                    "Joystick feedback ready. Press the first joystick button when "
+                    "you want to pause. Use LEFT/RIGHT to choose a recent state, "
+                    "press the first button to confirm it, then tilt the stick in "
+                    "the corrective direction."
+                )
+                self._pause_feedback_btn.setText(
+                    "JOYSTICK MODE — PRESS BUTTON 1 TO PAUSE"
                 )
                 self._pause_feedback_btn.setEnabled(False)
             elif self._is_gaze_modality():
@@ -827,6 +860,12 @@ class ParticipantWindow(QWidget):
                 self._feedback_message.setText(
                     "Wait until the system requests feedback. Then say "
                     "UP, DOWN, LEFT, or RIGHT."
+                )
+                self._skip_btn.setVisible(False)
+            elif self._feedback_modality == Modality.JOYSTICK:
+                self._feedback_message.setText(
+                    "Wait until the system requests feedback. Then tilt the "
+                    "joystick UP, DOWN, LEFT, or RIGHT."
                 )
                 self._skip_btn.setVisible(False)
             elif self._is_gaze_modality():
@@ -893,6 +932,9 @@ class ParticipantWindow(QWidget):
 
         self._anytime_feedback_active = True
         self._selected_history_step = None
+        self._joystick_history_cursor = 0
+        self._joystick_axis_latched = False
+        self._joystick_button_latched = True
 
         self._anytime_history = list(
             payload.get(
@@ -925,6 +967,12 @@ class ParticipantWindow(QWidget):
                 f"to correct (1 to {max_box})."
             )
             self._voice_recognizer.set_context(VOICE_CONTEXT_STATE_NUMBER)
+        elif self._feedback_modality == Modality.JOYSTICK:
+            self._highlight_joystick_history_cursor()
+            self._feedback_message.setText(
+                "Agent paused. Use joystick LEFT/RIGHT to choose a recent state, "
+                "then press the first joystick button to confirm it."
+            )
         elif self._is_gaze_modality():
             self._set_gaze_preview_active(True)
             max_box = max(1, len(self._anytime_history))
@@ -969,6 +1017,12 @@ class ParticipantWindow(QWidget):
             )
             self._set_controls(False)
             self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+        elif self._feedback_modality == Modality.JOYSTICK:
+            self._feedback_message.setText(
+                f"Feedback requested at cell {state}. Tilt the joystick UP, DOWN, "
+                f"LEFT, or RIGHT. Time remaining: {self._remaining_seconds} s"
+            )
+            self._set_controls(False)
         elif self._is_gaze_modality():
             self._set_gaze_preview_active(True)
             self._feedback_message.setText(
@@ -1033,6 +1087,16 @@ class ParticipantWindow(QWidget):
                     'Training resumed. Say "STOP" when you want to provide '
                     "another correction."
                 )
+            elif self._feedback_modality == Modality.JOYSTICK:
+                self._pause_feedback_btn.setEnabled(False)
+                self._joystick_axis_latched = False
+                self._joystick_button_latched = False
+                self._feedback_message.setText(
+                    f"Feedback {payload.get('action_name')} applied to step "
+                    f"{payload.get('step')} ({payload.get('steps_back', 0)} step(s) back). "
+                    "Training resumed. Press the first joystick button when you "
+                    "want to provide another correction."
+                )
             elif self._is_gaze_modality():
                 self._pause_feedback_btn.setEnabled(False)
                 self._gaze_recognizer.set_context(GAZE_CONTEXT_DOUBLE_BLINK)
@@ -1068,6 +1132,8 @@ class ParticipantWindow(QWidget):
             self._countdown.stop()
             if self._feedback_modality == Modality.VOICE:
                 self._voice_recognizer.set_context(VOICE_CONTEXT_IDLE)
+            elif self._feedback_modality == Modality.JOYSTICK:
+                self._joystick_axis_latched = False
             elif self._is_gaze_modality():
                 self._gaze_recognizer.set_context(GAZE_CONTEXT_IDLE)
 
@@ -1687,7 +1753,7 @@ class ParticipantWindow(QWidget):
             button.setFocusPolicy(
                 Qt.FocusPolicy.NoFocus
             )
-            if self._feedback_modality == Modality.VOICE or self._is_gaze_modality():
+            if self._feedback_modality in (Modality.VOICE, Modality.JOYSTICK) or self._is_gaze_modality():
                 # Voice/gaze trials show numbered boxes as visual references,
                 # but selection itself must use the assigned modality.
                 button.setEnabled(False)
@@ -1771,6 +1837,15 @@ class ParticipantWindow(QWidget):
                 "Now say UP, DOWN, LEFT, or RIGHT."
             )
             self._voice_recognizer.set_context(VOICE_CONTEXT_DIRECTION)
+        elif self._feedback_modality == Modality.JOYSTICK:
+            self._set_controls(False)
+            self._joystick_axis_latched = True
+            self._feedback_message.setText(
+                f"Selected box {item.get('history_index', '?')} — step "
+                f"{item['step']} at cell {tuple(item['state'])}. "
+                "Return the joystick to center, then tilt it UP, DOWN, LEFT, "
+                "or RIGHT for the corrective action."
+            )
         elif self._is_gaze_modality():
             self._set_controls(False)
             self._feedback_message.setText(
@@ -1821,6 +1896,110 @@ class ParticipantWindow(QWidget):
                 enabled
             )
 
+    def _joystick_direction(self, axes: list[float]) -> int | None:
+        """Map the first two joystick axes to Gridworld actions.
+
+        Action order follows the Gridworld convention used by the keyboard:
+        0=Up, 1=Down, 2=Left, 3=Right.  The dominant axis wins so diagonal
+        deflections still produce one unambiguous correction.
+        """
+        if len(axes) < 2:
+            return None
+        x = float(axes[0])
+        y = float(axes[1])
+        threshold = 0.55
+        if max(abs(x), abs(y)) < threshold:
+            return None
+        if abs(y) >= abs(x):
+            return 0 if y < 0 else 1
+        return 2 if x < 0 else 3
+
+    def _highlight_joystick_history_cursor(self) -> None:
+        if not self._history_buttons:
+            return
+        self._joystick_history_cursor = max(
+            0, min(self._joystick_history_cursor, len(self._history_buttons) - 1)
+        )
+        for index, (button, _record) in enumerate(self._history_buttons):
+            if self._selected_history_step is not None:
+                continue
+            button.setStyleSheet(
+                "font-weight: bold; border: 3px dashed #457b9d;"
+                if index == self._joystick_history_cursor
+                else ""
+            )
+        current = self._history_buttons[self._joystick_history_cursor][1]
+        self._maze.set_history(
+            self._anytime_history,
+            selected_step=current.get("step"),
+        )
+
+    def _poll_joystick_feedback(self) -> None:
+        """Read joystick input without relabeling keyboard/mouse actions.
+
+        Requested mode: tilt the stick to submit a direction.
+        Anytime mode: button 1 pauses; LEFT/RIGHT chooses a history box;
+        button 1 confirms it; the next directional stick tilt is submitted.
+        """
+        if self._feedback_modality != Modality.JOYSTICK:
+            self._joystick_axis_latched = False
+            self._joystick_button_latched = False
+            return
+
+        try:
+            stats = self._controller.device_manager.joystick_stats()
+        except Exception:
+            return
+        axes = [float(v) for v in stats.get("axes", [])]
+        buttons = stats.get("buttons", [])
+        pressed = bool(buttons and buttons[0])
+        button_rising = pressed and not self._joystick_button_latched
+        self._joystick_button_latched = pressed
+
+        x = axes[0] if len(axes) > 0 else 0.0
+        y = axes[1] if len(axes) > 1 else 0.0
+        if abs(x) < 0.30 and abs(y) < 0.30:
+            self._joystick_axis_latched = False
+
+        if self._feedback_timing == FeedbackTiming.REQUESTED:
+            if not self._waiting_for_feedback or self._joystick_axis_latched:
+                return
+            action = self._joystick_direction(axes)
+            if action is not None:
+                self._joystick_axis_latched = True
+                self._send_action(action, modality=Modality.JOYSTICK)
+            return
+
+        if self._feedback_timing != FeedbackTiming.ANYTIME:
+            return
+
+        if not self._anytime_feedback_active:
+            if button_rising:
+                self._begin_anytime_feedback()
+            return
+
+        if self._selected_history_step is None:
+            if not self._history_buttons:
+                return
+            if not self._joystick_axis_latched and abs(x) >= 0.55:
+                direction = -1 if x < 0 else 1
+                self._joystick_history_cursor = (
+                    self._joystick_history_cursor + direction
+                ) % len(self._history_buttons)
+                self._joystick_axis_latched = True
+                self._highlight_joystick_history_cursor()
+            if button_rising:
+                _button, record = self._history_buttons[self._joystick_history_cursor]
+                self._select_history_state(record)
+            return
+
+        if self._joystick_axis_latched:
+            return
+        action = self._joystick_direction(axes)
+        if action is not None:
+            self._joystick_axis_latched = True
+            self._send_action(action, modality=Modality.JOYSTICK)
+
     def _tick_countdown(
         self,
     ) -> None:
@@ -1839,6 +2018,11 @@ class ParticipantWindow(QWidget):
         if self._feedback_modality == Modality.VOICE:
             self._feedback_message.setText(
                 "Feedback requested. Say UP, DOWN, LEFT, or RIGHT. "
+                f"Time remaining: {self._remaining_seconds} s"
+            )
+        elif self._feedback_modality == Modality.JOYSTICK:
+            self._feedback_message.setText(
+                "Feedback requested. Tilt the joystick UP, DOWN, LEFT, or RIGHT. "
                 f"Time remaining: {self._remaining_seconds} s"
             )
         elif self._is_gaze_modality():
@@ -1876,7 +2060,7 @@ class ParticipantWindow(QWidget):
         event: QKeyEvent,
     ) -> None:
 
-        if self._feedback_modality == Modality.VOICE or self._is_gaze_modality():
+        if self._feedback_modality in (Modality.VOICE, Modality.JOYSTICK) or self._is_gaze_modality():
             # Do not silently turn keyboard presses into Voice/Eye-Gaze observations.
             # These conditions are controlled only by their assigned modality.
             if event.key() in (

@@ -4,6 +4,97 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
+
+## What's in this version (V1.3.1 — main-window study timers)
+
+The researcher console now shows a live countdown in the main-window status
+bar. The timer is never added to the participant-facing Gridworld or Continuous
+Navigation windows.
+
+- Every Study 1 condition receives 8 minutes.
+- Every Study 2 modality condition receives 8 minutes.
+- Every Agent Observation environment receives 5 minutes.
+- A paused Gridworld trial pauses the countdown and resume continues from the
+  remaining time.
+- Manual valid/invalid/abort completion stops the countdown immediately.
+- At `00:00`, the existing synchronized trial-close path stops the RL backend,
+  closes sensor recordings, completes the workflow run as valid, and records a
+  `TRIAL_TIME_LIMIT_REACHED` event.
+- Training and familiarization runs remain untimed.
+
+The durations are configurable under `timing` in `config/study.yaml`.
+
+## Revised Training / Study 1 / Study 2 / Observation flow (V1.3.0)
+
+The visible participant workflow is now:
+
+1. **Registration**
+2. **Training Phase**
+3. **Study 1 — When Should a Human Intervene?**
+4. **Study 2 — How Should a Human Provide Feedback?**
+5. **Agent Observation Phase — No Human Feedback**
+
+### Training Phase
+
+Six conditions are required. Gridworld and Continuous Room Navigation both include
+Keyboard **System Requested** and **Anytime** practice. Joystick and Voice receive
+Gridworld **System Requested** practice. **Anytime training is Keyboard-only.**
+HoloLens familiarization/sensor checking is an optional final training item and does
+not block Study 1. The existing **Quick Pass Required Training** action marks only
+the six mandatory items complete; it does not fabricate trial data or mark the
+optional HoloLens item complete.
+
+### Study 1 — WHEN to intervene
+
+Study 1 now uses **Keyboard only** and requires exactly four conditions:
+Gridworld Requested, Gridworld Anytime, Continuous Requested, and Continuous
+Anytime. The old baseline and Study-1 Joystick conditions are no longer part of
+protocol completion.
+
+### Study 2 — HOW to provide feedback
+
+Study 2 uses **Gridworld only**. The researcher chooses **Requested** or
+**Anytime** timing and then selects **Keyboard, Joystick, or Voice**. All three
+modalities are live Actor-Critic feedback paths. For Joystick Anytime, press the
+first joystick button to pause, use LEFT/RIGHT to choose a history state, press
+the first button to confirm it, then tilt the stick in the corrective direction.
+
+Not every modality is mandatory. After at least one valid modality run, the
+researcher can press **Finish Study 2 & Continue**. This writes an explicit
+workflow completion marker and automatically opens the Agent Observation phase.
+The intended protocol is to collect the one or two modalities selected for that
+participant.
+
+### Agent Observation Phase
+
+The participant observes the agent learn **without human feedback** in both
+Gridworld and Continuous Room Navigation. The Console requires fresh **Shimmer
+GSR/PPG** and **HoloLens** streams before either observation run can start. Trial
+recording uses the normal synchronized sensor lifecycle and stores these trials
+under:
+
+```text
+data/P001/S01/Phase3_AgentObservation_NoFeedback/
+  T01_Gridworld_NoFeedback/R01/
+  T02_Room_NoFeedback/R01/
+```
+
+Observation trial IDs use the readable `..._OBS_T##_R##` scope.
+
+### Ubuntu continuous-navigation worker compatibility
+
+This Console now sends `BEGIN_ANYTIME_FEEDBACK` for Continuous Anytime
+interventions. The Ubuntu worker must implement that message by pausing at the
+current state and returning the normal human-action request sequence. For the
+Agent Observation Continuous run, `PREPARE_TRIAL` is sent with feedback mode
+`N/A` and modality `N/A (No Participant Feedback)`; the worker should run normal
+RL without collision rewind/human-control requests. The Console defensively
+auto-skips an unexpected request in observation mode, but worker-side no-feedback
+support is still recommended so the RL trajectory is truly baseline/no-feedback.
+
+The older version sections below are retained as implementation history; the
+V1.3.x sections are authoritative for the current study flow.
+
 ## What's in this version (V1.2.2 — Study 1 Training Quick Pass + Ubuntu continuous navigation)
 
 - **Study 1(b) Continuous Action-Space Room Navigation is now live-integrated.** The existing `Continuous Room Navigation` placeholder now connects to the Ubuntu `HINT_ContinuousNav_Ubuntu_v1` worker over WebSocket/HTTP.

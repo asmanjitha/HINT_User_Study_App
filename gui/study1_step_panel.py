@@ -1,709 +1,188 @@
-"""Study 1 training/familiarization panel.
-
-The training window intentionally keeps the existing 2 x 4 practice matrix:
-Requested/Anytime x Keyboard/Joystick/Voice/Eye Gaze. Experimental Study 1
-uses a separate IRB-aligned panel (``study1_study_panel.py``).
-"""
-
+"""Shared pre-study training/familiarization phase."""
 from __future__ import annotations
 
 import datetime
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QCheckBox,
-    QComboBox,
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QSpinBox,
-    QTableWidget,
-    QTableWidgetItem,
-    QVBoxLayout,
-    QWidget,
+    QAbstractItemView, QCheckBox, QComboBox, QFormLayout, QGroupBox, QHBoxLayout,
+    QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton, QSpinBox,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from core.application_controller import ApplicationController
 from core.workflow_manager import (
-    STEP_LABELS,
-    STUDY1_TRAINING_QUICK_PASS_NOTE,
-    STUDY1_REQUIRED_CONDITION_COUNT,
-    STUDY1_REQUIRED_MODALITIES,
-    STUDY1_REQUIRED_TIMINGS,
+    STEP_LABELS, TRAINING_CONDITIONS, STUDY1_TRAINING_REQUIRED_CONDITION_COUNT,
 )
-from models.enums import (
-    Environment,
-    FeedbackTiming,
-    Modality,
-    Study,
-    WorkflowStep,
-)
+from devices.voice_recognizer import VoiceCommandRecognizer
+from models.enums import Environment, Modality, WorkflowStep
 from models.trial import ExperimentCondition
 
+_STATUS = {"Not Started":"⬜","In Progress":"🔶","Completed":"✅","Needs Repeat":"⚠"}
 
-_STATUS_SYMBOL = {
-    "Not Started": "⬜",
-    "In Progress": "🔶",
-    "Completed": "✅",
-    "Needs Repeat": "⚠",
-}
-
-
-def _fmt_time(ts: float | None) -> str:
-    if not ts:
-        return "--"
-    return datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
-
-
-def _fmt_duration(started: float | None, ended: float | None) -> str:
-    if not started or not ended:
-        return "--"
-    seconds = int(ended - started)
-    return f"{seconds // 60}m {seconds % 60}s"
-
+def _fmt(ts):
+    return "--" if not ts else datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
 
 class Study1StepPanel(QWidget):
-    def __init__(
-        self,
-        controller: ApplicationController,
-        step: WorkflowStep,
-        on_step_changed,
-        parent: QWidget | None = None,
-    ) -> None:
+    def __init__(self, controller: ApplicationController, step: WorkflowStep, on_step_changed, parent=None):
         super().__init__(parent)
         if step != WorkflowStep.STUDY1_TRAINING:
-            raise ValueError("Study1StepPanel is the Study 1 Training panel only")
-        self._controller = controller
-        self._step = step
-        self._practice = True
-        self._on_step_changed = on_step_changed
+            raise ValueError("Study1StepPanel is the shared Training Phase panel")
+        self._controller=controller; self._step=step; self._on_step_changed=on_step_changed
+        self._participant_code=None; self._active_run=None; self._active_live=False; self._active_remote=False
+        root=QVBoxLayout(self)
+        title=QLabel(STEP_LABELS[step]); title.setStyleSheet("font-size:18px;font-weight:bold;"); root.addWidget(title)
+        note=QLabel(
+            "Required practice covers Gridworld and Continuous Action Space. Anytime feedback practice is Keyboard-only. "
+            "Joystick and Voice are practiced only in System-requested mode. HoloLens familiarization is optional and is listed last; it never blocks the studies."
+        ); note.setWordWrap(True); note.setStyleSheet("color:#666;font-size:11px;"); root.addWidget(note)
+        root.addWidget(self._build_table()); root.addWidget(self._build_config()); root.addWidget(self._build_run()); root.addWidget(self._build_history(),1)
+        controller.rl_manager.trial_started.connect(lambda _t:self._set_live(True))
+        controller.continuous_nav_client.connection_status_changed.connect(self._worker_status_changed)
 
-        self._participant_code: str | None = None
-        self._active_run = None
-
-        root = QVBoxLayout(self)
-
-        title = QLabel(STEP_LABELS[step])
-        title.setStyleSheet("font-size: 18px; font-weight: bold;")
-        root.addWidget(title)
-
-        note_text = (
-            "Study 1 Training requires practice in all 8 combinations: Requested + "
-            "Anytime feedback, each with Keyboard, Joystick, Voice, and Eye Gaze. "
-            "Training progress is tracked separately from experimental Study 1 data."
-        )
-        note = QLabel(note_text)
-        note.setWordWrap(True)
-        note.setStyleSheet("color: #666; font-size: 11px;")
-        root.addWidget(note)
-
-        root.addWidget(self._build_condition_matrix())
-
-        root.addWidget(self._build_config_box())
-        root.addWidget(self._build_status_box())
-        root.addWidget(self._build_history_box(), 1)
-
-        self._controller.rl_manager.trial_started.connect(self._on_trial_started)
-        self._controller.rl_manager.episode_finished.connect(self._on_episode_finished)
-        self._controller.rl_manager.status_changed.connect(self._on_rl_status_changed)
-
-    # -- Required condition matrix -----------------------------------------
-    def _build_condition_matrix(self) -> QGroupBox:
-        phase_name = "Training" if self._practice else "Study"
-        box = QGroupBox(f"Required Study 1 {phase_name} Conditions")
-        layout = QVBoxLayout(box)
-
-        top = QHBoxLayout()
-        self._matrix_summary_label = QLabel("0 / 8 conditions completed")
-        self._matrix_summary_label.setStyleSheet("font-weight: bold;")
-        top.addWidget(self._matrix_summary_label)
-        top.addStretch()
-
-        self._quick_pass_btn = QPushButton("Quick Pass All Tests")
-        self._quick_pass_btn.setToolTip(
-            "For participants already familiar with all feedback modalities and HoloLens use. "
-            "Marks all 8 training requirements as passed without creating synthetic RL trials."
-        )
-        self._quick_pass_btn.clicked.connect(self._quick_pass_all_training)
-        top.addWidget(self._quick_pass_btn)
-
-        self._next_condition_btn = QPushButton("Select Next Incomplete")
-        self._next_condition_btn.clicked.connect(self._select_next_incomplete)
-        top.addWidget(self._next_condition_btn)
-        layout.addLayout(top)
-
-        self._condition_table = QTableWidget(
-            len(STUDY1_REQUIRED_TIMINGS),
-            len(STUDY1_REQUIRED_MODALITIES),
-        )
-        self._condition_table.setHorizontalHeaderLabels(
-            [modality.value for modality in STUDY1_REQUIRED_MODALITIES]
-        )
-        self._condition_table.setVerticalHeaderLabels(
-            [timing.value for timing in STUDY1_REQUIRED_TIMINGS]
-        )
-        self._condition_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
-        self._condition_table.verticalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
-        self._condition_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self._condition_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self._condition_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
-        self._condition_table.cellClicked.connect(self._condition_cell_clicked)
-        self._condition_table.setMinimumHeight(150)
-        layout.addWidget(self._condition_table)
-
-        legend = QLabel(
-            "⬜ Not started    🔶 In progress    ✅ Completed    ⚠ Needs repeat   "
-            "— click a cell to select that condition."
-        )
-        legend.setWordWrap(True)
-        legend.setStyleSheet("color: #666; font-size: 11px;")
-        layout.addWidget(legend)
+    def _build_table(self):
+        box=QGroupBox("Training checklist"); lay=QVBoxLayout(box)
+        top=QHBoxLayout(); self._summary=QLabel(); self._summary.setStyleSheet("font-weight:bold;"); top.addWidget(self._summary); top.addStretch()
+        self._quick=QPushButton("Quick Pass Required Training"); self._quick.clicked.connect(self._quick_pass); top.addWidget(self._quick)
+        self._next=QPushButton("Select Next Required"); self._next.clicked.connect(self._select_next); top.addWidget(self._next); lay.addLayout(top)
+        self._table=QTableWidget(len(TRAINING_CONDITIONS),6); self._table.setHorizontalHeaderLabels(["Practice item","Environment","Timing","Input","Required?","Status"])
+        self._table.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeMode.Stretch)
+        for c in range(1,6): self._table.horizontalHeader().setSectionResizeMode(c,QHeaderView.ResizeMode.ResizeToContents)
+        self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers); self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows); self._table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self._table.cellClicked.connect(self._select_row); lay.addWidget(self._table)
         return box
 
-    def _refresh_condition_matrix(self) -> None:
-        if not hasattr(self, "_condition_table"):
-            return
+    def _build_config(self):
+        box=QGroupBox("Selected training item"); form=QFormLayout(box)
+        self._condition=QComboBox()
+        for c in TRAINING_CONDITIONS: self._condition.addItem(c.label,c.key)
+        self._condition.currentIndexChanged.connect(self._selection_changed); form.addRow("Training item:",self._condition)
+        self._details=QLabel(); self._details.setWordWrap(True); form.addRow("Protocol:",self._details)
+        self._seed=QSpinBox(); self._seed.setRange(0,2147483647); self._seed.setValue(int(self._controller.config.study_raw.get("random_seed",42))); form.addRow("Gridworld seed:",self._seed)
+        self._warm=QCheckBox("Use maze-informed Actor/Critic warm start"); form.addRow("Gridworld warm start:",self._warm)
+        room_cfg=self._controller.config.study_raw.get("continuous_room_navigation",{})
+        row=QWidget(); h=QHBoxLayout(row); h.setContentsMargins(0,0,0,0)
+        self._host=QLineEdit(str(room_cfg.get("worker_host","127.0.0.1"))); h.addWidget(self._host,1)
+        self._port=QSpinBox(); self._port.setRange(1,65535); self._port.setValue(int(room_cfg.get("worker_port",8875))); h.addWidget(self._port)
+        self._connect=QPushButton("Connect / Test"); self._connect.clicked.connect(self._connect_worker); h.addWidget(self._connect); form.addRow("Ubuntu worker:",row)
+        self._worker_status=QLabel("Not connected"); self._worker_status.setWordWrap(True); form.addRow("Worker status:",self._worker_status)
+        self._hil=QSpinBox(); self._hil.setRange(1,100); self._hil.setValue(int(room_cfg.get("hil_correction_length",10))); form.addRow("Correction length:",self._hil)
+        self._timeout=QSpinBox(); self._timeout.setRange(1,120); self._timeout.setValue(int(room_cfg.get("feedback_timeout_seconds",10))); self._timeout.setSuffix(" s"); form.addRow("Feedback timeout:",self._timeout)
+        return box
 
-        if self._participant_code is None:
-            self._matrix_summary_label.setText("Select a participant to view condition status.")
-            for row in range(self._condition_table.rowCount()):
-                for col in range(self._condition_table.columnCount()):
-                    self._condition_table.setItem(row, col, QTableWidgetItem("⬜ Not Started"))
-            self._next_condition_btn.setEnabled(False)
-            self._quick_pass_btn.setEnabled(False)
-            return
+    def _build_run(self):
+        box=QGroupBox("Training run"); lay=QVBoxLayout(box); self._status=QLabel("No run in progress."); lay.addWidget(self._status)
+        self._folder=QLabel("Next data folder: --"); self._folder.setWordWrap(True); self._folder.setStyleSheet("font-family:monospace;color:#555;"); lay.addWidget(self._folder)
+        row=QHBoxLayout(); self._start=QPushButton("Start Selected Practice"); self._start.clicked.connect(self._start_run); row.addWidget(self._start)
+        self._complete=QPushButton("Stop && Mark Complete"); self._complete.clicked.connect(lambda:self._finish(True)); row.addWidget(self._complete)
+        self._abort=QPushButton("Abort"); self._abort.clicked.connect(lambda:self._finish(False)); row.addWidget(self._abort); lay.addLayout(row); self._set_running(False); return box
 
-        quick_passed = self._controller.workflow_manager.study1_training_quick_passed(
-            self._participant_code
-        )
-        summaries = self._controller.workflow_manager.study1_condition_statuses(
-            self._participant_code,
-            practice=self._practice,
-        )
-        by_pair = {
-            (item.feedback_timing, item.modality): item
-            for item in summaries
-        }
+    def _build_history(self):
+        box=QGroupBox("Practice Trial History"); lay=QVBoxLayout(box); self._history=QTableWidget(0,7); self._history.setHorizontalHeaderLabels(["Condition","Attempt","Environment","Timing","Input","Result","Started"]); self._history.horizontalHeader().setSectionResizeMode(2,QHeaderView.ResizeMode.Stretch); self._history.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers); lay.addWidget(self._history); return box
 
-        completed = 0
-        for row, timing in enumerate(STUDY1_REQUIRED_TIMINGS):
-            for col, modality in enumerate(STUDY1_REQUIRED_MODALITIES):
-                summary = by_pair[(timing, modality)]
-                if summary.status == "Completed":
-                    completed += 1
-
-                if quick_passed:
-                    text = "✅ Passed\nQuick Pass"
-                else:
-                    text = f"{_STATUS_SYMBOL[summary.status]} {summary.status}"
-                if not quick_passed and summary.completed_trials > 1:
-                    text += f"\n{summary.completed_trials} completed runs"
-                elif summary.total_trials > 1 and summary.status != "Completed":
-                    text += f"\n{summary.total_trials} attempts"
-
-                item = QTableWidgetItem(text)
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                if quick_passed:
-                    item.setToolTip(
-                        f"{timing.value} / {modality.value}\n"
-                        "Training requirement satisfied by Quick Pass.\n"
-                        "No synthetic RL trial was created for this condition."
-                    )
-                else:
-                    item.setToolTip(
-                        f"{timing.value} / {modality.value}\n"
-                        f"Completed trials: {summary.completed_trials}\n"
-                        f"Total attempts: {summary.total_trials}\n"
-                        f"Last trial: {summary.last_trial_id or '--'}"
-                    )
-                self._condition_table.setItem(row, col, item)
-
-        remaining = STUDY1_REQUIRED_CONDITION_COUNT - completed
-        if completed == STUDY1_REQUIRED_CONDITION_COUNT:
-            if quick_passed:
-                self._matrix_summary_label.setText(
-                    f"✅ {completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions passed — "
-                    "Training Quick Pass applied"
-                )
-            else:
-                self._matrix_summary_label.setText(
-                    f"✅ {completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions completed — "
-                    f"Study 1 {'Training' if self._practice else 'Study'} complete"
-                )
-            self._next_condition_btn.setEnabled(False)
-            self._quick_pass_btn.setEnabled(False)
+    def set_participant(self, code): self._participant_code=code; self.refresh(); self._select_next()
+    def refresh(self):
+        self._refresh_table(); self._refresh_history(); self._selection_changed()
+        if not self._participant_code:
+            self._status.setText("Select or register a participant first."); self._start.setEnabled(False); self._set_running(False); return
+        summary=self._controller.workflow_manager.step_status(self._participant_code,self._step); self._active_run=summary.active_run
+        blocking=self._controller.workflow_manager.has_active_run(self._participant_code)
+        if self._active_run:
+            self._status.setText(f"Training in progress: {self._active_run.run_id}"); self._start.setEnabled(False); self._set_running(True)
         else:
-            self._matrix_summary_label.setText(
-                f"{completed} / {STUDY1_REQUIRED_CONDITION_COUNT} conditions completed "
-                f"({remaining} remaining)"
-            )
-            self._next_condition_btn.setEnabled(self._active_run is None)
+            self._set_running(False)
+            self._status.setText(f"Required training: {summary.completed_count}/{STUDY1_TRAINING_REQUIRED_CONDITION_COUNT} complete. Optional HoloLens familiarization does not affect this count.")
+            self._start.setEnabled(blocking is None)
+            if blocking: self._status.setText(f"Another run ({blocking.run_id}) is active. Finish or abort it first.")
 
-        self._highlight_selected_condition()
+    def _refresh_table(self):
+        statuses=[] if not self._participant_code else self._controller.workflow_manager.training_condition_statuses(self._participant_code)
+        completed=0
+        for r,c in enumerate(TRAINING_CONDITIONS):
+            st=statuses[r] if statuses else None
+            if st and st.required and st.status=="Completed": completed+=1
+            vals=[c.label,c.environment.value,c.feedback_timing.value,c.modality.value,"Yes" if c.required else "Optional",f"{_STATUS[st.status]} {st.status}" if st else "⬜ Not Started"]
+            for col,v in enumerate(vals): self._table.setItem(r,col,QTableWidgetItem(v))
+        self._summary.setText(f"{completed} / {STUDY1_TRAINING_REQUIRED_CONDITION_COUNT} required training items completed")
+        self._quick.setEnabled(bool(self._participant_code) and completed<STUDY1_TRAINING_REQUIRED_CONDITION_COUNT and self._active_run is None)
+        self._next.setEnabled(bool(self._participant_code) and completed<STUDY1_TRAINING_REQUIRED_CONDITION_COUNT and self._active_run is None)
 
-    def _condition_cell_clicked(self, row: int, col: int) -> None:
-        if row < 0 or col < 0:
-            return
-        self._set_condition_selection(
-            STUDY1_REQUIRED_TIMINGS[row],
-            STUDY1_REQUIRED_MODALITIES[col],
-        )
+    def _refresh_history(self):
+        if not self._participant_code: self._history.setRowCount(0); return
+        trials=self._controller.trial_manager.list_trials(self._participant_code,practice=True); self._history.setRowCount(len(trials))
+        for r,t in enumerate(reversed(trials)):
+            vals=[t.condition_code or "--",t.run_code or "--",t.condition.environment.value,t.condition.feedback_timing.value,t.condition.modality.value,t.collection_status.value if t.collection_status.value!="Pending" else t.status.value,_fmt(t.started_at)]
+            for c,v in enumerate(vals): self._history.setItem(r,c,QTableWidgetItem(v))
 
-    def _set_condition_selection(
-        self, timing: FeedbackTiming, modality: Modality
-    ) -> None:
-        timing_index = self._timing_combo.findData(timing.name)
-        modality_index = self._modality_combo.findData(modality.name)
-        if timing_index >= 0:
-            self._timing_combo.setCurrentIndex(timing_index)
-        if modality_index >= 0:
-            self._modality_combo.setCurrentIndex(modality_index)
-        self._highlight_selected_condition()
+    def _selected(self):
+        key=self._condition.currentData(); return next(c for c in TRAINING_CONDITIONS if c.key==key)
+    def _select_row(self,row,_col):
+        if 0<=row<len(TRAINING_CONDITIONS):
+            idx=self._condition.findData(TRAINING_CONDITIONS[row].key); self._condition.setCurrentIndex(idx)
+    def _select_next(self):
+        if not self._participant_code:return
+        x=self._controller.workflow_manager.next_incomplete_training_condition(self._participant_code)
+        if x:
+            idx=self._condition.findData(x.key)
+            if idx>=0:self._condition.setCurrentIndex(idx)
+    def _selection_changed(self):
+        c=self._selected(); room=c.environment==Environment.CONTINUOUS_ROOM; grid=c.environment==Environment.GRIDWORLD
+        self._details.setText(f"{c.environment.value} | {c.feedback_timing.value} | {c.modality.value} | {'Required' if c.required else 'Optional'}")
+        self._seed.setEnabled(grid); self._warm.setEnabled(grid)
+        for w in (self._host,self._port,self._connect,self._hil,self._timeout): w.setEnabled(room and self._active_run is None)
+        self._update_preview()
 
-    def _highlight_selected_condition(self) -> None:
-        if not hasattr(self, "_condition_table"):
-            return
+    def _update_preview(self):
+        if not self._participant_code: self._folder.setText("Next data folder: --"); return
         try:
-            timing = FeedbackTiming[self._timing_combo.currentData()]
-            modality = Modality[self._modality_combo.currentData()]
-            row = STUDY1_REQUIRED_TIMINGS.index(timing)
-            col = STUDY1_REQUIRED_MODALITIES.index(modality)
-        except (KeyError, ValueError):
-            return
-        self._condition_table.setCurrentCell(row, col)
+            c=self._selected(); cond=ExperimentCondition(c.study,c.environment,c.feedback_timing,c.modality,rl_algorithm="ubuntu_ga3c_continuous_room" if c.environment==Environment.CONTINUOUS_ROOM else "actor_critic_gridworld",random_seed=self._seed.value() if c.environment==Environment.GRIDWORLD else None)
+            sid=self._controller.session_manager.preview_session_id(self._participant_code); p=self._controller.trial_manager.preview_storage(participant_code=self._participant_code,session_id=sid,condition=cond,practice=True); self._folder.setText(f"Next data folder: {p['relative_dir']}")
+        except Exception:self._folder.setText("Next data folder: unavailable")
 
-    def _select_next_incomplete(self) -> None:
-        if self._participant_code is None:
-            return
-        next_condition = self._controller.workflow_manager.next_incomplete_study1_condition(
-            self._participant_code,
-            practice=self._practice,
-        )
-        if next_condition is None:
-            return
-        self._set_condition_selection(
-            next_condition.feedback_timing,
-            next_condition.modality,
-        )
+    def _connect_worker(self):
+        try:
+            r=self._controller.connect_continuous_nav_worker(self._host.text().strip(),self._port.value()); self._worker_status.setText(f"Connected: {r.get('status',{}).get('hostname',self._host.text().strip())}")
+        except Exception as e: self._worker_status.setText(f"Connection failed: {e}"); QMessageBox.critical(self,"Ubuntu worker connection failed",str(e))
+    def _worker_status_changed(self,s): self._worker_status.setText(s)
 
-    # -- Config -------------------------------------------------------------
-    def _build_config_box(self) -> QGroupBox:
-        box = QGroupBox("Configuration")
-        form = QFormLayout(box)
+    def _quick_pass(self):
+        if not self._participant_code:return
+        ans=QMessageBox.question(self,"Quick Pass Required Training",f"Mark all {STUDY1_TRAINING_REQUIRED_CONDITION_COUNT} required training items as passed? Optional HoloLens familiarization remains optional and is not synthesized.")
+        if ans!=QMessageBox.StandardButton.Yes:return
+        try:self._controller.workflow_manager.quick_pass_study1_training(self._participant_code)
+        except Exception as e:QMessageBox.warning(self,"Could not Quick Pass",str(e));return
+        self.refresh(); self._on_step_changed and self._on_step_changed()
 
-        self._timing_combo = QComboBox()
-        for timing in STUDY1_REQUIRED_TIMINGS:
-            self._timing_combo.addItem(timing.value, timing.name)
-        self._timing_combo.currentIndexChanged.connect(self._highlight_selected_condition)
-        form.addRow("Feedback timing:", self._timing_combo)
-
-        self._modality_combo = QComboBox()
-        for modality in STUDY1_REQUIRED_MODALITIES:
-            self._modality_combo.addItem(modality.value, modality.name)
-        self._modality_combo.currentIndexChanged.connect(self._highlight_selected_condition)
-        form.addRow("Feedback modality:", self._modality_combo)
-
-        self._seed_spin = QSpinBox()
-        self._seed_spin.setRange(0, 2_147_483_647)
-        self._seed_spin.setValue(int(self._controller.config.study_raw.get("random_seed", 42)))
-        form.addRow("Random seed:", self._seed_spin)
-
-        self._warm_start = QCheckBox("Use maze-informed Actor/Critic warm start")
-        form.addRow("Warm start:", self._warm_start)
-
-        return box
-
-    # -- Status / controls --------------------------------------------------
-    def _build_status_box(self) -> QGroupBox:
-        box = QGroupBox("Run")
-        layout = QVBoxLayout(box)
-
-        self._status_label = QLabel("No run in progress.")
-        layout.addWidget(self._status_label)
-
-        info_row = QHBoxLayout()
-        self._episode_label = QLabel("Episode: --")
-        self._reward_label = QLabel("Last reward: --")
-        info_row.addWidget(self._episode_label)
-        info_row.addWidget(self._reward_label)
-        info_row.addStretch()
-        layout.addLayout(info_row)
-
-        buttons = QHBoxLayout()
-        label = "Start Selected Training Condition" if self._practice else "Start Selected Condition"
-        self._start_btn = QPushButton(label)
-        self._start_btn.clicked.connect(self._start_run)
-
-        self._pause_btn = QPushButton("Pause")
-        self._pause_btn.clicked.connect(self._controller.pause_active_trial)
-
-        self._resume_btn = QPushButton("Resume")
-        self._resume_btn.clicked.connect(self._controller.resume_active_trial)
-
-        self._stop_btn = QPushButton("Stop && Mark Complete")
-        self._stop_btn.clicked.connect(lambda: self._stop_run(completed=True))
-
-        self._abort_btn = QPushButton("Abort Run")
-        self._abort_btn.clicked.connect(lambda: self._stop_run(completed=False))
-
-        for btn in (
-            self._start_btn,
-            self._pause_btn,
-            self._resume_btn,
-            self._stop_btn,
-            self._abort_btn,
-        ):
-            buttons.addWidget(btn)
-        layout.addLayout(buttons)
-
-        self._set_running_controls(False)
-        return box
-
-    def _build_history_box(self) -> QGroupBox:
-        box = QGroupBox("Run History")
-        layout = QVBoxLayout(box)
-        self._history_table = QTableWidget(0, 7)
-        self._history_table.setHorizontalHeaderLabels(
-            ["Run", "Timing", "Modality", "Status", "Started", "Ended", "Duration"]
-        )
-        self._history_table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        self._history_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        layout.addWidget(self._history_table)
-        return box
-
-    # -- Public API ---------------------------------------------------------
-    def set_participant(self, participant_code: str | None) -> None:
-        participant_changed = participant_code != self._participant_code
-        self._participant_code = participant_code
-        self.refresh()
-        if participant_changed and participant_code is not None:
-            self._select_next_incomplete()
-
-    def refresh(self) -> None:
-        self._refresh_condition_matrix()
-
-        if self._participant_code is None:
-            self._status_label.setText("Select or register a participant first.")
-            self._set_running_controls(False)
-            self._start_btn.setEnabled(False)
-            self._quick_pass_btn.setEnabled(False)
-            self._history_table.setRowCount(0)
-            return
-
-        summary = self._controller.workflow_manager.step_status(
-            self._participant_code, self._step
-        )
-        self._active_run = summary.active_run
-
-        blocking_run = self._controller.workflow_manager.has_active_run(
-            self._participant_code
-        )
-        self._quick_pass_btn.setEnabled(
-            blocking_run is None
-            and summary.completed_count < STUDY1_REQUIRED_CONDITION_COUNT
-        )
-
-        if self._active_run is not None:
-            self._status_label.setText(f"In progress: {self._active_run.run_id}")
-            self._set_running_controls(True)
-            self._start_btn.setEnabled(False)
-        else:
-            self._set_running_controls(False)
-            self._start_btn.setEnabled(blocking_run is None)
-
-            if blocking_run is not None:
-                self._status_label.setText(
-                    f"Another run ({blocking_run.run_id}) is in progress for this participant. "
-                    "Finish or abort it first."
-                )
+    def _start_run(self):
+        if not self._participant_code:return
+        c=self._selected()
+        if c.modality==Modality.VOICE:
+            ok,msg=self._controller.device_manager.check_microphone()
+            if not ok or not VoiceCommandRecognizer.backend_available(): QMessageBox.warning(self,"Voice unavailable",msg if not ok else "Vosk is unavailable."); return
+        if c.modality==Modality.JOYSTICK:
+            ok,msg=self._controller.device_manager.check_joystick()
+            if not ok: QMessageBox.warning(self,"Joystick unavailable",msg); return
+        if c.key=="hololens_optional":
+            ok,msg=self._controller.device_manager.check_hololens()
+            if not ok: QMessageBox.warning(self,"HoloLens unavailable",msg); return
+        if c.environment==Environment.CONTINUOUS_ROOM and not self._controller.continuous_nav_client.connected:
+            try:self._controller.connect_continuous_nav_worker(self._host.text().strip(),self._port.value())
+            except Exception as e:QMessageBox.critical(self,"Continuous worker unavailable",str(e));return
+        try:
+            run,session=self._controller.workflow_manager.start_run(self._participant_code,self._step)
+            cond=ExperimentCondition(c.study,c.environment,c.feedback_timing,c.modality,rl_algorithm="ubuntu_ga3c_continuous_room" if c.environment==Environment.CONTINUOUS_ROOM else "actor_critic_gridworld",random_seed=self._seed.value() if c.environment==Environment.GRIDWORLD else None)
+            if c.environment==Environment.CONTINUOUS_ROOM:
+                trial=self._controller.start_continuous_room_trial(session.session_id,cond,practice=True,hil_correction_length=self._hil.value(),feedback_timeout_seconds=self._timeout.value()); self._active_remote=True; self._active_live=False
             else:
-                completed = summary.completed_count
-                phase_name = "Training" if self._practice else "Study"
+                trial=self._controller.start_actor_critic_trial(session.session_id,cond,practice=True,use_maze_qinit=self._warm.isChecked()); self._active_live=True; self._active_remote=False
+            self._controller.workflow_manager.attach_trial(run.run_id,trial.trial_id); self._active_run=self._controller.workflow_manager.get_run(run.run_id); self.refresh()
+        except Exception as e:
+            if 'run' in locals(): self._controller.workflow_manager.end_run(run.run_id,completed=False,notes=f"Failed to start: {e}")
+            QMessageBox.critical(self,"Could not start training",str(e)); self.refresh()
 
-                # Experimental Study 1 should only start after the participant
-                # has practiced all eight matching conditions.
-                training_complete = True
-                training_completed = STUDY1_REQUIRED_CONDITION_COUNT
-                if not self._practice:
-                    training_summary = self._controller.workflow_manager.step_status(
-                        self._participant_code,
-                        WorkflowStep.STUDY1_TRAINING,
-                    )
-                    training_completed = training_summary.completed_count
-                    training_complete = (
-                        training_completed == STUDY1_REQUIRED_CONDITION_COUNT
-                    )
-
-                if completed == STUDY1_REQUIRED_CONDITION_COUNT:
-                    self._status_label.setText(
-                        f"All 8 required Study 1 {phase_name.lower()} conditions are completed."
-                    )
-                elif not training_complete:
-                    self._status_label.setText(
-                        f"Complete Study 1 Training first: {training_completed}/"
-                        f"{STUDY1_REQUIRED_CONDITION_COUNT} training conditions completed."
-                    )
-                    self._start_btn.setEnabled(False)
-                else:
-                    next_condition = (
-                        self._controller.workflow_manager.next_incomplete_study1_condition(
-                            self._participant_code,
-                            practice=self._practice,
-                        )
-                    )
-                    next_text = ""
-                    if next_condition is not None:
-                        next_text = (
-                            f" Next incomplete: {next_condition.feedback_timing.value} / "
-                            f"{next_condition.modality.value}."
-                        )
-                    self._status_label.setText(
-                        f"Study 1 {phase_name.lower()} progress: "
-                        f"{completed}/{STUDY1_REQUIRED_CONDITION_COUNT} "
-                        f"required conditions completed.{next_text}"
-                    )
-
-        self._refresh_history()
-        self._refresh_condition_matrix()
-
-    def _refresh_history(self) -> None:
-        runs = self._controller.workflow_manager.list_runs(
-            self._participant_code, self._step
-        )
-        self._history_table.setRowCount(len(runs))
-        for row, run in enumerate(reversed(runs)):
-            timing = "--"
-            modality = "--"
-            status_text = run.status.value
-            if run.notes == STUDY1_TRAINING_QUICK_PASS_NOTE:
-                timing = "All"
-                modality = "All"
-                status_text = f"{run.status.value} — Quick Pass"
-            if run.trial_id:
-                trial = self._controller.trial_manager.get_trial(run.trial_id)
-                if trial is not None:
-                    timing = trial.condition.feedback_timing.value
-                    modality = trial.condition.modality.value
-
-            self._history_table.setItem(row, 0, QTableWidgetItem(run.run_id))
-            self._history_table.setItem(row, 1, QTableWidgetItem(timing))
-            self._history_table.setItem(row, 2, QTableWidgetItem(modality))
-            self._history_table.setItem(row, 3, QTableWidgetItem(status_text))
-            self._history_table.setItem(row, 4, QTableWidgetItem(_fmt_time(run.started_at)))
-            self._history_table.setItem(row, 5, QTableWidgetItem(_fmt_time(run.ended_at)))
-            self._history_table.setItem(
-                row, 6, QTableWidgetItem(_fmt_duration(run.started_at, run.ended_at))
-            )
-
-    # -- Actions ------------------------------------------------------------
-    def _quick_pass_all_training(self) -> None:
-        if self._participant_code is None:
-            return
-
-        summary = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY1_TRAINING
-        )
-        if summary.completed_count == STUDY1_REQUIRED_CONDITION_COUNT:
-            QMessageBox.information(
-                self,
-                "Training already complete",
-                "All Study 1 training requirements are already satisfied.",
-            )
-            return
-
-        blocking = self._controller.workflow_manager.has_active_run(self._participant_code)
-        if blocking is not None:
-            QMessageBox.warning(
-                self,
-                "Run in progress",
-                f"Finish or abort {blocking.run_id} before using Quick Pass.",
-            )
-            return
-
-        answer = QMessageBox.question(
-            self,
-            "Quick Pass all Study 1 training tests?",
-            "Use this only when the participant is already familiar with the feedback "
-            "modalities and HoloLens eye-gaze interaction.\n\n"
-            "This will mark all 8 Study 1 training conditions as PASSED and allow the "
-            "participant to proceed to the study. No synthetic RL training trials will "
-            "be created; one Quick Pass entry will be kept in workflow history.\n\n"
-            "Apply Quick Pass now?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if answer != QMessageBox.StandardButton.Yes:
-            return
-
-        try:
-            self._controller.workflow_manager.quick_pass_study1_training(
-                self._participant_code
-            )
-        except Exception as exc:
-            QMessageBox.critical(self, "Could not Quick Pass training", str(exc))
-            return
-
-
-        self.refresh()
-        if self._on_step_changed:
-            self._on_step_changed()
-
-    def _start_run(self) -> None:
-        if self._participant_code is None:
-            return
-
-        timing = FeedbackTiming[self._timing_combo.currentData()]
-        modality = Modality[self._modality_combo.currentData()]
-
-        if not self._practice:
-            training_summary = self._controller.workflow_manager.step_status(
-                self._participant_code,
-                WorkflowStep.STUDY1_TRAINING,
-            )
-            if training_summary.completed_count < STUDY1_REQUIRED_CONDITION_COUNT:
-                QMessageBox.warning(
-                    self,
-                    "Study 1 Training incomplete",
-                    f"Complete all 8 Study 1 Training conditions before starting "
-                    f"experimental Study 1. Current training progress: "
-                    f"{training_summary.completed_count}/{STUDY1_REQUIRED_CONDITION_COUNT}.",
-                )
-                return
-
-        condition_status = self._controller.workflow_manager.study1_condition_status(
-            self._participant_code,
-            timing,
-            modality,
-            practice=self._practice,
-        )
-        if condition_status.status == "Completed":
-            phase_name = "training" if self._practice else "study"
-            answer = QMessageBox.question(
-                self,
-                "Condition already completed",
-                f"{timing.value} / {modality.value} is already completed for Study 1 "
-                f"{phase_name}.\n\nStart a repeat run anyway?",
-            )
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-
-        if modality == Modality.EYE_GAZE:
-            ok, message = self._controller.device_manager.check_hololens()
-            eye = self._controller.device_manager.hololens_latest_eye_data()
-            calibrated = bool(eye.get("calibration_valid", False))
-            if not ok or not calibrated:
-                QMessageBox.warning(
-                    self,
-                    "HoloLens eye gaze unavailable",
-                    "Eye Gaze training needs a connected HoloLens 2 with fresh "
-                    "Extended Eye Tracking data and valid eye calibration.\n\n"
-                    f"{message}\n\nCalibrate eye tracking on the headset, then try again.",
-                )
-                return
-
-        if not self._controller.device_manager.all_connected():
-            answer = QMessageBox.question(
-                self,
-                "Devices not fully connected",
-                "Not all study devices show as Connected. Start this run anyway?",
-            )
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-
-        try:
-            run, session = self._controller.workflow_manager.start_run(
-                self._participant_code, self._step
-            )
-        except Exception as exc:
-            QMessageBox.critical(self, "Could not start run", str(exc))
-            return
-
-        condition = ExperimentCondition(
-            study=Study.STUDY_1,
-            environment=Environment.GRIDWORLD,
-            feedback_timing=timing,
-            modality=modality,
-            rl_algorithm="actor_critic_gridworld",
-            random_seed=self._seed_spin.value(),
-        )
-
-        try:
-            trial = self._controller.start_actor_critic_trial(
-                session_id=session.session_id,
-                condition=condition,
-                practice=self._practice,
-                use_maze_qinit=self._warm_start.isChecked(),
-            )
-        except Exception as exc:
-            self._controller.workflow_manager.end_run(
-                run.run_id, completed=False, notes=f"Failed to start: {exc}"
-            )
-            QMessageBox.critical(self, "Could not start trial", str(exc))
-            self.refresh()
-            return
-
-        self._controller.workflow_manager.attach_trial(run.run_id, trial.trial_id)
-        self._active_run = run
-        self.refresh()
-
-    def _stop_run(self, completed: bool) -> None:
-        if self._controller.active_trial is None or self._active_run is None:
-            return
-        self._controller.stop_active_trial(completed=completed)
-        self._controller.workflow_manager.end_run(
-            self._active_run.run_id, completed=completed
-        )
-        self._active_run = None
-        self.refresh()
-        if completed:
-            self._select_next_incomplete()
-        if self._on_step_changed:
-            self._on_step_changed()
-
-    def _set_running_controls(self, running: bool) -> None:
-        self._pause_btn.setEnabled(running)
-        self._resume_btn.setEnabled(running)
-        self._stop_btn.setEnabled(running)
-        self._abort_btn.setEnabled(running)
-        if hasattr(self, "_next_condition_btn"):
-            self._next_condition_btn.setEnabled(not running)
-
-    # -- RL signal handlers -------------------------------------------------
-    def _is_mine(self, trial) -> bool:
-        return (
-            self._active_run is not None
-            and trial is not None
-            and trial.trial_id == self._active_run.trial_id
-        )
-
-    def _on_trial_started(self, trial) -> None:
-        if self._is_mine(trial):
-            self._set_running_controls(True)
-            self._refresh_condition_matrix()
-
-    def _on_episode_finished(self, payload: dict) -> None:
-        trial = self._controller.active_trial
-        if not self._is_mine(trial):
-            return
-        self._episode_label.setText(f"Episode: {payload['episode']}")
-        self._reward_label.setText(f"Last reward: {payload['total_reward']:.2f}")
-
-    def _on_rl_status_changed(self, status: str) -> None:
-        trial = self._controller.active_trial
-        if self._active_run is None:
-            return
-        if trial is not None and self._is_mine(trial):
-            self._status_label.setText(
-                f"In progress: {self._active_run.run_id} — {status}"
-            )
+    def _finish(self,completed):
+        if not self._active_run:return
+        if self._controller.active_trial:self._controller.stop_active_trial(completed=completed)
+        self._controller.workflow_manager.end_run(self._active_run.run_id,completed=completed)
+        self._active_run=None; self._active_live=False; self._active_remote=False; self.refresh(); self._select_next(); self._on_step_changed and self._on_step_changed()
+    def _set_running(self,r): self._complete.setEnabled(r); self._abort.setEnabled(r); self._condition.setEnabled(not r)
+    def _set_live(self,_): pass

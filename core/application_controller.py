@@ -430,6 +430,23 @@ class ApplicationController:
             self._active_trial_backend = "none"
             raise
 
+    def begin_continuous_anytime_feedback(self) -> None:
+        trial = self.active_trial
+        if trial is None or self._active_trial_backend != "remote_continuous_room":
+            raise RuntimeError("No continuous-navigation trial is active")
+        if trial.condition.feedback_timing.value != "Anytime Feedback":
+            raise RuntimeError("The active continuous trial is not in Anytime Feedback mode")
+        timestamp_ns = self.continuous_nav_client.request_anytime_intervention()
+        self.event_bus.publish(
+            StudyEvent(
+                event_type=EventType.ANYTIME_FEEDBACK_STARTED,
+                participant_id=trial.participant_code,
+                session_id=trial.session_id,
+                trial_id=trial.trial_id,
+                value=f"continuous_anytime_request; console_timestamp_utc_ns={timestamp_ns}",
+            )
+        )
+
     def send_continuous_nav_action(
         self, request_id: str, action: int | None, *, source_detail: str = "participant"
     ) -> None:
@@ -620,6 +637,61 @@ class ApplicationController:
 
         self.active_trial = None
         self._active_trial_backend = "none"
+
+    def complete_active_trial_at_time_limit(
+        self,
+        trial_id: str,
+        limit_seconds: int,
+    ) -> bool:
+        """Close the active experimental trial when its protocol timer expires.
+
+        The trial and its workflow run are both finalized as valid.  A separate
+        event is published after both records are closed so every researcher
+        panel refreshes against a consistent, no-longer-running workflow state.
+        """
+        trial = self.active_trial
+        if trial is None or trial.trial_id != trial_id or trial.practice:
+            return False
+
+        run = self.workflow_manager.has_active_run(trial.participant_code)
+        if run is None or run.trial_id != trial_id:
+            logger.error(
+                "Cannot complete timed trial %s: matching active workflow run not found",
+                trial_id,
+            )
+            return False
+
+        participant_code = trial.participant_code
+        session_id = trial.session_id
+        readable_label = trial.readable_run_label
+        limit_minutes = limit_seconds / 60
+        minutes_text = (
+            str(int(limit_minutes))
+            if limit_minutes.is_integer()
+            else f"{limit_minutes:g}"
+        )
+        note = f"Automatically completed at the {minutes_text}-minute protocol time limit."
+
+        self.stop_active_trial(
+            completed=True,
+            collection_status=CollectionRunStatus.VALID,
+        )
+        self.workflow_manager.end_run(
+            run.run_id,
+            completed=True,
+            notes=note,
+            outcome=CollectionRunStatus.VALID,
+        )
+        self.event_bus.publish(
+            StudyEvent(
+                event_type=EventType.TRIAL_TIME_LIMIT_REACHED,
+                participant_id=participant_code,
+                session_id=session_id,
+                trial_id=trial_id,
+                value=f"{readable_label}; limit_seconds={limit_seconds}; marked Valid",
+            )
+        )
+        return True
 
     # --------------------------------------------------
     # Experimental sensor recording lifecycle

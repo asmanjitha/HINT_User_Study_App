@@ -28,12 +28,14 @@ _SESSION_SHORT_RE = re.compile(r"^[^_]+_(S\d{2,})$")
 
 STUDY_FOLDER = {
     Study.STUDY_1: "Study1_ExplicitFeedback",
-    Study.STUDY_2: "Study2_MultimodalFeedback",
+    Study.STUDY_2: "Study2_FeedbackModality",
+    Study.OBSERVATION: "Phase3_AgentObservation_NoFeedback",
 }
 
 TRAINING_STUDY_FOLDER = {
     Study.STUDY_1: "Study1",
     Study.STUDY_2: "Study2",
+    Study.OBSERVATION: "Optional_HoloLens",
 }
 
 ENVIRONMENT_TOKEN = {
@@ -54,7 +56,7 @@ MODALITY_TOKEN = {
     Modality.VOICE: "Voice",
     Modality.EYE_GAZE: "Gaze",
     Modality.IMPLICIT: "Implicit_GazePhysio",
-    Modality.NONE: "Experimenter",
+    Modality.NONE: "NoFeedback",
 }
 
 
@@ -209,9 +211,14 @@ def allocate_trial_storage_identity(
     run_code = _next_run_code(rows)
     name = condition_name(condition)
 
-    study_code = "ST1" if condition.study == Study.STUDY_1 else "ST2"
-    phase_code = "TR" if practice else "ST"
-    trial_id = f"{session_id}_{study_code}{phase_code}_{condition_code}_{run_code}"
+    study_code = {Study.STUDY_1: "ST1", Study.STUDY_2: "ST2", Study.OBSERVATION: "OBS"}[condition.study]
+    if condition.study == Study.OBSERVATION:
+        # Observation is already a phase name; avoid the awkward "OBSST"
+        # identifier used by the generic Study-1/Study-2 phase suffix.
+        scope_code = "OBSTR" if practice else "OBS"
+    else:
+        scope_code = f"{study_code}{'TR' if practice else 'ST'}"
+    trial_id = f"{session_id}_{scope_code}_{condition_code}_{run_code}"
 
     relative_dir = (
         study_relative_root(condition.study, practice)

@@ -37,18 +37,9 @@ def _insert_workflow_run(db: Database, run_id: str = "P001_S1ST_01") -> None:
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            run_id,
-            "P001",
-            WorkflowStep.STUDY1_STUDY.value,
-            Study.STUDY_1.value,
-            0,
-            StepRunStatus.COMPLETED.value,
-            "P001_S01",
-            None,
-            now,
-            now,
-            now,
-            "",
+            run_id, "P001", WorkflowStep.STUDY1_STUDY.value, Study.STUDY_1.value,
+            0, StepRunStatus.COMPLETED.value, "P001_S01", None,
+            now, now, now, "",
         ),
     )
     db.experimental_conn.commit()
@@ -72,19 +63,9 @@ def _insert_trial(
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            trial_id,
-            "P001_S01",
-            "P001",
-            Study.STUDY_1.value,
-            environment.value,
-            timing.value,
-            modality.value,
-            0,
-            status.value,
-            42,
-            None,
-            now,
-            now,
+            trial_id, "P001_S01", "P001", Study.STUDY_1.value,
+            environment.value, timing.value, modality.value, 0, status.value,
+            42, None, now, now,
             now if status in (TrialStatus.COMPLETED, TrialStatus.STOPPED) else None,
             None,
         ),
@@ -92,11 +73,16 @@ def _insert_trial(
     db.experimental_conn.commit()
 
 
-def test_study1_protocol_has_four_required_conditions_in_three_main_settings() -> None:
+def test_study1_protocol_is_four_keyboard_conditions_across_two_environments() -> None:
     assert STUDY1_STUDY_REQUIRED_CONDITION_COUNT == 4
     assert [c.environment for c in STUDY1_STUDY_REQUIRED_CONDITIONS].count(Environment.GRIDWORLD) == 2
-    assert any(c.environment == Environment.CONTINUOUS_ROOM for c in STUDY1_STUDY_REQUIRED_CONDITIONS)
-    assert any(c.environment == Environment.HUMAN_AGENT_BASELINE for c in STUDY1_STUDY_REQUIRED_CONDITIONS)
+    assert [c.environment for c in STUDY1_STUDY_REQUIRED_CONDITIONS].count(Environment.CONTINUOUS_ROOM) == 2
+    assert all(c.allowed_modalities == (Modality.KEYBOARD,) for c in STUDY1_STUDY_REQUIRED_CONDITIONS)
+    assert {c.feedback_timing for c in STUDY1_STUDY_REQUIRED_CONDITIONS} == {
+        FeedbackTiming.REQUESTED,
+        FeedbackTiming.ANYTIME,
+    }
+    assert all(c.environment != Environment.HUMAN_AGENT_BASELINE for c in STUDY1_STUDY_REQUIRED_CONDITIONS)
 
 
 def test_new_participant_has_four_not_started_study1_conditions(tmp_path: Path) -> None:
@@ -106,72 +92,36 @@ def test_new_participant_has_four_not_started_study1_conditions(tmp_path: Path) 
     assert all(item.status == "Not Started" for item in statuses)
 
 
-def test_gridworld_study1_accepts_only_explicit_keyboard_or_joystick(tmp_path: Path) -> None:
+def test_study1_counts_keyboard_only(tmp_path: Path) -> None:
     manager, db = _manager(tmp_path)
-    _insert_trial(
-        db,
-        "VOICE01",
-        Environment.GRIDWORLD,
-        FeedbackTiming.REQUESTED,
-        Modality.VOICE,
-    )
-    requested = manager.study1_study_condition_status("P001", "grid_requested")
-    assert requested.status == "Not Started"
+    _insert_trial(db, "VOICE01", Environment.GRIDWORLD, FeedbackTiming.REQUESTED, Modality.VOICE)
+    _insert_trial(db, "JOY01", Environment.GRIDWORLD, FeedbackTiming.REQUESTED, Modality.JOYSTICK)
+    assert manager.study1_study_condition_status("P001", "grid_requested").status == "Not Started"
 
-    _insert_trial(
-        db,
-        "JOY01",
-        Environment.GRIDWORLD,
-        FeedbackTiming.REQUESTED,
-        Modality.JOYSTICK,
-    )
+    _insert_trial(db, "KEY01", Environment.GRIDWORLD, FeedbackTiming.REQUESTED, Modality.KEYBOARD)
     requested = manager.study1_study_condition_status("P001", "grid_requested")
     assert requested.status == "Completed"
-    assert requested.last_modality == Modality.JOYSTICK
+    assert requested.last_modality == Modality.KEYBOARD
 
 
-def test_room_condition_requires_collision_requested_explicit_feedback(tmp_path: Path) -> None:
+def test_continuous_requested_and_anytime_are_separate_required_conditions(tmp_path: Path) -> None:
+    manager, db = _manager(tmp_path)
+    _insert_trial(db, "ROOM_ANYTIME", Environment.CONTINUOUS_ROOM, FeedbackTiming.ANYTIME, Modality.KEYBOARD)
+    assert manager.study1_study_condition_status("P001", "room_anytime").status == "Completed"
+    assert manager.study1_study_condition_status("P001", "room_requested").status == "Not Started"
+
+    _insert_trial(db, "ROOM_REQUESTED", Environment.CONTINUOUS_ROOM, FeedbackTiming.REQUESTED, Modality.KEYBOARD)
+    assert manager.study1_study_condition_status("P001", "room_requested").status == "Completed"
+
+
+def test_baseline_trial_does_not_count_toward_revised_study1(tmp_path: Path) -> None:
     manager, db = _manager(tmp_path)
     _insert_trial(
-        db,
-        "ROOM_ANYTIME",
-        Environment.CONTINUOUS_ROOM,
-        FeedbackTiming.ANYTIME,
-        Modality.KEYBOARD,
+        db, "OLD_BASELINE", Environment.HUMAN_AGENT_BASELINE,
+        FeedbackTiming.NOT_APPLICABLE, Modality.NONE,
     )
-    assert manager.study1_study_condition_status("P001", "room_navigation").status == "Not Started"
-
-    _insert_trial(
-        db,
-        "ROOM_REQUESTED",
-        Environment.CONTINUOUS_ROOM,
-        FeedbackTiming.REQUESTED,
-        Modality.KEYBOARD,
-    )
-    room = manager.study1_study_condition_status("P001", "room_navigation")
-    assert room.status == "Completed"
-    assert room.last_feedback_timing == FeedbackTiming.REQUESTED
-
-
-def test_baseline_requires_no_participant_feedback_marker(tmp_path: Path) -> None:
-    manager, db = _manager(tmp_path)
-    _insert_trial(
-        db,
-        "BASE_BAD",
-        Environment.HUMAN_AGENT_BASELINE,
-        FeedbackTiming.REQUESTED,
-        Modality.KEYBOARD,
-    )
-    assert manager.study1_study_condition_status("P001", "baseline_navigation").status == "Not Started"
-
-    _insert_trial(
-        db,
-        "BASE_OK",
-        Environment.HUMAN_AGENT_BASELINE,
-        FeedbackTiming.NOT_APPLICABLE,
-        Modality.NONE,
-    )
-    assert manager.study1_study_condition_status("P001", "baseline_navigation").status == "Completed"
+    statuses = manager.study1_study_condition_statuses("P001")
+    assert all(item.status == "Not Started" for item in statuses)
 
 
 def test_all_four_protocol_conditions_complete_study1(tmp_path: Path) -> None:
@@ -179,8 +129,8 @@ def test_all_four_protocol_conditions_complete_study1(tmp_path: Path) -> None:
     _insert_workflow_run(db)
     _insert_trial(db, "T1", Environment.GRIDWORLD, FeedbackTiming.REQUESTED, Modality.KEYBOARD)
     _insert_trial(db, "T2", Environment.GRIDWORLD, FeedbackTiming.ANYTIME, Modality.KEYBOARD)
-    _insert_trial(db, "T3", Environment.CONTINUOUS_ROOM, FeedbackTiming.REQUESTED, Modality.JOYSTICK)
-    _insert_trial(db, "T4", Environment.HUMAN_AGENT_BASELINE, FeedbackTiming.NOT_APPLICABLE, Modality.NONE)
+    _insert_trial(db, "T3", Environment.CONTINUOUS_ROOM, FeedbackTiming.REQUESTED, Modality.KEYBOARD)
+    _insert_trial(db, "T4", Environment.CONTINUOUS_ROOM, FeedbackTiming.ANYTIME, Modality.KEYBOARD)
 
     summary = manager.step_status("P001", WorkflowStep.STUDY1_STUDY)
     assert summary.completed_count == 4

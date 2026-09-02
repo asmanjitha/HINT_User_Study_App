@@ -35,7 +35,8 @@ class SessionManager:
         """Create one participant collection session.
 
         ``study`` is accepted for backward compatibility, but new workflow
-        sessions are always created as a combined Study 1 + Study 2 session.
+        sessions use one combined participant session spanning Training,
+        Study 1, Study 2, and the final Agent Observation phase.
         """
         session_id = generate_session_id(self._db, participant_code)
         scope = Study.COMBINED_SESSION
@@ -92,7 +93,7 @@ class SessionManager:
         return session
 
     def get_or_create_active_session(self, participant_code: str) -> Session:
-        """Reuse S01 across Study 1/2 until that participant session is closed."""
+        """Reuse S01 across the full participant workflow until it is closed."""
         row = self._db.experimental_conn.execute(
             """
             SELECT * FROM sessions

@@ -1,53 +1,81 @@
-study_version: "HINT_v0.8_study1b_ubuntu_continuous_nav"
+study_version: "HINT_v1.3.1_revised_flow_with_study_timers"
+
+# Revised participant flow:
+# Registration -> Training -> Study 1 (when) -> Study 2 (how) -> Agent Observation
 
 timing:
   session_max_minutes: 60
   continuous_task_max_minutes: 20
   feedback_timeout_seconds: 10
   practice_duration_minutes: 5
+  # Per-condition experimental countdowns shown only on the researcher console.
+  study_1_condition_minutes: 6
+  study_2_condition_minutes: 6
+  observation_condition_minutes: 5
+
+training_phase:
+  label: "Training Phase"
+  anytime_feedback_modalities:
+    - "Keyboard"
+  required_conditions:
+    - "Gridworld - System-requested - Keyboard"
+    - "Gridworld - Anytime - Keyboard"
+    - "Continuous Room Navigation - System-requested - Keyboard"
+    - "Continuous Room Navigation - Anytime - Keyboard"
+    - "Gridworld - System-requested - Joystick"
+    - "Gridworld - System-requested - Voice"
+  optional_last:
+    - "HoloLens familiarization / sensor check"
 
 studies:
   study_1:
-    label: "Explicit Feedback for Agent Learning"
-    feedback_timings:
-      - "Requested Feedback"
-      - "Anytime Feedback"
-
-    # IRB-aligned experimental flow. Study 1 uses explicit input only.
+    label: "When Should a Human Intervene?"
+    research_question: "Compare system-requested versus anytime intervention timing."
     environments:
       - "Gridworld"
       - "Continuous Room Navigation"
-      - "Human-Agent Navigation (Baseline)"
-
+    feedback_timings:
+      - "Requested Feedback"
+      - "Anytime Feedback"
     modalities:
       - "Keyboard"
-      - "Joystick"
-
     protocol_substeps:
       - key: "grid_requested"
-        label: "2D Gridworld - System-requested feedback"
+        label: "Gridworld - System-requested feedback - Keyboard"
       - key: "grid_anytime"
-        label: "2D Gridworld - Anytime feedback"
-      - key: "room_navigation"
-        label: "Study 1(b) - Continuous action-space room navigation (Ubuntu HINT worker)"
-      - key: "baseline_navigation"
-        label: "Baseline - Experimenter virtual navigation"
+        label: "Gridworld - Anytime feedback - Keyboard"
+      - key: "room_requested"
+        label: "Continuous action space - System-requested feedback - Keyboard"
+      - key: "room_anytime"
+        label: "Continuous action space - Anytime feedback - Keyboard"
 
   study_2:
-    label: "Feedback Modality Tradeoffs"
-
-    # The GUI now centers Study 2 on the multimodal 2D Gridworld task.
+    label: "How Should a Human Provide Feedback?"
+    research_question: "Compare selected feedback modalities under an experimenter-selected timing mode."
     primary_environment: "Gridworld"
     environments:
       - "Gridworld"
-
+    feedback_timings:
+      - "Requested Feedback"
+      - "Anytime Feedback"
     modalities:
       - "Keyboard"
       - "Joystick"
       - "Voice"
-      - "Eye Gaze"
+    completion_policy: "Experimenter selects one or two modalities and explicitly marks Study 2 finished."
+    counterbalancing_method: "experimenter_selected"
 
-    counterbalancing_method: "latin_square"
+agent_observation_phase:
+  label: "Agent Observation Phase - No Human Feedback"
+  human_feedback: false
+  required_environments:
+    - "Gridworld"
+    - "Continuous Room Navigation"
+  required_sensors:
+    - "Shimmer GSR"
+    - "Shimmer PPG"
+    - "HoloLens PV"
+    - "HoloLens Extended Eye Tracking"
 
 random_seed: 42
 

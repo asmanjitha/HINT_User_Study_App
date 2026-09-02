@@ -1,8 +1,8 @@
 """Workflow page -- the heart of the simplified console.
 
-Register/select a participant, then step through the fixed study sequence
-(Registration -> Study 1 Training -> Study 1 Study -> Study 2 Training ->
-Study 2 Study) using the left-hand menu, which shows each step's status
+Register/select a participant, then step through the revised sequence
+(Registration -> Training -> Study 1 -> Study 2 -> Agent Observation) using
+the left-hand menu, which shows each step's status
 (Not Started / In Progress / Completed) and how many times it's been run.
 Steps other than Registration can be repeated as many times as needed --
 click the step again and press Start.
@@ -28,17 +28,17 @@ from core.application_controller import ApplicationController
 from core.workflow_manager import (
     STEP_LABELS,
     STEP_ORDER,
+    OBSERVATION_REQUIRED_CONDITION_COUNT,
     STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
     STUDY1_TRAINING_REQUIRED_CONDITION_COUNT,
-    STUDY2_REQUIRED_CONDITION_COUNT,
 )
 from gui.device_status_strip import DeviceStatusStrip
 from gui.participant_dialog import NewParticipantDialog
 from gui.registration_panel import RegistrationPanel
 from gui.study1_step_panel import Study1StepPanel
 from gui.study1_study_panel import Study1StudyPanel
-from gui.study2_step_panel import Study2StepPanel
 from gui.study2_study_panel import Study2StudyPanel
+from gui.observation_panel import ObservationPanel
 from models.enums import EventType, StepOverallStatus, WorkflowStep
 from models.event import StudyEvent
 
@@ -151,22 +151,22 @@ class WorkflowPage(QWidget):
         )
         self._stack.addWidget(self._study1_study_panel)  # index 2
 
-        self._study2_training_panel = Study2StepPanel(
-            self._controller, WorkflowStep.STUDY2_TRAINING, self._refresh_step_list
-        )
-        self._stack.addWidget(self._study2_training_panel)  # index 3
-
         self._study2_study_panel = Study2StudyPanel(
+            self._controller, self._refresh_step_list, self._advance_to_observation
+        )
+        self._stack.addWidget(self._study2_study_panel)  # index 3
+
+        self._observation_panel = ObservationPanel(
             self._controller, self._refresh_step_list
         )
-        self._stack.addWidget(self._study2_study_panel)  # index 4
+        self._stack.addWidget(self._observation_panel)  # index 4
 
         self._panels = [
             self._registration_panel,
             self._study1_training_panel,
             self._study1_study_panel,
-            self._study2_training_panel,
             self._study2_study_panel,
+            self._observation_panel,
         ]
 
         self._step_list.setCurrentRow(0)
@@ -213,6 +213,15 @@ class WorkflowPage(QWidget):
         self._stack.setCurrentIndex(row)
         self._panels[row].refresh()
 
+    def _advance_to_observation(self) -> None:
+        """Move the researcher to the final phase after explicit Study 2 finish."""
+        self._refresh_step_list()
+        try:
+            row = STEP_ORDER.index(WorkflowStep.AGENT_OBSERVATION)
+        except ValueError:
+            return
+        self._step_list.setCurrentRow(row)
+
     def _refresh_step_list(self) -> None:
         participant_exists = self._current_participant_code is not None
         if participant_exists:
@@ -243,8 +252,18 @@ class WorkflowPage(QWidget):
                 if summary.active_run is not None:
                     suffix += "  (running)"
             elif step == WorkflowStep.STUDY2_STUDY:
+                finished = self._controller.workflow_manager.study2_finished(
+                    self._current_participant_code
+                )
+                suffix = f"  ({summary.completed_count} modality condition(s) collected"
+                if finished or summary.overall_status == StepOverallStatus.COMPLETED:
+                    suffix += ", finished"
+                suffix += ")"
+                if summary.active_run is not None:
+                    suffix += "  (running)"
+            elif step == WorkflowStep.AGENT_OBSERVATION:
                 suffix = (
-                    f"  ({summary.completed_count}/{STUDY2_REQUIRED_CONDITION_COUNT} modalities)"
+                    f"  ({summary.completed_count}/{OBSERVATION_REQUIRED_CONDITION_COUNT} no-feedback environments)"
                 )
                 if summary.active_run is not None:
                     suffix += "  (running)"
@@ -265,5 +284,10 @@ class WorkflowPage(QWidget):
             self._panels[current_row].refresh()
 
     def _on_event(self, event: StudyEvent) -> None:
-        if event.event_type in (EventType.SESSION_CREATED, EventType.SESSION_STARTED, EventType.SESSION_ENDED):
+        if event.event_type in (
+            EventType.SESSION_CREATED,
+            EventType.SESSION_STARTED,
+            EventType.SESSION_ENDED,
+            EventType.TRIAL_TIME_LIMIT_REACHED,
+        ):
             self._refresh_step_list()

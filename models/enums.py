@@ -73,8 +73,9 @@ class CollectionRunStatus(str, Enum):
 class Study(str, Enum):
     STUDY_1 = "Study 1"
     STUDY_2 = "Study 2"
-    # A participant collection session can contain both studies. Individual
-    # trials still always use STUDY_1 or STUDY_2.
+    OBSERVATION = "Agent Observation"
+    # Kept at its historical stored value for database compatibility. A new
+    # participant collection session can also contain Agent Observation trials.
     COMBINED_SESSION = "Study 1 + Study 2"
 
 
@@ -115,6 +116,7 @@ class WorkflowStep(str, Enum):
     STUDY1_STUDY = "Study 1 - Study"
     STUDY2_TRAINING = "Study 2 - Training"
     STUDY2_STUDY = "Study 2 - Study"
+    AGENT_OBSERVATION = "Agent Observation Phase"
 
 
 class StepRunStatus(str, Enum):
@@ -151,6 +153,7 @@ class EventType(str, Enum):
     TRIAL_PAUSED = "TRIAL_PAUSED"
     TRIAL_RESUMED = "TRIAL_RESUMED"
     TRIAL_ENDED = "TRIAL_ENDED"
+    TRIAL_TIME_LIMIT_REACHED = "TRIAL_TIME_LIMIT_REACHED"
 
     EPISODE_STARTED = "EPISODE_STARTED"
     EPISODE_ENDED = "EPISODE_ENDED"

@@ -5,9 +5,9 @@ from pathlib import Path
 
 from core.database import Database
 from core.workflow_manager import (
-    STUDY1_REQUIRED_CONDITION_COUNT,
-    STUDY1_REQUIRED_MODALITIES,
-    STUDY1_REQUIRED_TIMINGS,
+    TRAINING_CONDITIONS,
+    TRAINING_REQUIRED_CONDITIONS,
+    STUDY1_TRAINING_REQUIRED_CONDITION_COUNT,
     WorkflowManager,
 )
 from models.enums import (
@@ -22,22 +22,13 @@ from models.enums import (
 )
 
 
-def _manager(tmp_path: Path) -> tuple[WorkflowManager, Database]:
-    db = Database(
-        tmp_path / "identifiable.sqlite3",
-        tmp_path / "experimental.sqlite3",
-    )
-    manager = WorkflowManager(db, session_manager=None, event_bus=None)  # type: ignore[arg-type]
+def _manager(tmp_path: Path, session_manager=None) -> tuple[WorkflowManager, Database]:
+    db = Database(tmp_path / "identifiable.sqlite3", tmp_path / "experimental.sqlite3")
+    manager = WorkflowManager(db, session_manager=session_manager, event_bus=None)  # type: ignore[arg-type]
     return manager, db
 
 
-def _insert_run(
-    db: Database,
-    *,
-    step: WorkflowStep,
-    run_id: str,
-    practice: bool,
-) -> None:
+def _insert_run(db: Database, run_id: str = "P001_S1TR_01") -> None:
     now = time.time()
     db.experimental_conn.execute(
         """
@@ -47,32 +38,15 @@ def _insert_run(
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            run_id,
-            "P001",
-            step.value,
-            Study.STUDY_1.value,
-            int(practice),
-            StepRunStatus.COMPLETED.value,
-            f"P001_{run_id}",
-            None,
-            now,
-            now,
-            now,
-            "",
+            run_id, "P001", WorkflowStep.STUDY1_TRAINING.value, Study.STUDY_1.value,
+            1, StepRunStatus.COMPLETED.value, "P001_S01", None,
+            now, now, now, "",
         ),
     )
     db.experimental_conn.commit()
 
 
-def _insert_trial(
-    db: Database,
-    trial_id: str,
-    timing: FeedbackTiming,
-    modality: Modality,
-    *,
-    practice: bool,
-    status: TrialStatus = TrialStatus.COMPLETED,
-) -> None:
+def _insert_training_trial(db: Database, trial_id: str, req, *, practice: bool = True) -> None:
     now = time.time()
     db.experimental_conn.execute(
         """
@@ -83,166 +57,104 @@ def _insert_trial(
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            trial_id,
-            f"P001_S_{trial_id}",
-            "P001",
-            Study.STUDY_1.value,
-            Environment.GRIDWORLD.value,
-            timing.value,
-            modality.value,
-            int(practice),
-            status.value,
-            42,
-            None,
-            now,
-            now,
-            now if status in (TrialStatus.COMPLETED, TrialStatus.STOPPED) else None,
-            None,
+            trial_id, "P001_S01", "P001", req.study.value, req.environment.value,
+            req.feedback_timing.value, req.modality.value, int(practice),
+            TrialStatus.COMPLETED.value, 42, None, now, now, now, None,
         ),
     )
     db.experimental_conn.commit()
 
 
-def _complete_matrix(db: Database, *, practice: bool, prefix: str) -> None:
-    n = 1
-    for timing in STUDY1_REQUIRED_TIMINGS:
-        for modality in STUDY1_REQUIRED_MODALITIES:
-            _insert_trial(
-                db,
-                f"{prefix}{n:02d}",
-                timing,
-                modality,
-                practice=practice,
-            )
-            n += 1
+def test_training_has_six_required_conditions_plus_optional_hololens_last() -> None:
+    assert STUDY1_TRAINING_REQUIRED_CONDITION_COUNT == 6
+    assert len(TRAINING_CONDITIONS) == 7
+    assert len(TRAINING_REQUIRED_CONDITIONS) == 6
+    optional = TRAINING_CONDITIONS[-1]
+    assert optional.required is False
+    assert "HoloLens" in optional.label
+    assert optional.modality == Modality.NONE
 
 
-def test_training_has_its_own_eight_condition_matrix(tmp_path: Path) -> None:
-    manager, _ = _manager(tmp_path)
-    statuses = manager.study1_condition_statuses("P001", practice=True)
-    assert len(statuses) == STUDY1_REQUIRED_CONDITION_COUNT
-    assert all(item.status == "Not Started" for item in statuses)
+def test_training_adds_continuous_requested_and_anytime_keyboard() -> None:
+    room = [c for c in TRAINING_REQUIRED_CONDITIONS if c.environment == Environment.CONTINUOUS_ROOM]
+    assert len(room) == 2
+    assert {c.feedback_timing for c in room} == {FeedbackTiming.REQUESTED, FeedbackTiming.ANYTIME}
+    assert all(c.modality == Modality.KEYBOARD for c in room)
 
 
-def test_training_and_study_condition_status_are_independent(tmp_path: Path) -> None:
+def test_anytime_training_is_keyboard_only() -> None:
+    anytime = [c for c in TRAINING_REQUIRED_CONDITIONS if c.feedback_timing == FeedbackTiming.ANYTIME]
+    assert anytime
+    assert all(c.modality == Modality.KEYBOARD for c in anytime)
+    assert all(
+        c.feedback_timing == FeedbackTiming.REQUESTED
+        for c in TRAINING_REQUIRED_CONDITIONS
+        if c.modality in (Modality.JOYSTICK, Modality.VOICE)
+    )
+
+
+def test_training_and_nonpractice_trials_are_independent(tmp_path: Path) -> None:
     manager, db = _manager(tmp_path)
-    _insert_trial(
-        db,
-        "TR01",
-        FeedbackTiming.ANYTIME,
-        Modality.VOICE,
-        practice=True,
-    )
+    req = TRAINING_REQUIRED_CONDITIONS[0]
+    _insert_training_trial(db, "TR01", req, practice=True)
+    _insert_training_trial(db, "ST01", req, practice=False)
 
-    training = manager.study1_condition_status(
-        "P001",
-        FeedbackTiming.ANYTIME,
-        Modality.VOICE,
-        practice=True,
-    )
-    study = manager.study1_condition_status(
-        "P001",
-        FeedbackTiming.ANYTIME,
-        Modality.VOICE,
-        practice=False,
-    )
-
+    training = manager.training_condition_status("P001", req.key)
     assert training.status == "Completed"
-    assert study.status == "Not Started"
+    assert training.completed_trials == 1
 
 
-def test_seven_of_eight_training_conditions_keeps_training_in_progress(tmp_path: Path) -> None:
+def test_five_of_six_required_training_conditions_keeps_training_in_progress(tmp_path: Path) -> None:
     manager, db = _manager(tmp_path)
-    _insert_run(
-        db,
-        step=WorkflowStep.STUDY1_TRAINING,
-        run_id="P001_S1TR_01",
-        practice=True,
-    )
-
-    conditions = [
-        (timing, modality)
-        for timing in STUDY1_REQUIRED_TIMINGS
-        for modality in STUDY1_REQUIRED_MODALITIES
-    ]
-    for n, (timing, modality) in enumerate(conditions[:7], start=1):
-        _insert_trial(
-            db,
-            f"TR{n:02d}",
-            timing,
-            modality,
-            practice=True,
-        )
+    _insert_run(db)
+    for i, req in enumerate(TRAINING_REQUIRED_CONDITIONS[:-1], start=1):
+        _insert_training_trial(db, f"TR{i:02d}", req)
 
     summary = manager.step_status("P001", WorkflowStep.STUDY1_TRAINING)
-    assert summary.completed_count == 7
+    assert summary.completed_count == 5
     assert summary.overall_status == StepOverallStatus.IN_PROGRESS
 
 
-def test_all_eight_training_conditions_complete_training_only(tmp_path: Path) -> None:
+def test_all_six_required_complete_even_when_optional_hololens_not_run(tmp_path: Path) -> None:
     manager, db = _manager(tmp_path)
-    _insert_run(
-        db,
-        step=WorkflowStep.STUDY1_TRAINING,
-        run_id="P001_S1TR_01",
-        practice=True,
-    )
-    _complete_matrix(db, practice=True, prefix="TR")
+    _insert_run(db)
+    for i, req in enumerate(TRAINING_REQUIRED_CONDITIONS, start=1):
+        _insert_training_trial(db, f"TR{i:02d}", req)
 
-    training = manager.step_status("P001", WorkflowStep.STUDY1_TRAINING)
-    study = manager.study1_condition_statuses("P001", practice=False)
-
-    assert training.completed_count == 8
-    assert training.overall_status == StepOverallStatus.COMPLETED
-    assert manager.next_incomplete_study1_condition("P001", practice=True) is None
-    assert all(item.status == "Not Started" for item in study)
+    summary = manager.step_status("P001", WorkflowStep.STUDY1_TRAINING)
+    optional = manager.training_condition_status("P001", TRAINING_CONDITIONS[-1].key)
+    assert summary.completed_count == 6
+    assert summary.overall_status == StepOverallStatus.COMPLETED
+    assert optional.status == "Not Started"
+    assert manager.next_incomplete_training_condition("P001") is None
 
 
-def test_quick_pass_marks_all_training_conditions_without_fake_trials(tmp_path: Path) -> None:
-    db = Database(
-        tmp_path / "identifiable.sqlite3",
-        tmp_path / "experimental.sqlite3",
-    )
-
+def test_quick_pass_marks_required_training_only_without_fake_trials(tmp_path: Path) -> None:
     class _FakeSessionManager:
         def get_or_create_active_session(self, participant_code: str):
             from models.session import Session
-
             return Session(
                 session_id=f"{participant_code}_S01",
                 participant_code=participant_code,
                 study=Study.COMBINED_SESSION,
             )
 
-    manager = WorkflowManager(
-        db,
-        session_manager=_FakeSessionManager(),  # type: ignore[arg-type]
-        event_bus=None,  # type: ignore[arg-type]
-    )
-
+    manager, db = _manager(tmp_path, _FakeSessionManager())
     run = manager.quick_pass_study1_training("P001")
 
     assert run.status == StepRunStatus.COMPLETED
-    assert manager.study1_training_quick_passed("P001") is True
-
-    statuses = manager.study1_condition_statuses("P001", practice=True)
-    assert len(statuses) == STUDY1_REQUIRED_CONDITION_COUNT
-    assert all(item.status == "Completed" for item in statuses)
-    assert all(item.completed_trials == 0 for item in statuses)
+    statuses = manager.training_condition_statuses("P001")
+    required = [x for x in statuses if x.required]
+    optional = [x for x in statuses if not x.required]
+    assert len(required) == 6
+    assert all(x.status == "Completed" for x in required)
+    assert all(x.completed_trials == 0 for x in required)
+    assert len(optional) == 1 and optional[0].status == "Not Started"
 
     summary = manager.step_status("P001", WorkflowStep.STUDY1_TRAINING)
-    assert summary.completed_count == STUDY1_REQUIRED_CONDITION_COUNT
+    assert summary.completed_count == 6
     assert summary.overall_status == StepOverallStatus.COMPLETED
-    assert manager.next_incomplete_study1_condition("P001", practice=True) is None
+    assert db.experimental_conn.execute("SELECT COUNT(*) AS n FROM trials").fetchone()["n"] == 0
 
-    trial_count = db.experimental_conn.execute("SELECT COUNT(*) AS n FROM trials").fetchone()["n"]
-    assert trial_count == 0
-
-    # Re-applying via the manager is idempotent and does not add another marker run.
-    same_run = manager.quick_pass_study1_training("P001")
-    assert same_run.run_id == run.run_id
-    run_count = db.experimental_conn.execute(
-        "SELECT COUNT(*) AS n FROM workflow_runs WHERE participant_code = ? AND step = ?",
-        ("P001", WorkflowStep.STUDY1_TRAINING.value),
-    ).fetchone()["n"]
-    assert run_count == 1
+    same = manager.quick_pass_study1_training("P001")
+    assert same.run_id == run.run_id

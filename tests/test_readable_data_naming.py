@@ -117,7 +117,7 @@ def test_study2_has_its_own_t_numbering(tmp_path: Path) -> None:
     assert study2.trial_path is not None
     assert study2.trial_path == (
         Path(session.session_dir)
-        / "Study2_MultimodalFeedback"
+        / "Study2_FeedbackModality"
         / "T01_Gridworld_Requested_Voice"
         / "R01"
     )
@@ -152,7 +152,7 @@ def test_invalid_attempt_does_not_complete_study_condition(tmp_path: Path) -> No
     condition = _condition(
         study=Study.STUDY_1,
         timing=FeedbackTiming.ANYTIME,
-        modality=Modality.JOYSTICK,
+        modality=Modality.KEYBOARD,
     )
 
     invalid = trial_manager.create_trial(session, condition, practice=False)

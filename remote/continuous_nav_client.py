@@ -478,6 +478,18 @@ class ContinuousNavClient(QObject):
     def start_trial(self, timeout: float = 12.0) -> dict[str, Any]:
         return self._send_and_wait({"type": "START_TRIAL"}, {"TASK_STARTED"}, timeout=timeout)
 
+
+    def request_anytime_intervention(self) -> int:
+        """Ask a compatible Ubuntu worker to enter a human-control intervention now."""
+        if not self.connected:
+            raise RuntimeError("Ubuntu worker is not connected")
+        timestamp_utc_ns = time.time_ns()
+        self._send_q.put({
+            "type": "BEGIN_ANYTIME_FEEDBACK",
+            "timestamp_utc_ns": timestamp_utc_ns,
+        })
+        return timestamp_utc_ns
+
     def send_action(
         self,
         request_id: str,

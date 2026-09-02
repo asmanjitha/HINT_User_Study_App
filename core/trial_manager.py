@@ -43,8 +43,8 @@ class TrialManager:
     ) -> Trial:
         if session.session_path is None:
             raise ValueError("Session has no storage directory")
-        if condition.study not in (Study.STUDY_1, Study.STUDY_2):
-            raise ValueError("Trials must belong to Study 1 or Study 2")
+        if condition.study not in (Study.STUDY_1, Study.STUDY_2, Study.OBSERVATION):
+            raise ValueError("Trials must belong to Study 1, Study 2, or Agent Observation")
 
         identity = allocate_trial_storage_identity(
             self._db,

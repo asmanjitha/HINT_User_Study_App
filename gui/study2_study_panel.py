@@ -1,13 +1,10 @@
-"""Study 2 experimental panel: multimodal feedback in the 2D Gridworld.
+"""Study 2 panel: HOW should a human provide Gridworld feedback?
 
-Study 2 is presented as a modality-comparison study rather than repeating
-Study 1's environment flow.  Completion is tracked once per required
-modality: Keyboard, Joystick, Voice, and Eye Gaze.
-
-Keyboard, Voice, and Eye Gaze Gridworld input paths are live Actor-Critic
-integrations. Joystick remains a tracked Trial until its dedicated feedback
-path is connected. Voice commands use the selected microphone; Eye Gaze uses
-the connected HoloLens 2 EET stream. Neither is synthesized from keyboard input.
+Study 2 uses only the Gridworld environment.  The experimenter chooses one
+feedback timing (System Requested or Anytime) and then collects whichever one
+or two modalities are desired for that participant from Keyboard, Joystick,
+and Voice.  Completing every modality is intentionally *not* required; a
+researcher-facing Finish Study 2 button creates an explicit completion marker.
 """
 
 from __future__ import annotations
@@ -35,19 +32,17 @@ from PySide6.QtWidgets import (
 )
 
 from core.application_controller import ApplicationController
-from devices.voice_recognizer import VoiceCommandRecognizer
 from core.workflow_manager import (
     STEP_LABELS,
     STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
-    STUDY2_REQUIRED_CONDITION_COUNT,
     STUDY2_REQUIRED_MODALITIES,
 )
+from devices.voice_recognizer import VoiceCommandRecognizer
 from models.enums import (
     CollectionRunStatus,
     Environment,
     FeedbackTiming,
     Modality,
-    StepOverallStatus,
     Study,
     WorkflowStep,
 )
@@ -79,12 +74,14 @@ class Study2StudyPanel(QWidget):
         self,
         controller: ApplicationController,
         on_step_changed,
+        on_study_finished=None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._controller = controller
         self._step = WorkflowStep.STUDY2_STUDY
         self._on_step_changed = on_step_changed
+        self._on_study_finished = on_study_finished
         self._participant_code: str | None = None
         self._active_run = None
         self._active_live_rl = False
@@ -95,10 +92,11 @@ class Study2StudyPanel(QWidget):
         root.addWidget(title)
 
         note = QLabel(
-            "Study 2 focuses on feedback-modality tradeoffs in the 2D Gridworld. "
-            "Complete the Gridworld task with Keyboard, Joystick, Voice, and "
-            "Eye Gaze feedback. Feedback timing is recorded "
-            "for each run but modality completion is tracked independently."
+            "Study 2 investigates HOW feedback should be provided. It uses only the "
+            "2D Gridworld. Choose System Requested or Anytime feedback, then run the "
+            "participant with the Keyboard, Joystick, and/or Voice modality you want "
+            "to evaluate. You do not need to complete every modality: after at least "
+            "one valid modality run, use Finish Study 2 to continue."
         )
         note.setWordWrap(True)
         note.setStyleSheet("color: #666; font-size: 11px;")
@@ -114,14 +112,15 @@ class Study2StudyPanel(QWidget):
         self._controller.rl_manager.status_changed.connect(self._on_rl_status_changed)
 
     def _build_matrix(self) -> QGroupBox:
-        box = QGroupBox("Required Study 2 Gridworld modalities")
+        box = QGroupBox("Available Study 2 feedback modalities")
         layout = QVBoxLayout(box)
+
         top = QHBoxLayout()
-        self._summary_label = QLabel("0 / 4 modalities completed")
+        self._summary_label = QLabel("0 modality runs completed")
         self._summary_label.setStyleSheet("font-weight: bold;")
         top.addWidget(self._summary_label)
         top.addStretch()
-        self._next_btn = QPushButton("Select Next Incomplete")
+        self._next_btn = QPushButton("Select Next Uncollected")
         self._next_btn.clicked.connect(self._select_next)
         top.addWidget(self._next_btn)
         layout.addLayout(top)
@@ -140,24 +139,24 @@ class Study2StudyPanel(QWidget):
         return box
 
     def _build_config(self) -> QGroupBox:
-        box = QGroupBox("Selected modality configuration")
+        box = QGroupBox("Selected Study 2 configuration")
         form = QFormLayout(box)
 
         fixed_env = QLabel(Environment.GRIDWORLD.value)
         fixed_env.setStyleSheet("font-weight: bold;")
         form.addRow("Environment:", fixed_env)
 
-        self._modality_combo = QComboBox()
-        for modality in STUDY2_REQUIRED_MODALITIES:
-            self._modality_combo.addItem(modality.value, modality.name)
-        self._modality_combo.currentIndexChanged.connect(self._on_selection_changed)
-        form.addRow("Feedback modality:", self._modality_combo)
-
         self._timing_combo = QComboBox()
         for timing in (FeedbackTiming.REQUESTED, FeedbackTiming.ANYTIME):
             self._timing_combo.addItem(timing.value, timing.name)
         self._timing_combo.currentIndexChanged.connect(self._on_selection_changed)
         form.addRow("Feedback timing:", self._timing_combo)
+
+        self._modality_combo = QComboBox()
+        for modality in STUDY2_REQUIRED_MODALITIES:
+            self._modality_combo.addItem(modality.value, modality.name)
+        self._modality_combo.currentIndexChanged.connect(self._on_selection_changed)
+        form.addRow("Feedback modality:", self._modality_combo)
 
         self._seed_spin = QSpinBox()
         self._seed_spin.setRange(0, 2_147_483_647)
@@ -174,9 +173,10 @@ class Study2StudyPanel(QWidget):
         return box
 
     def _build_status(self) -> QGroupBox:
-        box = QGroupBox("Run")
+        box = QGroupBox("Run and Study 2 completion")
         layout = QVBoxLayout(box)
         self._status_label = QLabel("No run in progress.")
+        self._status_label.setWordWrap(True)
         layout.addWidget(self._status_label)
 
         self._data_folder_label = QLabel("Next data folder: --")
@@ -200,15 +200,11 @@ class Study2StudyPanel(QWidget):
         self._resume_btn = QPushButton("Resume")
         self._resume_btn.clicked.connect(self._controller.resume_active_trial)
         self._complete_btn = QPushButton("Stop && Mark Valid")
-        self._complete_btn.clicked.connect(
-            lambda: self._finish_run(CollectionRunStatus.VALID)
-        )
+        self._complete_btn.clicked.connect(lambda: self._finish_run(CollectionRunStatus.VALID))
         self._invalid_btn = QPushButton("Mark Invalid / Repeat")
         self._invalid_btn.clicked.connect(self._mark_invalid_and_repeat)
         self._abort_btn = QPushButton("Abort Run")
-        self._abort_btn.clicked.connect(
-            lambda: self._finish_run(CollectionRunStatus.ABORTED)
-        )
+        self._abort_btn.clicked.connect(lambda: self._finish_run(CollectionRunStatus.ABORTED))
         for button in (
             self._start_btn,
             self._pause_btn,
@@ -219,17 +215,28 @@ class Study2StudyPanel(QWidget):
         ):
             buttons.addWidget(button)
         layout.addLayout(buttons)
+
+        finish_row = QHBoxLayout()
+        finish_row.addStretch()
+        self._finish_study_btn = QPushButton("Finish Study 2 && Continue")
+        self._finish_study_btn.setToolTip(
+            "Use after collecting the modality run(s) selected for this participant."
+        )
+        self._finish_study_btn.clicked.connect(self._finish_study2)
+        finish_row.addWidget(self._finish_study_btn)
+        layout.addLayout(finish_row)
+
         self._set_running_controls(False)
         return box
 
     def _build_history(self) -> QGroupBox:
-        box = QGroupBox("Run History")
+        box = QGroupBox("Study 2 Run History")
         layout = QVBoxLayout(box)
         self._history = QTableWidget(0, 8)
         self._history.setHorizontalHeaderLabels(
             [
                 "Condition", "Attempt", "Modality", "Timing", "Result",
-                "Started", "Ended", "Duration"
+                "Started", "Ended", "Duration",
             ]
         )
         self._history.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
@@ -253,14 +260,16 @@ class Study2StudyPanel(QWidget):
         if self._participant_code is None:
             self._status_label.setText("Select or register a participant first.")
             self._start_btn.setEnabled(False)
+            self._finish_study_btn.setEnabled(False)
             self._set_running_controls(False)
             return
 
-        summary = self._controller.workflow_manager.step_status(
-            self._participant_code, self._step
-        )
+        summary = self._controller.workflow_manager.step_status(self._participant_code, self._step)
         self._active_run = summary.active_run
         blocking = self._controller.workflow_manager.has_active_run(self._participant_code)
+        finished = self._controller.workflow_manager.study2_finished(self._participant_code)
+        statuses = self._controller.workflow_manager.study2_condition_statuses(self._participant_code)
+        completed = sum(1 for item in statuses if item.status == "Completed")
 
         if self._active_run is not None:
             trial = (
@@ -276,6 +285,7 @@ class Study2StudyPanel(QWidget):
                     rel = trial.trial_path
                 self._data_folder_label.setText(f"Current data folder: {rel}")
             self._start_btn.setEnabled(False)
+            self._finish_study_btn.setEnabled(False)
             self._set_running_controls(True)
             return
 
@@ -285,30 +295,35 @@ class Study2StudyPanel(QWidget):
         study1 = self._controller.workflow_manager.step_status(
             self._participant_code, WorkflowStep.STUDY1_STUDY
         )
-        study2_training = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY2_TRAINING
-        )
+        prerequisites_ok = study1.completed_count >= STUDY1_STUDY_REQUIRED_CONDITION_COUNT
 
         if blocking is not None:
             self._status_label.setText(
                 f"Another run ({blocking.run_id}) is in progress. Finish or abort it first."
             )
             self._start_btn.setEnabled(False)
-        elif study1.completed_count < STUDY1_STUDY_REQUIRED_CONDITION_COUNT:
+            self._finish_study_btn.setEnabled(False)
+        elif not prerequisites_ok:
             self._status_label.setText(
                 f"Complete Study 1 first: {study1.completed_count}/"
-                f"{STUDY1_STUDY_REQUIRED_CONDITION_COUNT} protocol conditions completed."
+                f"{STUDY1_STUDY_REQUIRED_CONDITION_COUNT} conditions completed."
             )
             self._start_btn.setEnabled(False)
-        elif study2_training.overall_status != StepOverallStatus.COMPLETED:
-            self._status_label.setText("Complete Study 2 Training before experimental Study 2.")
+            self._finish_study_btn.setEnabled(False)
+        elif finished:
+            self._status_label.setText(
+                f"Study 2 has been marked finished by the experimenter. "
+                f"{completed} modality condition(s) were collected. Continue to Agent Observation."
+            )
             self._start_btn.setEnabled(False)
+            self._finish_study_btn.setEnabled(False)
         else:
             self._status_label.setText(
-                f"Study 2 progress: {summary.completed_count}/"
-                f"{STUDY2_REQUIRED_CONDITION_COUNT} modalities completed."
+                f"Study 2 collection: {completed} modality condition(s) completed. "
+                "Collect the one or two modalities selected for this participant, then press Finish Study 2."
             )
             self._start_btn.setEnabled(True)
+            self._finish_study_btn.setEnabled(completed >= 1)
 
     def _refresh_matrix(self) -> None:
         if self._participant_code is None:
@@ -318,9 +333,7 @@ class Study2StudyPanel(QWidget):
             self._next_btn.setEnabled(False)
             return
 
-        statuses = self._controller.workflow_manager.study2_condition_statuses(
-            self._participant_code
-        )
+        statuses = self._controller.workflow_manager.study2_condition_statuses(self._participant_code)
         completed = 0
         for col, item in enumerate(statuses):
             if item.status == "Completed":
@@ -331,10 +344,11 @@ class Study2StudyPanel(QWidget):
             cell = QTableWidgetItem(text)
             cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self._table.setItem(0, col, cell)
-        self._summary_label.setText(
-            f"{completed} / {STUDY2_REQUIRED_CONDITION_COUNT} modalities completed"
-        )
-        self._next_btn.setEnabled(self._active_run is None and completed < STUDY2_REQUIRED_CONDITION_COUNT)
+
+        finished = self._controller.workflow_manager.study2_finished(self._participant_code)
+        finish_text = " — Study 2 finished" if finished else ""
+        self._summary_label.setText(f"{completed} modality condition(s) completed{finish_text}")
+        self._next_btn.setEnabled(self._active_run is None and not finished)
         self._highlight_selected()
 
     def _refresh_history(self) -> None:
@@ -374,7 +388,7 @@ class Study2StudyPanel(QWidget):
             modality = Modality[self._modality_combo.currentData()]
             col = STUDY2_REQUIRED_MODALITIES.index(modality)
             self._table.setCurrentCell(0, col)
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             pass
 
     def _select_next(self) -> None:
@@ -396,27 +410,32 @@ class Study2StudyPanel(QWidget):
     def _update_execution_hint(self) -> None:
         if not hasattr(self, "_execution_label"):
             return
-        modality = Modality[self._modality_combo.currentData()]
+        try:
+            modality = Modality[self._modality_combo.currentData()]
+            timing = FeedbackTiming[self._timing_combo.currentData()]
+        except (KeyError, TypeError):
+            return
+
         if modality == Modality.KEYBOARD:
-            text = "Live Actor-Critic Gridworld is integrated for Keyboard feedback."
-        elif modality == Modality.VOICE:
-            text = (
-                "Live Actor-Critic Gridworld + microphone speech recognition. "
-                "Requested mode: say a direction. Anytime mode: say STOP, then "
-                "the state-box number, then a direction."
+            detail = (
+                "Keyboard controls the corrective direction."
+                if timing == FeedbackTiming.REQUESTED
+                else "Press SPACE to pause, select a recent state, then use the keyboard direction keys."
             )
-        elif modality == Modality.EYE_GAZE:
-            text = (
-                "Live Actor-Critic Gridworld + HoloLens 2 eye tracking. Requested: "
-                "look in the same direction twice. Anytime: double blink to pause, "
-                "close eyes ~1 s, blink N times for state N, then double-look direction."
+        elif modality == Modality.VOICE:
+            detail = (
+                "Say UP, DOWN, LEFT, or RIGHT when feedback is requested."
+                if timing == FeedbackTiming.REQUESTED
+                else 'Say "STOP" to pause, speak the state-box number, then say the corrective direction.'
             )
         else:
-            text = (
-                f"Tracked/external run: the real {modality.value} adapter is not integrated "
-                "in this build. Keyboard input will NOT be relabeled as this modality."
+            detail = (
+                "Tilt the connected joystick in the corrective direction when feedback is requested."
+                if timing == FeedbackTiming.REQUESTED
+                else "Press joystick button 1 to pause, use LEFT/RIGHT to choose a recent state, "
+                "press button 1 to confirm it, then tilt the stick in the corrective direction."
             )
-        self._execution_label.setText(text)
+        self._execution_label.setText(f"Live Actor-Critic Gridworld. {detail}")
         self._update_data_folder_preview()
 
     def _condition_from_selection(self) -> ExperimentCondition:
@@ -427,11 +446,7 @@ class Study2StudyPanel(QWidget):
             environment=Environment.GRIDWORLD,
             feedback_timing=timing,
             modality=modality,
-            rl_algorithm=(
-                "actor_critic_gridworld"
-                if modality in (Modality.KEYBOARD, Modality.VOICE, Modality.EYE_GAZE)
-                else "external_multimodal_gridworld"
-            ),
+            rl_algorithm="actor_critic_gridworld",
             random_seed=self._seed_spin.value(),
         )
 
@@ -442,22 +457,49 @@ class Study2StudyPanel(QWidget):
             self._data_folder_label.setText("Next data folder: --")
             return
         try:
-            session_id = self._controller.session_manager.preview_session_id(
-                self._participant_code
-            )
+            session_id = self._controller.session_manager.preview_session_id(self._participant_code)
             preview = self._controller.trial_manager.preview_storage(
                 participant_code=self._participant_code,
                 session_id=session_id,
                 condition=self._condition_from_selection(),
                 practice=False,
             )
-            self._data_folder_label.setText(
-                f"Next data folder: {preview['relative_dir']}"
-            )
+            self._data_folder_label.setText(f"Next data folder: {preview['relative_dir']}")
         except Exception:
             self._data_folder_label.setText("Next data folder: unavailable")
 
     # ------------------------------------------------------------------
+    def _validate_modality_device(self, modality: Modality) -> bool:
+        if modality == Modality.VOICE:
+            ok, message = self._controller.device_manager.check_microphone()
+            if not ok:
+                QMessageBox.warning(
+                    self,
+                    "Voice microphone unavailable",
+                    "The Voice condition needs a connected microphone receiving data.\n\n"
+                    f"{message}\n\nOpen Devices, connect/check the microphone, then try again.",
+                )
+                return False
+            if not VoiceCommandRecognizer.backend_available():
+                QMessageBox.warning(
+                    self,
+                    "Speech recognition unavailable",
+                    "The Vosk Python package is not installed. Install requirements.txt "
+                    "before running Voice feedback.",
+                )
+                return False
+        elif modality == Modality.JOYSTICK:
+            ok, message = self._controller.device_manager.check_joystick()
+            if not ok:
+                QMessageBox.warning(
+                    self,
+                    "Joystick unavailable",
+                    "The Joystick condition needs a connected joystick/gamepad.\n\n"
+                    f"{message}\n\nOpen Devices, select and connect the joystick, then try again.",
+                )
+                return False
+        return True
+
     def _start_run(self) -> None:
         if self._participant_code is None:
             return
@@ -468,13 +510,9 @@ class Study2StudyPanel(QWidget):
         if study1.completed_count < STUDY1_STUDY_REQUIRED_CONDITION_COUNT:
             QMessageBox.warning(self, "Study 1 incomplete", "Complete Study 1 before Study 2.")
             return
-
-        study2_training = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY2_TRAINING
-        )
-        if study2_training.overall_status != StepOverallStatus.COMPLETED:
-            QMessageBox.warning(
-                self, "Study 2 Training incomplete", "Complete Study 2 Training first."
+        if self._controller.workflow_manager.study2_finished(self._participant_code):
+            QMessageBox.information(
+                self, "Study 2 already finished", "Study 2 is already marked finished for this participant."
             )
             return
 
@@ -487,62 +525,22 @@ class Study2StudyPanel(QWidget):
             answer = QMessageBox.question(
                 self,
                 "Modality already completed",
-                f"{modality.value} is already complete. Start a repeat run anyway?",
+                f"{modality.value} already has a valid run. Start a repeat run anyway?",
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
 
-        if modality == Modality.VOICE:
-            ok, message = self._controller.device_manager.check_microphone()
-            if not ok:
-                QMessageBox.warning(
-                    self,
-                    "Voice microphone unavailable",
-                    "The Voice condition needs a connected microphone that is "
-                    f"receiving data.\n\n{message}\n\nOpen Devices, connect/check the "
-                    "microphone, then start this run again.",
-                )
-                return
-            if not VoiceCommandRecognizer.backend_available():
-                QMessageBox.warning(
-                    self,
-                    "Speech recognition unavailable",
-                    "The Vosk Python package is not installed. "
-                    "Install requirements.txt before running Voice feedback.",
-                )
-                return
-
-        if modality == Modality.EYE_GAZE:
-            ok, message = self._controller.device_manager.check_hololens()
-            eye = self._controller.device_manager.hololens_latest_eye_data()
-            calibrated = bool(eye.get("calibration_valid", False))
-            if not ok or not calibrated:
-                QMessageBox.warning(
-                    self,
-                    "HoloLens eye gaze unavailable",
-                    "The Eye Gaze condition needs a connected HoloLens 2 with fresh "
-                    "Extended Eye Tracking data and valid eye calibration.\n\n"
-                    f"{message}\n\nCalibrate eye tracking on the headset, then start again.",
-                )
-                return
+        if not self._validate_modality_device(modality):
+            return
 
         if not self._controller.device_manager.shimmer_stream_healthy():
             answer = QMessageBox.question(
                 self,
                 "Shimmer is not receiving live data",
-                "No fresh Shimmer GSR/PPG samples are reaching the GUI. If you start "
-                "this experimental run now, no trial-specific physiological CSV will "
-                "be created.\n\nReturn to Devices, reconnect/check live data, and then start the run.\n\n"
-                "Start without Shimmer physiological recording anyway?",
-            )
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-
-        if not self._controller.device_manager.all_connected():
-            answer = QMessageBox.question(
-                self,
-                "Devices not fully connected",
-                "Not all study devices show as Connected. Start this run anyway?",
+                "No fresh Shimmer GSR/PPG samples are reaching the GUI. Starting now "
+                "means no trial-specific physiological CSV will be created.\n\n"
+                "Return to Devices and reconnect/check live data.\n\n"
+                "Start this Study 2 run without Shimmer recording anyway?",
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -555,22 +553,14 @@ class Study2StudyPanel(QWidget):
             QMessageBox.critical(self, "Could not start run", str(exc))
             return
 
-        self._active_live_rl = modality in (Modality.KEYBOARD, Modality.VOICE, Modality.EYE_GAZE)
-
+        self._active_live_rl = True
         try:
-            if self._active_live_rl:
-                trial = self._controller.start_actor_critic_trial(
-                    session_id=session.session_id,
-                    condition=condition,
-                    practice=False,
-                    use_maze_qinit=self._warm_start.isChecked(),
-                )
-            else:
-                trial = self._controller.start_tracked_trial(
-                    session_id=session.session_id,
-                    condition=condition,
-                    practice=False,
-                )
+            trial = self._controller.start_actor_critic_trial(
+                session_id=session.session_id,
+                condition=condition,
+                practice=False,
+                use_maze_qinit=self._warm_start.isChecked(),
+            )
         except Exception as exc:
             self._controller.workflow_manager.end_run(
                 run.run_id, completed=False, notes=f"Failed to start: {exc}"
@@ -583,6 +573,43 @@ class Study2StudyPanel(QWidget):
         self._active_run = self._controller.workflow_manager.get_run(run.run_id)
         self.refresh()
 
+    def _finish_study2(self) -> None:
+        if self._participant_code is None:
+            return
+        if self._controller.workflow_manager.has_active_run(self._participant_code) is not None:
+            QMessageBox.warning(self, "Run in progress", "Finish or abort the current run first.")
+            return
+
+        statuses = self._controller.workflow_manager.study2_condition_statuses(self._participant_code)
+        completed = [item.modality.value for item in statuses if item.status == "Completed"]
+        if not completed:
+            QMessageBox.warning(
+                self,
+                "No Study 2 modality collected",
+                "Complete at least one valid Study 2 modality run before marking this study finished.",
+            )
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Finish Study 2?",
+            "Mark Study 2 finished for this participant and continue to the Agent Observation phase?\n\n"
+            f"Completed modality condition(s): {', '.join(completed)}\n\n"
+            "The remaining modalities are intentionally not required.",
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self._controller.workflow_manager.finish_study2(self._participant_code)
+        except Exception as exc:
+            QMessageBox.critical(self, "Could not finish Study 2", str(exc))
+            return
+        self.refresh()
+        if self._on_step_changed:
+            self._on_step_changed()
+        if self._on_study_finished:
+            self._on_study_finished()
+
     def _mark_invalid_and_repeat(self) -> None:
         reasons = [
             "Participant mistake / misunderstood instructions",
@@ -594,22 +621,17 @@ class Study2StudyPanel(QWidget):
             "Other",
         ]
         reason, ok = QInputDialog.getItem(
-            self, "Mark run invalid", "Reason for repeating this condition:",
-            reasons, 0, False
+            self, "Mark run invalid", "Reason for repeating this condition:", reasons, 0, False
         )
         if not ok:
             return
         if reason == "Other":
-            reason, ok = QInputDialog.getText(
-                self, "Invalid run reason", "Enter reason:"
-            )
+            reason, ok = QInputDialog.getText(self, "Invalid run reason", "Enter reason:")
             if not ok or not reason.strip():
                 return
         self._finish_run(CollectionRunStatus.INVALID, reason.strip())
 
-    def _finish_run(
-        self, outcome: CollectionRunStatus, reason: str = ""
-    ) -> None:
+    def _finish_run(self, outcome: CollectionRunStatus, reason: str = "") -> None:
         if self._active_run is None:
             return
         completed = outcome != CollectionRunStatus.ABORTED
