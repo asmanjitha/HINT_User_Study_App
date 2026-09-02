@@ -4,6 +4,22 @@
 Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
+## What's in this version (V1.5.0 — participant-controlled activity start)
+
+Every Training, Study 1, Study 2, and Agent Observation activity now uses a
+two-stage start:
+
+1. The researcher prepares the selected run from the Console.
+2. The participant window opens with a full-window **START ACTIVITY** button.
+3. The activity begins only when the participant presses that button.
+
+While the participant is waiting, the main window says **Study timer: waiting
+for participant**. The Trial start time, researcher-console countdown,
+applicable HoloLens/Shimmer recordings, and local Gridworld or Ubuntu
+continuous-navigation task all begin at the participant click. No timer is
+displayed in either participant window. The participant start gate also applies
+to Training activities, which remain untimed.
+
 
 ## What's in this version (V1.4.0 — storage selection and flexible workflow)
 

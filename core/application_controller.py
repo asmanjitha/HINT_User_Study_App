@@ -147,6 +147,7 @@ class ApplicationController:
         )
 
         self._active_trial_backend = "none"
+        self._activity_started = False
         self._continuous_nav_feedback_timeout_seconds = float(
             remote_cfg.get("feedback_timeout_seconds", 10)
         )
@@ -221,27 +222,11 @@ class ApplicationController:
                     use_maze_qinit,
             )
 
-            if (
-                session.status
-                == SessionStatus.CREATED
-            ):
-
-                self.session_manager.start_session(
-                    session
-                )
-
-            self.trial_manager.start_trial(
-                trial
-            )
-
-            self._start_trial_sensor_recordings(trial)
-
             self.active_session = session
-
             self.active_trial = trial
-
-            self.rl_manager.start()
             self._active_trial_backend = "local_gridworld"
+            self._activity_started = False
+            self._publish_activity_prepared(trial)
 
             return trial
 
@@ -309,24 +294,11 @@ class ApplicationController:
             practice=practice,
         )
 
-        if session.status == SessionStatus.CREATED:
-            self.session_manager.start_session(session)
-
-        try:
-            self.trial_manager.start_trial(trial)
-            self._start_trial_sensor_recordings(trial)
-        except Exception:
-            logger.exception("Could not start tracked trial %s", trial.trial_id)
-            self._stop_trial_sensor_recordings(trial, reason="trial_start_failed")
-            try:
-                self.trial_manager.end_trial(trial, completed=False)
-            except Exception:
-                logger.exception("Could not mark failed tracked trial as stopped")
-            raise
-
         self.active_session = session
         self.active_trial = trial
         self._active_trial_backend = "tracked"
+        self._activity_started = False
+        self._publish_activity_prepared(trial)
         return trial
 
     def connect_continuous_nav_worker(
@@ -399,17 +371,11 @@ class ApplicationController:
                 feedback_timeout_seconds=feedback_timeout_seconds,
             )
 
-            if session.status == SessionStatus.CREATED:
-                self.session_manager.start_session(session)
-            self.trial_manager.start_trial(trial)
-            self._start_trial_sensor_recordings(trial)
             self.active_session = session
             self.active_trial = trial
             self._active_trial_backend = "remote_continuous_room"
-
-            # Only now allow the Ubuntu RL process to move: sensors and the
-            # master trial lifecycle are already recording against the same T/R id.
-            self.continuous_nav_client.start_trial()
+            self._activity_started = False
+            self._publish_activity_prepared(trial)
             return trial
         except Exception:
             logger.exception("Could not start remote continuous-room trial %s", trial.trial_id)
@@ -428,6 +394,85 @@ class ApplicationController:
             self.continuous_nav_client.clear_active_trial()
             self.active_trial = None
             self._active_trial_backend = "none"
+            raise
+
+    @property
+    def activity_started(self) -> bool:
+        """Whether the participant has released the prepared activity."""
+        return self.active_trial is not None and self._activity_started
+
+    def _publish_activity_prepared(self, trial: Trial) -> None:
+        self.event_bus.publish(
+            StudyEvent(
+                event_type=EventType.ACTIVITY_PREPARED,
+                participant_id=trial.participant_code,
+                session_id=trial.session_id,
+                trial_id=trial.trial_id,
+                value=(
+                    f"{trial.condition_code}/{trial.run_code}; "
+                    "waiting_for_participant_start"
+                ),
+            )
+        )
+
+    def start_prepared_activity(self, trial_id: str) -> Trial:
+        """Start a prepared activity after the participant presses Start.
+
+        Trial time, the main-window countdown, sensor recordings, and the task
+        backend all begin at this boundary.  Researcher-side preparation alone
+        therefore never consumes protocol time or records waiting-room data.
+        """
+        trial = self.active_trial
+        if trial is None or trial.trial_id != trial_id:
+            raise RuntimeError("This activity is no longer waiting to start")
+        if self._activity_started:
+            return trial
+
+        session = self.active_session
+        if session is None:
+            raise RuntimeError("The prepared activity has no active session")
+
+        try:
+            if session.status == SessionStatus.CREATED:
+                self.session_manager.start_session(session)
+
+            self.trial_manager.start_trial(trial)
+            # Mark the boundary immediately after TRIAL_STARTED so a backend
+            # failure cannot cause a second click to start the same trial twice.
+            self._activity_started = True
+            self._start_trial_sensor_recordings(trial)
+
+            if self._active_trial_backend == "local_gridworld":
+                self.rl_manager.start()
+            elif self._active_trial_backend == "remote_continuous_room":
+                self.continuous_nav_client.start_trial()
+
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.PARTICIPANT_ACTIVITY_STARTED,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=f"{trial.condition_code}/{trial.run_code}",
+                )
+            )
+            return trial
+        except Exception:
+            logger.exception(
+                "Participant could not start prepared activity %s", trial.trial_id
+            )
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.EXPERIMENTER_NOTE,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        "Participant Start Activity failed. Mark this run "
+                        "Invalid/Repeat or Aborted after checking the task backend."
+                    ),
+                )
+            )
             raise
 
     def begin_continuous_anytime_feedback(self) -> None:
@@ -540,6 +585,8 @@ class ApplicationController:
 
         if self.active_trial is None:
             return
+        if not self._activity_started:
+            return
         if self._active_trial_backend == "remote_continuous_room":
             # Ubuntu worker v1 intentionally has no pause command; pausing only
             # the Console would desynchronize sensors and simulator time.
@@ -553,6 +600,8 @@ class ApplicationController:
     ) -> None:
 
         if self.active_trial is None:
+            return
+        if not self._activity_started:
             return
         if self._active_trial_backend == "remote_continuous_room":
             return
@@ -573,6 +622,7 @@ class ApplicationController:
 
         trial = self.active_trial
         backend = self._active_trial_backend
+        activity_started = self._activity_started
         remote_error = ""
 
         # Stop the state-producing backend before publishing TRIAL_ENDED or
@@ -587,7 +637,7 @@ class ApplicationController:
             except Exception as exc:
                 remote_error = str(exc)
                 logger.exception("Could not stop Ubuntu continuous-navigation task cleanly")
-        else:
+        elif activity_started:
             self.rl_manager.stop()
 
         self.trial_manager.end_trial(
@@ -637,6 +687,7 @@ class ApplicationController:
 
         self.active_trial = None
         self._active_trial_backend = "none"
+        self._activity_started = False
 
     def complete_active_trial_at_time_limit(
         self,

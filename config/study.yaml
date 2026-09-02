@@ -1,4 +1,4 @@
-study_version: "HINT_v1.4_storage_and_workflow_overrides"
+study_version: "HINT_v1.5_participant_activity_start"
 
 # Revised participant flow:
 # Registration -> Training -> Study 1 (when) -> Study 2 (how) -> Agent Observation

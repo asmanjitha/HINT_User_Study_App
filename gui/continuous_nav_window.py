@@ -16,7 +16,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from models.enums import Environment, FeedbackTiming, Modality
+from gui.participant_start_overlay import ParticipantStartOverlay
+from models.enums import AppMode, Environment, EventType, FeedbackTiming, Modality
+from models.event import StudyEvent
 
 
 class ContinuousNavCanvas(QWidget):
@@ -209,9 +211,56 @@ class ContinuousNavParticipantWindow(QWidget):
         self._client.human_action_applied.connect(self._on_action_applied)
         self._client.message_received.connect(self._on_remote_message)
 
+        self._start_overlay = ParticipantStartOverlay(self)
+        self._start_overlay.start_requested.connect(
+            self._on_participant_start_requested
+        )
+        self._controller.event_bus.event_published.connect(
+            self._on_activity_lifecycle_event
+        )
+
         self._set_feedback_controls_enabled(False)
 
     # ------------------------------------------------------------------
+    def _on_activity_lifecycle_event(self, event: StudyEvent) -> None:
+        if event.event_type == EventType.ACTIVITY_PREPARED:
+            trial = self._controller.active_trial
+            if (
+                trial is None
+                or trial.trial_id != event.trial_id
+                or trial.condition.environment != Environment.CONTINUOUS_ROOM
+            ):
+                return
+
+            self._status.setText(
+                "Ubuntu room is prepared. Waiting for you to start the activity."
+            )
+            if self._controller.config.mode == AppMode.STUDY:
+                self.showFullScreen()
+            else:
+                self.show()
+            self.raise_()
+            self.activateWindow()
+            self._start_overlay.present(trial)
+            return
+
+        if event.event_type == EventType.PARTICIPANT_ACTIVITY_STARTED:
+            self._start_overlay.start_succeeded(event.trial_id or "")
+        elif event.event_type == EventType.TRIAL_ENDED:
+            gate_was_visible = self._start_overlay.isVisible()
+            self._start_overlay.dismiss(event.trial_id or "")
+            if gate_was_visible:
+                self.hide()
+
+    def _on_participant_start_requested(self, trial_id: str) -> None:
+        try:
+            self._controller.start_prepared_activity(trial_id)
+        except Exception as exc:
+            self._start_overlay.start_failed(
+                str(exc),
+                can_retry=not self._controller.activity_started,
+            )
+
     def _room_trial_active(self) -> bool:
         trial = self._controller.active_trial
         return bool(
@@ -463,3 +512,10 @@ class ContinuousNavParticipantWindow(QWidget):
             self._status.setText(f"Feedback sent (action {label}). Waiting for Ubuntu to apply it…")
         except Exception as exc:
             self._status.setText(f"Could not send feedback: {exc}")
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if hasattr(self, "_start_overlay"):
+            self._start_overlay.setGeometry(self.rect())
+            if self._start_overlay.isVisible():
+                self._start_overlay.raise_()

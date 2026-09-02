@@ -70,10 +70,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._controller = controller
 
-        # The participant-facing second window (maze view + feedback
-        # controls) is unchanged from V0.1 -- it reacts to rl_manager
-        # signals directly and pops up whenever a Study 1 trial starts,
-        # regardless of which researcher-console tab is showing.
+        # Participant-facing windows are prepared by the researcher, then wait
+        # for the participant's own Start Activity confirmation before a trial
+        # clock, recording, or task backend begins.
         self._participant_window = ParticipantWindow(controller)
         self._continuous_nav_window = ContinuousNavParticipantWindow(controller)
 
@@ -131,6 +130,7 @@ class MainWindow(QMainWindow):
         self._timer_tick.setInterval(250)
         self._timer_tick.timeout.connect(self._update_study_timer)
         self._timed_trial_id: str | None = None
+        self._prepared_trial_id: str | None = None
         self._timed_study: Study | None = None
         self._timer_limit_seconds = 0
         self._timer_remaining_seconds = 0.0
@@ -202,6 +202,7 @@ class MainWindow(QMainWindow):
     def _start_study_timer(self, trial_id: str) -> None:
         trial = self._controller.trial_manager.get_trial(trial_id)
         if trial is None or trial.practice or trial.condition.study not in _STUDY_TIMER_CONFIG_KEYS:
+            self._clear_study_timer()
             return
         self._timed_trial_id = trial_id
         self._timed_study = trial.condition.study
@@ -232,6 +233,7 @@ class MainWindow(QMainWindow):
     def _clear_study_timer(self) -> None:
         self._timer_tick.stop()
         self._timed_trial_id = None
+        self._prepared_trial_id = None
         self._timed_study = None
         self._timer_remaining_seconds = 0.0
         self._timer_paused = False
@@ -274,14 +276,22 @@ class MainWindow(QMainWindow):
             self._clear_study_timer()
 
     def _on_study_timer_event(self, event: StudyEvent) -> None:
-        if event.event_type == EventType.TRIAL_STARTED and event.trial_id:
+        if event.event_type == EventType.ACTIVITY_PREPARED and event.trial_id:
+            self._prepared_trial_id = event.trial_id
+            self._timer_label.setText("Study timer: waiting for participant")
+        elif event.event_type == EventType.TRIAL_STARTED and event.trial_id:
+            self._prepared_trial_id = None
             self._start_study_timer(event.trial_id)
         elif event.event_type == EventType.TRIAL_PAUSED and event.trial_id == self._timed_trial_id:
             self._pause_study_timer()
         elif event.event_type == EventType.TRIAL_RESUMED and event.trial_id == self._timed_trial_id:
             self._resume_study_timer()
-        elif event.event_type == EventType.TRIAL_ENDED and event.trial_id == self._timed_trial_id:
-            self._clear_study_timer()
+        elif event.event_type == EventType.TRIAL_ENDED:
+            if event.trial_id == self._timed_trial_id:
+                self._clear_study_timer()
+            elif event.trial_id == self._prepared_trial_id:
+                self._prepared_trial_id = None
+                self._clear_study_timer()
 
     def _go_to_devices(self) -> None:
         self._nav_list.setCurrentRow(_DEVICES_INDEX)

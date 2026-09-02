@@ -46,11 +46,13 @@ from devices.gaze_gesture_recognizer import (
 )
 from models.enums import (
     AppMode,
+    Environment,
     EventType,
     FeedbackTiming,
     Modality,
 )
 from models.event import StudyEvent
+from gui.participant_start_overlay import ParticipantStartOverlay
 
 
 class MazeCanvas(QWidget):
@@ -749,7 +751,53 @@ class ParticipantWindow(QWidget):
             False
         )
 
+        self._start_overlay = ParticipantStartOverlay(self)
+        self._start_overlay.start_requested.connect(
+            self._on_participant_start_requested
+        )
+        self._controller.event_bus.event_published.connect(
+            self._on_activity_lifecycle_event
+        )
+
     # --------------------------------------------------
+
+    def _on_activity_lifecycle_event(self, event: StudyEvent) -> None:
+        if event.event_type == EventType.ACTIVITY_PREPARED:
+            trial = self._controller.active_trial
+            if (
+                trial is None
+                or trial.trial_id != event.trial_id
+                or trial.condition.environment == Environment.CONTINUOUS_ROOM
+            ):
+                return
+
+            self._status_label.setText("Activity ready — waiting for you to start")
+            if self._controller.config.mode == AppMode.STUDY:
+                self.showFullScreen()
+            else:
+                self.resize(850, 900)
+                self.show()
+            self.raise_()
+            self.activateWindow()
+            self._start_overlay.present(trial)
+            return
+
+        if event.event_type == EventType.PARTICIPANT_ACTIVITY_STARTED:
+            self._start_overlay.start_succeeded(event.trial_id or "")
+        elif event.event_type == EventType.TRIAL_ENDED:
+            gate_was_visible = self._start_overlay.isVisible()
+            self._start_overlay.dismiss(event.trial_id or "")
+            if gate_was_visible:
+                self.hide()
+
+    def _on_participant_start_requested(self, trial_id: str) -> None:
+        try:
+            self._controller.start_prepared_activity(trial_id)
+        except Exception as exc:
+            self._start_overlay.start_failed(
+                str(exc),
+                can_retry=not self._controller.activity_started,
+            )
 
     def _on_trial_started(
         self,
@@ -2054,6 +2102,10 @@ class ParticipantWindow(QWidget):
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
         self._apply_gaze_preview_pixmap()
+        if hasattr(self, "_start_overlay"):
+            self._start_overlay.setGeometry(self.rect())
+            if self._start_overlay.isVisible():
+                self._start_overlay.raise_()
 
     def keyPressEvent(
         self,
