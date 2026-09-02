@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QStackedWidget,
     QStatusBar,
     QWidget,
@@ -39,7 +40,9 @@ from gui.devices_page import DevicesPage
 from gui.continuous_nav_window import ContinuousNavParticipantWindow
 from gui.event_log_page import EventLogPage
 from gui.participant_window import ParticipantWindow
+from gui.storage_location_dialog import ensure_storage_location
 from gui.workflow_page import WorkflowPage
+from core.config_loader import PROJECT_ROOT
 from models.enums import EventType, Study
 from models.event import StudyEvent
 
@@ -103,6 +106,18 @@ class MainWindow(QMainWindow):
         status_bar.showMessage(
             f"Mode: {controller.config.mode.value}    |    Study config: {controller.config.study_version}"
         )
+        data_location_name = (
+            controller.config.data_dir.name
+            or controller.config.data_dir.anchor
+            or str(controller.config.data_dir)
+        )
+        self._storage_button = QPushButton(f"Data: {data_location_name}")
+        self._storage_button.setToolTip(
+            f"Current data location: {controller.config.data_dir}\n"
+            "Click to choose a different location for the next app launch."
+        )
+        self._storage_button.clicked.connect(self._change_data_location)
+        status_bar.addPermanentWidget(self._storage_button)
         self._timer_label = QLabel("Study timer: --:--")
         self._timer_label.setMinimumWidth(310)
         self._timer_label.setStyleSheet(
@@ -131,6 +146,30 @@ class MainWindow(QMainWindow):
         )
         self._stack.addWidget(self._workflow_page)  # 1
         self._stack.addWidget(EventLogPage(self._controller))  # 2
+
+    def _change_data_location(self) -> None:
+        selected = ensure_storage_location(
+            self._controller.config.config_dir,
+            PROJECT_ROOT,
+            force_prompt=True,
+            parent=self,
+        )
+        if selected is None:
+            return
+        if selected == self._controller.config.data_dir.resolve():
+            QMessageBox.information(
+                self,
+                "Data location unchanged",
+                f"The console is already using:\n{selected}",
+            )
+            return
+        QMessageBox.information(
+            self,
+            "Restart required",
+            f"The new data location has been saved:\n{selected}\n\n"
+            "Finish or abort any active run, close the console, and reopen it. "
+            "The current launch will continue using the old location.",
+        )
 
     def _duration_seconds_for_study(self, study: Study) -> int:
         timing = self._controller.config.study_raw.get("timing", {})

@@ -35,13 +35,13 @@ from core.workflow_manager import (
     OBSERVATION_REQUIRED_CONDITIONS,
     OBSERVATION_REQUIRED_CONDITION_COUNT,
     STEP_LABELS,
+    condition_status_is_complete,
 )
 from models.enums import (
     CollectionRunStatus,
     Environment,
     FeedbackTiming,
     Modality,
-    StepOverallStatus,
     Study,
     WorkflowStep,
 )
@@ -51,6 +51,7 @@ _STATUS_SYMBOL = {
     "Not Started": "⬜",
     "In Progress": "🔶",
     "Completed": "✅",
+    "Manually Completed": "✅",
     "Needs Repeat": "⚠",
 }
 
@@ -119,6 +120,9 @@ class ObservationPanel(QWidget):
         self._summary_label.setStyleSheet("font-weight: bold;")
         top.addWidget(self._summary_label)
         top.addStretch()
+        self._mark_item_btn = QPushButton("Mark Selected Observation Complete…")
+        self._mark_item_btn.clicked.connect(self._mark_selected_complete)
+        top.addWidget(self._mark_item_btn)
         self._next_btn = QPushButton("Select Next Incomplete")
         self._next_btn.clicked.connect(self._select_next)
         top.addWidget(self._next_btn)
@@ -293,17 +297,9 @@ class ObservationPanel(QWidget):
         self._active_room = False
         self._set_running_controls(False)
 
-        study2 = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY2_STUDY
-        )
         if blocking is not None:
             self._status_label.setText(
                 f"Another run ({blocking.run_id}) is in progress. Finish or abort it first."
-            )
-            self._start_btn.setEnabled(False)
-        elif study2.overall_status != StepOverallStatus.COMPLETED:
-            self._status_label.setText(
-                "Finish Study 2 before starting the final Agent Observation phase."
             )
             self._start_btn.setEnabled(False)
         elif summary.completed_count == OBSERVATION_REQUIRED_CONDITION_COUNT:
@@ -328,7 +324,7 @@ class ObservationPanel(QWidget):
         )
         completed = 0
         for row, item in enumerate(statuses):
-            if item.status == "Completed":
+            if condition_status_is_complete(item.status):
                 completed += 1
             self._table.setItem(row, 0, QTableWidgetItem(item.label))
             no_feedback = QTableWidgetItem("None — observe only")
@@ -340,6 +336,7 @@ class ObservationPanel(QWidget):
         self._summary_label.setText(
             f"{completed} / {OBSERVATION_REQUIRED_CONDITION_COUNT} environments completed"
         )
+        self._mark_item_btn.setEnabled(self._participant_code is not None and self._active_run is None)
         self._next_btn.setEnabled(self._active_run is None and completed < OBSERVATION_REQUIRED_CONDITION_COUNT)
         self._highlight_selected()
 
@@ -511,12 +508,6 @@ class ObservationPanel(QWidget):
         if self._participant_code is None:
             return
 
-        study2 = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY2_STUDY
-        )
-        if study2.overall_status != StepOverallStatus.COMPLETED:
-            QMessageBox.warning(self, "Study 2 incomplete", "Finish Study 2 before Agent Observation.")
-            return
         if not self._check_required_sensors():
             return
 
@@ -524,11 +515,12 @@ class ObservationPanel(QWidget):
         existing = self._controller.workflow_manager.observation_condition_status(
             self._participant_code, req.key
         )
-        if existing.status == "Completed":
+        if condition_status_is_complete(existing.status):
             answer = QMessageBox.question(
                 self,
                 "Observation already completed",
-                f"{req.label} already has a valid run. Start a repeat anyway?",
+                f"{req.label} is already complete (valid run or manual override). "
+                "Start a repeat anyway?",
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -576,6 +568,38 @@ class ObservationPanel(QWidget):
         self._controller.workflow_manager.attach_trial(run.run_id, trial.trial_id)
         self._active_run = self._controller.workflow_manager.get_run(run.run_id)
         self.refresh()
+
+    def _mark_selected_complete(self) -> None:
+        if self._participant_code is None or self._active_run is not None:
+            return
+        item = self._selected_required()
+        status = self._controller.workflow_manager.observation_condition_status(
+            self._participant_code, item.key
+        )
+        if condition_status_is_complete(status.status):
+            QMessageBox.information(self, "Already complete", f"'{item.label}' is already complete.")
+            return
+        reason, ok = QInputDialog.getText(
+            self,
+            "Manual completion reason",
+            f"Reason for marking '{item.label}' complete:",
+        )
+        if not ok:
+            return
+        try:
+            self._controller.workflow_manager.mark_completion_override(
+                self._participant_code,
+                self._step,
+                item_key=item.key,
+                reason=reason,
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "Could not mark observation complete", str(exc))
+            return
+        self.refresh()
+        self._select_next()
+        if self._on_step_changed:
+            self._on_step_changed()
 
     def _mark_invalid_and_repeat(self) -> None:
         reasons = [

@@ -20,6 +20,7 @@ from typing import Any, Optional
 import yaml
 
 from models.enums import AppMode
+from core.storage_location import configured_data_root
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG_DIR = PROJECT_ROOT / "config"
@@ -107,13 +108,30 @@ def load_config(config_dir: Optional[Path] = None) -> AppConfig:
     except KeyError as exc:
         raise ConfigError(f"app.yaml: missing required paths.{exc.args[0]}") from exc
 
+    selected_data_root = configured_data_root(config_dir, PROJECT_ROOT)
+    external_or_custom_root = bool(
+        selected_data_root.resolve() != _resolve(PROJECT_ROOT, data_dir_raw).resolve()
+    )
+
     return AppConfig(
         raw=copy.deepcopy(app_raw),
         mode=mode,
-        data_dir=_resolve(PROJECT_ROOT, data_dir_raw),
-        logs_dir=_resolve(PROJECT_ROOT, logs_dir_raw),
-        identifiable_db=_resolve(PROJECT_ROOT, identifiable_db_raw),
-        experimental_db=_resolve(PROJECT_ROOT, experimental_db_raw),
+        data_dir=selected_data_root,
+        logs_dir=(
+            selected_data_root / "_system_logs"
+            if external_or_custom_root
+            else _resolve(PROJECT_ROOT, logs_dir_raw)
+        ),
+        identifiable_db=(
+            selected_data_root / "identifiable.sqlite3"
+            if external_or_custom_root
+            else _resolve(PROJECT_ROOT, identifiable_db_raw)
+        ),
+        experimental_db=(
+            selected_data_root / "experimental.sqlite3"
+            if external_or_custom_root
+            else _resolve(PROJECT_ROOT, experimental_db_raw)
+        ),
         backup_destination=str(backup_section.get("destination", "")),
         study_raw=copy.deepcopy(study_raw),
         config_dir=config_dir,

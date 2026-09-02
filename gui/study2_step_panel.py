@@ -29,13 +29,11 @@ from core.application_controller import ApplicationController
 from devices.voice_recognizer import VoiceCommandRecognizer
 from core.workflow_manager import (
     STEP_LABELS,
-    STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
 )
 from models.enums import (
     Environment,
     FeedbackTiming,
     Modality,
-    StepOverallStatus,
     Study,
     WorkflowStep,
 )
@@ -203,27 +201,12 @@ class Study2StepPanel(QWidget):
             )
             self._set_running_controls(False)
 
-            study1_summary = self._controller.workflow_manager.step_status(
-                self._participant_code, WorkflowStep.STUDY1_STUDY
-            )
-            study1_complete = (
-                study1_summary.overall_status == StepOverallStatus.COMPLETED
-            )
-
-            self._start_btn.setEnabled(
-                blocking_run is None and study1_complete
-            )
+            self._start_btn.setEnabled(blocking_run is None)
 
             if blocking_run is not None:
                 self._status_label.setText(
                     f"Another run ({blocking_run.run_id}) is in progress for this participant. "
                     "Finish or abort it first."
-                )
-            elif not study1_complete:
-                self._status_label.setText(
-                    f"Study 1 is not complete: {study1_summary.completed_count}/"
-                    f"{STUDY1_STUDY_REQUIRED_CONDITION_COUNT} required conditions finished. "
-                    "Complete the Study 1 protocol sub-steps before starting Study 2."
                 )
 
         self._refresh_history()
@@ -241,19 +224,6 @@ class Study2StepPanel(QWidget):
     # -- Actions ---------------------------------------------------------------
     def _start_run(self) -> None:
         if self._participant_code is None:
-            return
-
-        study1_summary = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY1_STUDY
-        )
-        if study1_summary.overall_status != StepOverallStatus.COMPLETED:
-            QMessageBox.information(
-                self,
-                "Study 1 incomplete",
-                f"This participant has completed {study1_summary.completed_count}/"
-                f"{STUDY1_STUDY_REQUIRED_CONDITION_COUNT} required Study 1 conditions. "
-                "Complete all Study 1 protocol conditions before starting Study 2.",
-            )
             return
 
         environment = Environment[self._env_combo.currentData()]

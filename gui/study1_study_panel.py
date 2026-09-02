@@ -42,7 +42,7 @@ from core.workflow_manager import (
     STEP_LABELS,
     STUDY1_STUDY_REQUIRED_CONDITIONS,
     STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
-    STUDY1_TRAINING_REQUIRED_CONDITION_COUNT,
+    condition_status_is_complete,
 )
 from models.enums import (
     CollectionRunStatus,
@@ -58,6 +58,7 @@ _STATUS_SYMBOL = {
     "Not Started": "⬜",
     "In Progress": "🔶",
     "Completed": "✅",
+    "Manually Completed": "✅",
     "Needs Repeat": "⚠",
 }
 
@@ -139,6 +140,9 @@ class Study1StudyPanel(QWidget):
         self._summary_label.setStyleSheet("font-weight: bold;")
         top.addWidget(self._summary_label)
         top.addStretch()
+        self._mark_item_btn = QPushButton("Mark Selected Sub-step Complete…")
+        self._mark_item_btn.clicked.connect(self._mark_selected_complete)
+        top.addWidget(self._mark_item_btn)
         self._next_btn = QPushButton("Select Next Incomplete")
         self._next_btn.clicked.connect(self._select_next_incomplete)
         top.addWidget(self._next_btn)
@@ -338,22 +342,9 @@ class Study1StudyPanel(QWidget):
         self._active_live_rl = False
         self._set_running_controls(False)
 
-        training = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY1_TRAINING
-        )
-        training_complete = (
-            training.completed_count == STUDY1_TRAINING_REQUIRED_CONDITION_COUNT
-        )
-
         if blocking is not None:
             self._status_label.setText(
                 f"Another run ({blocking.run_id}) is in progress. Finish or abort it first."
-            )
-            self._start_btn.setEnabled(False)
-        elif not training_complete:
-            self._status_label.setText(
-                f"Complete Study 1 Training first: {training.completed_count}/"
-                f"{STUDY1_TRAINING_REQUIRED_CONDITION_COUNT} training conditions completed."
             )
             self._start_btn.setEnabled(False)
         elif summary.completed_count == STUDY1_STUDY_REQUIRED_CONDITION_COUNT:
@@ -381,7 +372,7 @@ class Study1StudyPanel(QWidget):
         )
         completed = 0
         for row, item in enumerate(statuses):
-            if item.status == "Completed":
+            if condition_status_is_complete(item.status):
                 completed += 1
             values = [
                 item.label,
@@ -399,6 +390,7 @@ class Study1StudyPanel(QWidget):
         self._summary_label.setText(
             f"{completed} / {STUDY1_STUDY_REQUIRED_CONDITION_COUNT} required conditions completed"
         )
+        self._mark_item_btn.setEnabled(self._participant_code is not None and self._active_run is None)
         self._next_btn.setEnabled(self._active_run is None and completed < STUDY1_STUDY_REQUIRED_CONDITION_COUNT)
         self._highlight_selected_task()
 
@@ -577,27 +569,16 @@ class Study1StudyPanel(QWidget):
         if self._participant_code is None:
             return
 
-        training = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY1_TRAINING
-        )
-        if training.completed_count < STUDY1_TRAINING_REQUIRED_CONDITION_COUNT:
-            QMessageBox.warning(
-                self,
-                "Study 1 Training incomplete",
-                f"Complete Study 1 Training first ({training.completed_count}/"
-                f"{STUDY1_TRAINING_REQUIRED_CONDITION_COUNT}).",
-            )
-            return
-
         req = self._selected_required()
         existing = self._controller.workflow_manager.study1_study_condition_status(
             self._participant_code, req.key
         )
-        if existing.status == "Completed":
+        if condition_status_is_complete(existing.status):
             answer = QMessageBox.question(
                 self,
                 "Sub-step already completed",
-                f"{req.label} is already complete. Start a repeat run anyway?",
+                f"{req.label} is already complete (valid run or manual override). "
+                "Start a repeat run anyway?",
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -674,6 +655,38 @@ class Study1StudyPanel(QWidget):
         self._controller.workflow_manager.attach_trial(run.run_id, trial.trial_id)
         self._active_run = self._controller.workflow_manager.get_run(run.run_id)
         self.refresh()
+
+    def _mark_selected_complete(self) -> None:
+        if self._participant_code is None or self._active_run is not None:
+            return
+        item = self._selected_required()
+        status = self._controller.workflow_manager.study1_study_condition_status(
+            self._participant_code, item.key
+        )
+        if condition_status_is_complete(status.status):
+            QMessageBox.information(self, "Already complete", f"'{item.label}' is already complete.")
+            return
+        reason, ok = QInputDialog.getText(
+            self,
+            "Manual completion reason",
+            f"Reason for marking '{item.label}' complete:",
+        )
+        if not ok:
+            return
+        try:
+            self._controller.workflow_manager.mark_completion_override(
+                self._participant_code,
+                self._step,
+                item_key=item.key,
+                reason=reason,
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "Could not mark sub-step complete", str(exc))
+            return
+        self.refresh()
+        self._select_next_incomplete()
+        if self._on_step_changed:
+            self._on_step_changed()
 
     def _mark_invalid_and_repeat(self) -> None:
         reasons = [

@@ -34,8 +34,8 @@ from PySide6.QtWidgets import (
 from core.application_controller import ApplicationController
 from core.workflow_manager import (
     STEP_LABELS,
-    STUDY1_STUDY_REQUIRED_CONDITION_COUNT,
     STUDY2_REQUIRED_MODALITIES,
+    condition_status_is_complete,
 )
 from devices.voice_recognizer import VoiceCommandRecognizer
 from models.enums import (
@@ -52,6 +52,7 @@ _STATUS_SYMBOL = {
     "Not Started": "⬜",
     "In Progress": "🔶",
     "Completed": "✅",
+    "Manually Completed": "✅",
     "Needs Repeat": "⚠",
 }
 
@@ -95,8 +96,8 @@ class Study2StudyPanel(QWidget):
             "Study 2 investigates HOW feedback should be provided. It uses only the "
             "2D Gridworld. Choose System Requested or Anytime feedback, then run the "
             "participant with the Keyboard, Joystick, and/or Voice modality you want "
-            "to evaluate. You do not need to complete every modality: after at least "
-            "one valid modality run, use Finish Study 2 to continue."
+            "to evaluate. You do not need to complete every modality. Use Finish "
+            "Study 2 when you are ready to continue, even if no modality was collected."
         )
         note.setWordWrap(True)
         note.setStyleSheet("color: #666; font-size: 11px;")
@@ -120,6 +121,9 @@ class Study2StudyPanel(QWidget):
         self._summary_label.setStyleSheet("font-weight: bold;")
         top.addWidget(self._summary_label)
         top.addStretch()
+        self._mark_item_btn = QPushButton("Mark Selected Modality Complete…")
+        self._mark_item_btn.clicked.connect(self._mark_selected_complete)
+        top.addWidget(self._mark_item_btn)
         self._next_btn = QPushButton("Select Next Uncollected")
         self._next_btn.clicked.connect(self._select_next)
         top.addWidget(self._next_btn)
@@ -269,7 +273,7 @@ class Study2StudyPanel(QWidget):
         blocking = self._controller.workflow_manager.has_active_run(self._participant_code)
         finished = self._controller.workflow_manager.study2_finished(self._participant_code)
         statuses = self._controller.workflow_manager.study2_condition_statuses(self._participant_code)
-        completed = sum(1 for item in statuses if item.status == "Completed")
+        completed = sum(1 for item in statuses if condition_status_is_complete(item.status))
 
         if self._active_run is not None:
             trial = (
@@ -292,28 +296,16 @@ class Study2StudyPanel(QWidget):
         self._active_live_rl = False
         self._set_running_controls(False)
 
-        study1 = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY1_STUDY
-        )
-        prerequisites_ok = study1.completed_count >= STUDY1_STUDY_REQUIRED_CONDITION_COUNT
-
         if blocking is not None:
             self._status_label.setText(
                 f"Another run ({blocking.run_id}) is in progress. Finish or abort it first."
             )
             self._start_btn.setEnabled(False)
             self._finish_study_btn.setEnabled(False)
-        elif not prerequisites_ok:
-            self._status_label.setText(
-                f"Complete Study 1 first: {study1.completed_count}/"
-                f"{STUDY1_STUDY_REQUIRED_CONDITION_COUNT} conditions completed."
-            )
-            self._start_btn.setEnabled(False)
-            self._finish_study_btn.setEnabled(False)
         elif finished:
             self._status_label.setText(
                 f"Study 2 has been marked finished by the experimenter. "
-                f"{completed} modality condition(s) were collected. Continue to Agent Observation."
+                f"{completed} modality condition(s) are complete. Continue to Agent Observation."
             )
             self._start_btn.setEnabled(False)
             self._finish_study_btn.setEnabled(False)
@@ -323,7 +315,7 @@ class Study2StudyPanel(QWidget):
                 "Collect the one or two modalities selected for this participant, then press Finish Study 2."
             )
             self._start_btn.setEnabled(True)
-            self._finish_study_btn.setEnabled(completed >= 1)
+            self._finish_study_btn.setEnabled(True)
 
     def _refresh_matrix(self) -> None:
         if self._participant_code is None:
@@ -336,7 +328,7 @@ class Study2StudyPanel(QWidget):
         statuses = self._controller.workflow_manager.study2_condition_statuses(self._participant_code)
         completed = 0
         for col, item in enumerate(statuses):
-            if item.status == "Completed":
+            if condition_status_is_complete(item.status):
                 completed += 1
             text = f"{_STATUS_SYMBOL[item.status]} {item.status}"
             if item.last_feedback_timing is not None:
@@ -348,6 +340,7 @@ class Study2StudyPanel(QWidget):
         finished = self._controller.workflow_manager.study2_finished(self._participant_code)
         finish_text = " — Study 2 finished" if finished else ""
         self._summary_label.setText(f"{completed} modality condition(s) completed{finish_text}")
+        self._mark_item_btn.setEnabled(self._participant_code is not None and self._active_run is None and not finished)
         self._next_btn.setEnabled(self._active_run is None and not finished)
         self._highlight_selected()
 
@@ -504,12 +497,6 @@ class Study2StudyPanel(QWidget):
         if self._participant_code is None:
             return
 
-        study1 = self._controller.workflow_manager.step_status(
-            self._participant_code, WorkflowStep.STUDY1_STUDY
-        )
-        if study1.completed_count < STUDY1_STUDY_REQUIRED_CONDITION_COUNT:
-            QMessageBox.warning(self, "Study 1 incomplete", "Complete Study 1 before Study 2.")
-            return
         if self._controller.workflow_manager.study2_finished(self._participant_code):
             QMessageBox.information(
                 self, "Study 2 already finished", "Study 2 is already marked finished for this participant."
@@ -521,11 +508,12 @@ class Study2StudyPanel(QWidget):
         existing = self._controller.workflow_manager.study2_condition_status(
             self._participant_code, modality
         )
-        if existing.status == "Completed":
+        if condition_status_is_complete(existing.status):
             answer = QMessageBox.question(
                 self,
                 "Modality already completed",
-                f"{modality.value} already has a valid run. Start a repeat run anyway?",
+                f"{modality.value} is already complete (valid run or manual override). "
+                "Start a repeat run anyway?",
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -581,20 +569,13 @@ class Study2StudyPanel(QWidget):
             return
 
         statuses = self._controller.workflow_manager.study2_condition_statuses(self._participant_code)
-        completed = [item.modality.value for item in statuses if item.status == "Completed"]
-        if not completed:
-            QMessageBox.warning(
-                self,
-                "No Study 2 modality collected",
-                "Complete at least one valid Study 2 modality run before marking this study finished.",
-            )
-            return
+        completed = [item.modality.value for item in statuses if condition_status_is_complete(item.status)]
 
         answer = QMessageBox.question(
             self,
             "Finish Study 2?",
             "Mark Study 2 finished for this participant and continue to the Agent Observation phase?\n\n"
-            f"Completed modality condition(s): {', '.join(completed)}\n\n"
+            f"Completed modality condition(s): {', '.join(completed) if completed else 'None'}\n\n"
             "The remaining modalities are intentionally not required.",
         )
         if answer != QMessageBox.StandardButton.Yes:
@@ -609,6 +590,38 @@ class Study2StudyPanel(QWidget):
             self._on_step_changed()
         if self._on_study_finished:
             self._on_study_finished()
+
+    def _mark_selected_complete(self) -> None:
+        if self._participant_code is None or self._active_run is not None:
+            return
+        modality = Modality[self._modality_combo.currentData()]
+        status = self._controller.workflow_manager.study2_condition_status(
+            self._participant_code, modality
+        )
+        if condition_status_is_complete(status.status):
+            QMessageBox.information(self, "Already complete", f"'{modality.value}' is already complete.")
+            return
+        reason, ok = QInputDialog.getText(
+            self,
+            "Manual completion reason",
+            f"Reason for marking '{modality.value}' complete:",
+        )
+        if not ok:
+            return
+        try:
+            self._controller.workflow_manager.mark_completion_override(
+                self._participant_code,
+                self._step,
+                item_key=modality.name,
+                reason=reason,
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "Could not mark modality complete", str(exc))
+            return
+        self.refresh()
+        self._select_next()
+        if self._on_step_changed:
+            self._on_step_changed()
 
     def _mark_invalid_and_repeat(self) -> None:
         reasons = [

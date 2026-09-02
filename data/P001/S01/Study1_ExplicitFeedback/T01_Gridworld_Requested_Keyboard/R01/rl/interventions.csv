@@ -1,7 +1,0 @@
-participant_id,session_id,trial_id,condition_code,run_code,condition_name,practice,episode,step,selected_step,pause_step,steps_back,feedback_timing,modality,requested,skipped,timeout,state_row,state_col,action,action_name,request_timestamp,pause_timestamp,response_timestamp,response_latency_ms
-P001,P001_S01,P001_S01_ST1ST_T01_R01,T01,R01,Gridworld_Requested_Keyboard,0,15,6,6,,,Requested Feedback,Keyboard,1,0,0,0,2,3,RIGHT,1788307544.007767,,1788307549.923026,5915.259
-P001,P001_S01,P001_S01_ST1ST_T01_R01,T01,R01,Gridworld_Requested_Keyboard,0,28,9,9,,,Requested Feedback,,1,1,1,0,3,,,1788307553.657239,,1788307563.666372,10009.133
-P001,P001_S01,P001_S01_ST1ST_T01_R01,T01,R01,Gridworld_Requested_Keyboard,0,29,6,6,,,Requested Feedback,Keyboard,1,0,0,2,0,3,RIGHT,1788307564.292900,,1788307565.478197,1185.296
-P001,P001_S01,P001_S01_ST1ST_T01_R01,T01,R01,Gridworld_Requested_Keyboard,0,38,8,8,,,Requested Feedback,Keyboard,1,0,0,0,4,3,RIGHT,1788307569.544173,,1788307578.693580,9149.407
-P001,P001_S01,P001_S01_ST1ST_T01_R01,T01,R01,Gridworld_Requested_Keyboard,0,54,12,12,,,Requested Feedback,Keyboard,1,0,0,4,4,3,RIGHT,1788307587.696631,,1788307589.473676,1777.045
-P001,P001_S01,P001_S01_ST1ST_T01_R01,T01,R01,Gridworld_Requested_Keyboard,0,55,8,8,,,Requested Feedback,Keyboard,1,0,0,2,2,3,RIGHT,1788307590.070976,,1788307596.931819,6860.842

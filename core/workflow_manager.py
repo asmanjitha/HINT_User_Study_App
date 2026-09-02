@@ -22,6 +22,7 @@ from core.session_manager import SessionManager
 from models.enums import (
     CollectionRunStatus,
     Environment,
+    EventType,
     FeedbackTiming,
     Modality,
     StepOverallStatus,
@@ -30,6 +31,7 @@ from models.enums import (
     TrialStatus,
     WorkflowStep,
 )
+from models.event import StudyEvent
 from models.session import Session
 from models.workflow import StepRun
 
@@ -190,6 +192,12 @@ _ACTIVE_TRIAL_STATUSES = {
     TrialStatus.PAUSED.value,
 }
 STUDY1_TRAINING_QUICK_PASS_NOTE = "QUICK_PASS_ALL_REQUIRED_TRAINING_TESTS"
+ALL_ITEMS_OVERRIDE_KEY = "__ALL__"
+MANUAL_COMPLETION_STATUS = "Manually Completed"
+
+
+def condition_status_is_complete(status: str) -> bool:
+    return status in ("Completed", MANUAL_COMPLETION_STATUS)
 
 
 class TrainingConditionSummary(NamedTuple):
@@ -312,6 +320,86 @@ class WorkflowManager:
         self._persist(run)
         return run
 
+    # ---- Explicit researcher completion overrides ---------------------
+    def mark_completion_override(
+        self,
+        participant_code: str,
+        step: WorkflowStep,
+        *,
+        item_key: str | None = None,
+        reason: str,
+    ) -> None:
+        if step == WorkflowStep.REGISTRATION:
+            raise ValueError("Registration is completed by creating the participant.")
+        blocking = self.has_active_run(participant_code)
+        if blocking is not None:
+            raise ValueError(f"Finish or abort active run {blocking.run_id} first.")
+        key = item_key or ALL_ITEMS_OVERRIDE_KEY
+        valid_keys = self._valid_override_item_keys(step)
+        if key != ALL_ITEMS_OVERRIDE_KEY and key not in valid_keys:
+            raise ValueError(f"Unknown completion item for {step.value}: {key}")
+        reason = reason.strip()
+        if not reason:
+            raise ValueError("A reason is required for a manual completion override.")
+        now = time.time()
+        self._db.experimental_conn.execute(
+            """
+            INSERT INTO completion_overrides
+                (participant_code, step, item_key, reason, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(participant_code, step, item_key) DO UPDATE SET
+                reason=excluded.reason,
+                created_at=excluded.created_at
+            """,
+            (participant_code, step.value, key, reason, now),
+        )
+        self._db.experimental_conn.commit()
+        logger.warning(
+            "Researcher marked completion participant=%s step=%s item=%s reason=%s",
+            participant_code,
+            step.value,
+            key,
+            reason,
+        )
+        if self._event_bus is not None:
+            self._event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.WORKFLOW_COMPLETION_OVERRIDDEN,
+                    participant_id=participant_code,
+                    value=f"step={step.value}; item={key}; reason={reason}",
+                )
+            )
+
+    def completion_is_overridden(
+        self,
+        participant_code: str,
+        step: WorkflowStep,
+        item_key: str | None = None,
+    ) -> bool:
+        keys = [ALL_ITEMS_OVERRIDE_KEY]
+        if item_key is not None:
+            keys.append(item_key)
+        placeholders = ",".join("?" for _ in keys)
+        row = self._db.experimental_conn.execute(
+            f"""SELECT 1 FROM completion_overrides
+                WHERE participant_code=? AND step=? AND item_key IN ({placeholders})
+                LIMIT 1""",
+            (participant_code, step.value, *keys),
+        ).fetchone()
+        return row is not None
+
+    @staticmethod
+    def _valid_override_item_keys(step: WorkflowStep) -> set[str]:
+        if step == WorkflowStep.STUDY1_TRAINING:
+            return {item.key for item in TRAINING_CONDITIONS}
+        if step == WorkflowStep.STUDY1_STUDY:
+            return {item.key for item in STUDY1_STUDY_REQUIRED_CONDITIONS}
+        if step == WorkflowStep.STUDY2_STUDY:
+            return {item.name for item in STUDY2_REQUIRED_MODALITIES}
+        if step == WorkflowStep.AGENT_OBSERVATION:
+            return {item.key for item in OBSERVATION_REQUIRED_CONDITIONS}
+        return set()
+
     # ---- Training ------------------------------------------------------
     def study1_training_quick_passed(self, participant_code: str) -> bool:
         row = self._db.experimental_conn.execute(
@@ -328,7 +416,7 @@ class WorkflowManager:
         blocking = self.has_active_run(participant_code)
         if blocking is not None:
             raise ValueError(f"Cannot Quick Pass training while run {blocking.run_id} is in progress.")
-        actual = sum(1 for s in self.training_condition_statuses(participant_code) if s.required and s.status == "Completed")
+        actual = sum(1 for s in self.training_condition_statuses(participant_code) if s.required and condition_status_is_complete(s.status))
         if actual == STUDY1_TRAINING_REQUIRED_CONDITION_COUNT:
             raise ValueError("Training Phase is already complete.")
         run, _ = self.start_run(participant_code, WorkflowStep.STUDY1_TRAINING)
@@ -348,7 +436,15 @@ class WorkflowManager:
             matching = [r for r in rows if self._matches_training(r, req)]
             completed = [r for r in matching if self._row_is_valid_completion(r)]
             active = next((r for r in reversed(matching) if r["status"] in _ACTIVE_TRIAL_STATUSES), None)
-            status = "Completed" if (quick and req.required) else self._condition_status_label(matching, completed, active)
+            manual = self.completion_is_overridden(
+                participant_code, WorkflowStep.STUDY1_TRAINING, req.key
+            )
+            status = (
+                MANUAL_COMPLETION_STATUS
+                if manual
+                else "Completed" if (quick and req.required)
+                else self._condition_status_label(matching, completed, active)
+            )
             out.append(TrainingConditionSummary(
                 req.key, req.label, req.study, req.environment, req.feedback_timing, req.modality, req.required,
                 status, len(completed), len(matching), active["trial_id"] if active else None,
@@ -364,7 +460,7 @@ class WorkflowManager:
 
     def next_incomplete_training_condition(self, participant_code: str) -> Optional[TrainingConditionSummary]:
         for item in self.training_condition_statuses(participant_code):
-            if item.required and item.status != "Completed":
+            if item.required and not condition_status_is_complete(item.status):
                 return item
         return None
 
@@ -402,7 +498,7 @@ class WorkflowManager:
         if practice:
             return self.next_incomplete_training_condition(participant_code)
         for item in self.study1_condition_statuses(participant_code, practice=False):
-            if item.status != "Completed":
+            if not condition_status_is_complete(item.status):
                 return item
         return None
 
@@ -419,8 +515,12 @@ class WorkflowManager:
             completed=[r for r in matching if self._row_is_valid_completion(r)]
             active=next((r for r in reversed(matching) if r["status"] in _ACTIVE_TRIAL_STATUSES),None)
             last=matching[-1] if matching else None
+            manual=self.completion_is_overridden(
+                participant_code, WorkflowStep.STUDY1_STUDY, req.key
+            )
+            status=MANUAL_COMPLETION_STATUS if manual else self._condition_status_label(matching,completed,active)
             out.append(Study1StudyConditionSummary(
-                req.key,req.label,req.environment,req.feedback_timing,self._condition_status_label(matching,completed,active),
+                req.key,req.label,req.environment,req.feedback_timing,status,
                 len(completed),len(matching),active["trial_id"] if active else None,last["trial_id"] if last else None,
                 Modality(last["modality"]) if last else None,FeedbackTiming(last["feedback_timing"]) if last else None,
             ))
@@ -434,7 +534,7 @@ class WorkflowManager:
 
     def next_incomplete_study1_study_condition(self, participant_code: str):
         for item in self.study1_study_condition_statuses(participant_code):
-            if item.status != "Completed":
+            if not condition_status_is_complete(item.status):
                 return item
         return None
 
@@ -455,7 +555,11 @@ class WorkflowManager:
             completed=[r for r in matching if self._row_is_valid_completion(r)]
             active=next((r for r in reversed(matching) if r["status"] in _ACTIVE_TRIAL_STATUSES),None)
             last=matching[-1] if matching else None
-            out.append(Study2ConditionSummary(modality,self._condition_status_label(matching,completed,active),len(completed),len(matching),active["trial_id"] if active else None,last["trial_id"] if last else None,FeedbackTiming(last["feedback_timing"]) if last else None))
+            manual=self.completion_is_overridden(
+                participant_code, WorkflowStep.STUDY2_STUDY, modality.name
+            )
+            status=MANUAL_COMPLETION_STATUS if manual else self._condition_status_label(matching,completed,active)
+            out.append(Study2ConditionSummary(modality,status,len(completed),len(matching),active["trial_id"] if active else None,last["trial_id"] if last else None,FeedbackTiming(last["feedback_timing"]) if last else None))
         return out
 
     def study2_condition_status(self, participant_code: str, modality: Modality) -> Study2ConditionSummary:
@@ -466,11 +570,13 @@ class WorkflowManager:
 
     def next_incomplete_study2_condition(self, participant_code: str):
         for item in self.study2_condition_statuses(participant_code):
-            if item.status != "Completed":
+            if not condition_status_is_complete(item.status):
                 return item
         return None
 
     def study2_finished(self, participant_code: str) -> bool:
+        if self.completion_is_overridden(participant_code, WorkflowStep.STUDY2_STUDY):
+            return True
         row=self._db.experimental_conn.execute(
             """SELECT 1 FROM workflow_runs WHERE participant_code=? AND step=? AND status=? AND notes=? LIMIT 1""",
             (participant_code,WorkflowStep.STUDY2_STUDY.value,StepRunStatus.COMPLETED.value,STUDY2_FINISHED_NOTE),
@@ -502,7 +608,11 @@ class WorkflowManager:
             matching=[r for r in rows if r["environment"]==req.environment.value]
             completed=[r for r in matching if self._row_is_valid_completion(r)]
             active=next((r for r in reversed(matching) if r["status"] in _ACTIVE_TRIAL_STATUSES),None)
-            out.append(ObservationConditionSummary(req.key,req.label,req.environment,self._condition_status_label(matching,completed,active),len(completed),len(matching),active["trial_id"] if active else None,matching[-1]["trial_id"] if matching else None))
+            manual=self.completion_is_overridden(
+                participant_code, WorkflowStep.AGENT_OBSERVATION, req.key
+            )
+            status=MANUAL_COMPLETION_STATUS if manual else self._condition_status_label(matching,completed,active)
+            out.append(ObservationConditionSummary(req.key,req.label,req.environment,status,len(completed),len(matching),active["trial_id"] if active else None,matching[-1]["trial_id"] if matching else None))
         return out
 
     def observation_condition_status(self, participant_code: str, key: str):
@@ -513,7 +623,7 @@ class WorkflowManager:
 
     def next_incomplete_observation_condition(self, participant_code: str):
         for item in self.observation_condition_statuses(participant_code):
-            if item.status!="Completed":
+            if not condition_status_is_complete(item.status):
                 return item
         return None
 
@@ -536,16 +646,16 @@ class WorkflowManager:
         runs=self.list_runs(participant_code,step)
         active=next((r for r in runs if r.status==StepRunStatus.IN_PROGRESS),None)
         if step==WorkflowStep.STUDY1_TRAINING:
-            completed=sum(1 for x in self.training_condition_statuses(participant_code) if x.required and x.status=="Completed")
+            completed=sum(1 for x in self.training_condition_statuses(participant_code) if x.required and condition_status_is_complete(x.status))
             complete=completed==STUDY1_TRAINING_REQUIRED_CONDITION_COUNT
         elif step==WorkflowStep.STUDY1_STUDY:
-            completed=sum(1 for x in self.study1_study_condition_statuses(participant_code) if x.status=="Completed")
+            completed=sum(1 for x in self.study1_study_condition_statuses(participant_code) if condition_status_is_complete(x.status))
             complete=completed==STUDY1_STUDY_REQUIRED_CONDITION_COUNT
         elif step==WorkflowStep.STUDY2_STUDY:
-            completed=sum(1 for x in self.study2_condition_statuses(participant_code) if x.status=="Completed")
+            completed=sum(1 for x in self.study2_condition_statuses(participant_code) if condition_status_is_complete(x.status))
             complete=self.study2_finished(participant_code) or completed==STUDY2_REQUIRED_CONDITION_COUNT
         elif step==WorkflowStep.AGENT_OBSERVATION:
-            completed=sum(1 for x in self.observation_condition_statuses(participant_code) if x.status=="Completed")
+            completed=sum(1 for x in self.observation_condition_statuses(participant_code) if condition_status_is_complete(x.status))
             complete=completed==OBSERVATION_REQUIRED_CONDITION_COUNT
         else:  # hidden legacy Study 2 training
             completed=sum(1 for r in runs if r.status==StepRunStatus.COMPLETED)

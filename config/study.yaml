@@ -1,4 +1,4 @@
-study_version: "HINT_v1.3.1_revised_flow_with_study_timers"
+study_version: "HINT_v1.4_storage_and_workflow_overrides"
 
 # Revised participant flow:
 # Registration -> Training -> Study 1 (when) -> Study 2 (how) -> Agent Observation
@@ -9,8 +9,8 @@ timing:
   feedback_timeout_seconds: 10
   practice_duration_minutes: 5
   # Per-condition experimental countdowns shown only on the researcher console.
-  study_1_condition_minutes: 6
-  study_2_condition_minutes: 6
+  study_1_condition_minutes: 8
+  study_2_condition_minutes: 8
   observation_condition_minutes: 5
 
 training_phase:

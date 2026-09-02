@@ -5,19 +5,20 @@ import datetime
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QFormLayout, QGroupBox, QHBoxLayout,
-    QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton, QSpinBox,
+    QHeaderView, QInputDialog, QLabel, QLineEdit, QMessageBox, QPushButton, QSpinBox,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from core.application_controller import ApplicationController
 from core.workflow_manager import (
     STEP_LABELS, TRAINING_CONDITIONS, STUDY1_TRAINING_REQUIRED_CONDITION_COUNT,
+    condition_status_is_complete,
 )
 from devices.voice_recognizer import VoiceCommandRecognizer
 from models.enums import Environment, Modality, WorkflowStep
 from models.trial import ExperimentCondition
 
-_STATUS = {"Not Started":"⬜","In Progress":"🔶","Completed":"✅","Needs Repeat":"⚠"}
+_STATUS = {"Not Started":"⬜","In Progress":"🔶","Completed":"✅","Manually Completed":"✅","Needs Repeat":"⚠"}
 
 def _fmt(ts):
     return "--" if not ts else datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
@@ -42,6 +43,7 @@ class Study1StepPanel(QWidget):
     def _build_table(self):
         box=QGroupBox("Training checklist"); lay=QVBoxLayout(box)
         top=QHBoxLayout(); self._summary=QLabel(); self._summary.setStyleSheet("font-weight:bold;"); top.addWidget(self._summary); top.addStretch()
+        self._mark_item=QPushButton("Mark Selected Item Complete…"); self._mark_item.clicked.connect(self._mark_selected_complete); top.addWidget(self._mark_item)
         self._quick=QPushButton("Quick Pass Required Training"); self._quick.clicked.connect(self._quick_pass); top.addWidget(self._quick)
         self._next=QPushButton("Select Next Required"); self._next.clicked.connect(self._select_next); top.addWidget(self._next); lay.addLayout(top)
         self._table=QTableWidget(len(TRAINING_CONDITIONS),6); self._table.setHorizontalHeaderLabels(["Practice item","Environment","Timing","Input","Required?","Status"])
@@ -99,10 +101,11 @@ class Study1StepPanel(QWidget):
         completed=0
         for r,c in enumerate(TRAINING_CONDITIONS):
             st=statuses[r] if statuses else None
-            if st and st.required and st.status=="Completed": completed+=1
+            if st and st.required and condition_status_is_complete(st.status): completed+=1
             vals=[c.label,c.environment.value,c.feedback_timing.value,c.modality.value,"Yes" if c.required else "Optional",f"{_STATUS[st.status]} {st.status}" if st else "⬜ Not Started"]
             for col,v in enumerate(vals): self._table.setItem(r,col,QTableWidgetItem(v))
         self._summary.setText(f"{completed} / {STUDY1_TRAINING_REQUIRED_CONDITION_COUNT} required training items completed")
+        self._mark_item.setEnabled(bool(self._participant_code) and self._active_run is None)
         self._quick.setEnabled(bool(self._participant_code) and completed<STUDY1_TRAINING_REQUIRED_CONDITION_COUNT and self._active_run is None)
         self._next.setEnabled(bool(self._participant_code) and completed<STUDY1_TRAINING_REQUIRED_CONDITION_COUNT and self._active_run is None)
 
@@ -151,6 +154,17 @@ class Study1StepPanel(QWidget):
         try:self._controller.workflow_manager.quick_pass_study1_training(self._participant_code)
         except Exception as e:QMessageBox.warning(self,"Could not Quick Pass",str(e));return
         self.refresh(); self._on_step_changed and self._on_step_changed()
+
+    def _mark_selected_complete(self):
+        if not self._participant_code or self._active_run is not None:return
+        item=self._selected()
+        status=self._controller.workflow_manager.training_condition_status(self._participant_code,item.key)
+        if condition_status_is_complete(status.status):QMessageBox.information(self,"Already complete",f"'{item.label}' is already complete.");return
+        reason,ok=QInputDialog.getText(self,"Manual completion reason",f"Reason for marking '{item.label}' complete:")
+        if not ok:return
+        try:self._controller.workflow_manager.mark_completion_override(self._participant_code,self._step,item_key=item.key,reason=reason)
+        except Exception as e:QMessageBox.warning(self,"Could not mark item complete",str(e));return
+        self.refresh(); self._select_next(); self._on_step_changed and self._on_step_changed()
 
     def _start_run(self):
         if not self._participant_code:return

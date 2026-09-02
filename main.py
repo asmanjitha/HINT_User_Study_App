@@ -15,7 +15,9 @@ import sys
 from PySide6.QtWidgets import QApplication
 
 from core.application_controller import ApplicationController
+from core.config_loader import DEFAULT_CONFIG_DIR, PROJECT_ROOT
 from gui.main_window import MainWindow
+from gui.storage_location_dialog import ensure_storage_location
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,9 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("HINT Study Console")
     app.setOrganizationName("HINT Study")
+
+    if ensure_storage_location(DEFAULT_CONFIG_DIR, PROJECT_ROOT) is None:
+        return 0
 
     controller = ApplicationController()
 

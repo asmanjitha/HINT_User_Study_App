@@ -5,6 +5,47 @@ Reinforcement Learning.** A researcher-facing desktop application for
 running the HINT human-in-the-loop RL user study.
 
 
+## What's in this version (V1.4.0 — storage selection and flexible workflow)
+
+### External-drive data storage
+
+Before the databases and recorders open, the Console verifies the configured
+study-data folder. The startup dialog can select a dedicated folder on an
+external hard drive and remember it for later launches. When a custom location
+is selected, the following are all stored there:
+
+- participant/session/trial folders and RL outputs;
+- HoloLens, Shimmer, and input recordings;
+- `identifiable.sqlite3` and `experimental.sqlite3`;
+- application logs under `_system_logs/`.
+
+The main-window status bar shows the active data location. Click its **Data**
+button to select a different folder for the next launch. A storage change made
+after the app has opened requires a restart so databases and recorders are
+never switched during a participant run. If a remembered external drive is
+missing or unwritable, the Console forces the storage dialog to appear instead
+of silently writing elsewhere.
+
+Each storage root is an independent dataset with its own participant list and
+ID sequence. Changing the root does not move or copy files from the old root.
+
+### Flexible study order and manual completion
+
+- Study 1 can start without completing Training.
+- Study 2 can start without completing Study 1.
+- Agent Observation can start without finishing Study 2.
+- **Mark Current Phase Complete…** manually completes the displayed phase.
+- Each checklist/matrix has a **Mark Selected … Complete…** button for one
+  training item, Study 1 sub-step, Study 2 modality, or Observation environment.
+- Study 2's existing finish action can be used even when no modality was
+  collected.
+
+Every manual completion requires a reason and is stored in the
+`completion_overrides` table plus the event log as
+`WORKFLOW_COMPLETION_OVERRIDDEN`. The UI labels it **Manually Completed**. It
+does not create a fake Trial, sensor recording, or data directory.
+
+
 ## What's in this version (V1.3.1 — main-window study timers)
 
 The researcher console now shows a live countdown in the main-window status

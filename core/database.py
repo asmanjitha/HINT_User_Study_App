@@ -93,6 +93,19 @@ CREATE TABLE IF NOT EXISTS workflow_runs (
     notes TEXT,
     FOREIGN KEY (participant_code) REFERENCES participants (participant_code)
 );
+
+-- Explicit researcher overrides. These never fabricate a Trial or sensor data;
+-- they only allow a workflow phase/condition to be treated as complete.
+CREATE TABLE IF NOT EXISTS completion_overrides (
+    override_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participant_code TEXT NOT NULL,
+    step TEXT NOT NULL,
+    item_key TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    created_at REAL NOT NULL,
+    UNIQUE (participant_code, step, item_key),
+    FOREIGN KEY (participant_code) REFERENCES participants (participant_code)
+);
 """
 
 
