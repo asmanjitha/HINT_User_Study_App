@@ -21,6 +21,7 @@ _STATUS_COLORS = {
 }
 
 _SHORT_NAME = {
+    DeviceType.BEAM: "Beam",
     DeviceType.HOLOLENS: "HoloLens",
     DeviceType.SHIMMER: "Shimmer",
     DeviceType.JOYSTICK: "Joystick",

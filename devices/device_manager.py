@@ -1,9 +1,8 @@
 """Device Manager.
 
 Owns one device instance per :class:`~models.enums.DeviceType` and gives the
-rest of the app a single place to connect/disconnect devices. Shimmer, keyboard,
-joystick, microphone, and HoloLens 2 now use real hardware adapters. HoloLens
-streams PV video and Extended Eye Tracking through HL2SS.
+rest of the app a single place to connect/disconnect devices. Beam, Shimmer,
+keyboard, joystick, microphone, and HoloLens 2 use real hardware adapters.
 """
 
 from __future__ import annotations
@@ -14,6 +13,7 @@ from pathlib import Path
 from PySide6.QtCore import QObject, Signal
 
 from core.event_bus import EventBus
+from devices.beam_eye_tracker_device import BeamEyeTrackerDevice
 from devices.hololens_device import HoloLensDevice
 from devices.input_devices import KeyboardDevice, JoystickDevice, MicrophoneDevice
 from devices.shimmer_device import ShimmerDevice
@@ -46,10 +46,15 @@ class DeviceManager(QObject):
     hololens_log_message = Signal(str)
     hololens_stream_stats_changed = Signal(object)
 
+    # Beam-specific signals
+    beam_log_message = Signal(str)
+    beam_stats_changed = Signal(object)
+
     def __init__(
         self,
         event_bus: EventBus,
         data_dir: Path | None = None,
+        beam_config: dict | None = None,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
@@ -57,6 +62,9 @@ class DeviceManager(QObject):
         data_dir = Path(data_dir) if data_dir is not None else Path("data")
 
         self._devices = {
+            DeviceType.BEAM: BeamEyeTrackerDevice(
+                parent=self, screen_recording_config=beam_config
+            ),
             DeviceType.HOLOLENS: HoloLensDevice(parent=self),
             DeviceType.SHIMMER: ShimmerDevice(data_dir=data_dir, parent=self),
             DeviceType.JOYSTICK: JoystickDevice(parent=self),
@@ -75,6 +83,10 @@ class DeviceManager(QObject):
         hololens.connection_progress.connect(self.hololens_connection_progress.emit)
         hololens.log_message.connect(self.hololens_log_message.emit)
         hololens.stream_stats_changed.connect(self.hololens_stream_stats_changed.emit)
+
+        beam = self.beam_device
+        beam.log_message.connect(self.beam_log_message.emit)
+        beam.stats_changed.connect(self.beam_stats_changed.emit)
 
     @property
     def shimmer_device(self) -> ShimmerDevice:
@@ -106,6 +118,76 @@ class DeviceManager(QObject):
             status in (DeviceStatus.CONNECTED, DeviceStatus.RECEIVING_DATA)
             for status in self.all_statuses().values()
         )
+
+    # ------------------------------------------------------------------
+    # Beam Eye Tracker GUI + recording facade
+
+    @property
+    def beam_device(self) -> BeamEyeTrackerDevice:
+        return self._devices[DeviceType.BEAM]
+
+    def connect_beam(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        *,
+        auto_follow_participant_window: bool = True,
+    ) -> None:
+        self.beam_device.set_capture_target(
+            x,
+            y,
+            width,
+            height,
+            auto_follow_participant_window=auto_follow_participant_window,
+        )
+        self.beam_device.connect_device()
+
+    def set_beam_capture_target(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        *,
+        auto_follow_participant_window: bool,
+    ) -> None:
+        self.beam_device.set_capture_target(
+            x,
+            y,
+            width,
+            height,
+            auto_follow_participant_window=auto_follow_participant_window,
+        )
+
+    def sync_beam_capture_to_participant_window(
+        self, window_handle: int
+    ) -> tuple[bool, str]:
+        return self.beam_device.sync_capture_to_participant_window(window_handle)
+
+    def list_beam_displays(self) -> list[dict[str, int | str]]:
+        return BeamEyeTrackerDevice.available_displays()
+
+    def beam_stats(self) -> dict:
+        return self.beam_device.stats()
+
+    def beam_latest_gaze(self) -> dict:
+        return self.beam_device.latest_gaze()
+
+    def check_beam(self) -> tuple[bool, str]:
+        return self.beam_device.check_connection()
+
+    def beam_stream_healthy(self, max_age_s: float = 1.0) -> bool:
+        return self.beam_device.is_stream_healthy(max_age_s=max_age_s)
+
+    def start_beam_trial_recording(self, trial: Trial) -> dict:
+        return self.beam_device.start_trial_recording(trial)
+
+    def stop_beam_trial_recording(
+        self, trial_id: str | None = None, reason: str = "trial_ended"
+    ) -> dict | None:
+        return self.beam_device.stop_trial_recording(trial_id=trial_id, reason=reason)
 
     # ------------------------------------------------------------------
     # HoloLens GUI facade

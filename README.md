@@ -1,4 +1,98 @@
-# HINT Study Console
+# HINT Study Console v1.8.4
+
+
+
+## v1.8.4 — Study 2 participant window starts fullscreen
+
+- Actual Study 2 Gridworld trials now open the participant Start Activity window fullscreen by default, even when HINT is launched in DEVELOPMENT mode.
+- The Study 2 Gridworld remains fullscreen after the participant presses **START ACTIVITY**.
+- Training/practice behavior is unchanged.
+- **F11** continues to toggle fullscreen for researcher testing/troubleshooting.
+- The Study 1 fullscreen behavior from v1.8.3 and Beam participant-display capture from v1.8.2 are preserved.
+
+## v1.8.3 — Study 1 participant windows start fullscreen
+
+- Actual Study 1 Gridworld trials now open the participant window fullscreen by default, even when HINT is launched in DEVELOPMENT mode.
+- Actual Study 1 continuous-room trials now open fullscreen by default as well.
+- Training/practice retains the previous DEVELOPMENT-mode windowed behavior.
+- Press **F11** in either participant window to toggle fullscreen for researcher testing/troubleshooting.
+- Beam automatic display capture continues to resolve the physical monitor containing the participant window immediately before recording starts.
+
+## v1.8.2 — Beam records the participant's actual display
+
+Beam screen recording now defaults to **Automatic — follow participant activity
+window**. Immediately before the participant's **START ACTIVITY** click begins
+sensor recording, HINT uses the native Windows participant-window handle to
+identify the monitor containing that user window and maps it to MSS physical
+display pixels. `screen_gaze.mp4` therefore follows the display the participant
+is actually viewing instead of remaining tied to an earlier/default monitor.
+
+The Devices page also keeps an explicit manual fallback. Select
+**Manual — Display N** and click **Apply Screen Target** to lock Beam recording
+to a specific monitor. Automatic mode also retains the selected/primary display
+as a fallback if Windows monitor resolution fails. The resolved viewport and
+capture-target source are saved in `sensors/beam/recording_metadata.json`.
+
+## v1.8.1 — Study 3 Start-screen visibility fix
+
+The Study 3 participant window now keeps Qt's native video surface hidden while
+the activity is prepared. This prevents the stopped player's black surface from
+covering the **Ready to begin? / START ACTIVITY** page on Windows. The video
+surface is shown only after the participant presses **START ACTIVITY**, at the
+same synchronized boundary that begins playback and sensor recording.
+
+The Start page also follows late fullscreen resize events so it continues to
+fill the participant display when Windows finishes applying fullscreen geometry.
+
+## v1.8.0 — Study 3 fullscreen observation videos
+
+Study 3 now plays two researcher-selected prerecorded videos instead of
+launching live RL backends: one Gridworld agent-training video and one
+room-environment agent-training video. Configure them from **Workflow → Study 3**
+with the two **Browse…** buttons. The selected paths are remembered in
+`config/observation_videos.yaml`.
+
+For each video, the researcher presses **Prepare Selected Video**. The
+participant display then opens fullscreen with **START ACTIVITY**. The
+participant's click starts HoloLens PV/EET recording, Shimmer GSR/PPG recording,
+and video playback at the same lifecycle boundary. The natural end of the video
+stops/finalizes both recordings and marks the run Valid. The researcher can
+still stop and mark Valid, mark Invalid/Repeat, or abort from the console.
+
+Study 3 video duration is authoritative; the old five-minute observation
+countdown no longer cuts a video short. Each run stores
+`observation_video/source.json` with source-file details alongside the normal
+HoloLens and Shimmer outputs. MP4 with H.264 video and AAC audio is recommended
+for broad Windows/Qt playback compatibility.
+
+## v1.7.0 — Beam gaze-pointer screen MP4
+
+Every activity assigned to Beam now records the selected participant display at
+30 FPS and overlays the latest valid gaze point. The synchronized outputs are
+`sensors/beam/gaze.csv`, `sensors/beam/screen_gaze.mp4`, and
+`sensors/beam/recording_metadata.json`. High-confidence gaze is green,
+medium-confidence gaze is yellow, low-confidence gaze is orange, and the pointer
+is hidden when tracking is lost or stale. Recording starts at the participant's
+Start click and stops/finalizes with the activity.
+
+Display enumeration and capture use physical pixels, which keeps the Beam gaze
+mapping aligned when Windows display scaling is enabled. Screen-recording FPS,
+codec, pointer radius, stale-sample threshold, and status overlay can be changed
+under `beam_screen_recording` in `config/study.yaml`.
+
+## v1.6.0 — Beam webcam eye tracking
+
+Beam Eye Tracker is now integrated as a real device. Required Training, Study 1,
+and Study 2 save synchronized screen gaze to `sensors/beam/gaze.csv`. Optional
+HoloLens familiarization and Agent Observation continue to use HoloLens PV + EET.
+Shimmer recording behavior is unchanged.
+
+Before collection, install Beam Eye Tracker 2.6.3 or newer, run
+`pip install -r requirements.txt`, configure/calibrate the webcam in Beam, then
+open **Devices → Beam Webcam Eye Tracker**, select the participant display,
+connect, and use **Validate Live Gaze**. HINT consumes Beam's SDK output and does
+not open or record the webcam itself. It records only the selected participant
+display. See `BEAM_SCREEN_GAZE_VIDEO_CHANGELOG.md`.
 
 **HINT — Understanding When and How Humans Should Intervene in
 Reinforcement Learning.** A researcher-facing desktop application for
@@ -70,7 +164,8 @@ Navigation windows.
 
 - Every Study 1 condition receives 8 minutes.
 - Every Study 2 modality condition receives 8 minutes.
-- Every Agent Observation environment receives 5 minutes.
+- Study 3 observation videos run to their natural end; their media duration is
+  authoritative.
 - A paused Gridworld trial pauses the countdown and resume continues from the
   remaining time.
 - Manual valid/invalid/abort completion stops the countdown immediately.
@@ -89,7 +184,7 @@ The visible participant workflow is now:
 2. **Training Phase**
 3. **Study 1 — When Should a Human Intervene?**
 4. **Study 2 — How Should a Human Provide Feedback?**
-5. **Agent Observation Phase — No Human Feedback**
+5. **Study 3 — Agent-Training Video Observation**
 
 ### Training Phase
 
@@ -122,13 +217,16 @@ workflow completion marker and automatically opens the Agent Observation phase.
 The intended protocol is to collect the one or two modalities selected for that
 participant.
 
-### Agent Observation Phase
+### Study 3 — Agent-Training Video Observation
 
-The participant observes the agent learn **without human feedback** in both
-Gridworld and Continuous Room Navigation. The Console requires fresh **Shimmer
-GSR/PPG** and **HoloLens** streams before either observation run can start. Trial
-recording uses the normal synchronized sensor lifecycle and stores these trials
-under:
+The participant watches two prerecorded agent-training videos **without human
+feedback**: Gridworld and room environment. Select both local files with the
+Study 3 **Browse…** controls. The Console requires fresh **Shimmer GSR/PPG** and
+**HoloLens PV/EET** streams before either video can be prepared. After the
+researcher prepares a video, the participant presses **START ACTIVITY** in the
+fullscreen participant window. That click starts playback and both sensor
+recordings. Natural video completion stops/finalizes the sensors and marks the
+run Valid. Trials are stored under:
 
 ```text
 data/P001/S01/Phase3_AgentObservation_NoFeedback/
@@ -138,29 +236,29 @@ data/P001/S01/Phase3_AgentObservation_NoFeedback/
 
 Observation trial IDs use the readable `..._OBS_T##_R##` scope.
 
+The source video itself is not copied into every participant directory. A small
+`observation_video/source.json` file records its absolute source path, filename,
+size, and modification timestamp for reproducibility.
+
 ### Ubuntu continuous-navigation worker compatibility
 
-This Console now sends `BEGIN_ANYTIME_FEEDBACK` for Continuous Anytime
-interventions. The Ubuntu worker must implement that message by pausing at the
-current state and returning the normal human-action request sequence. For the
-Agent Observation Continuous run, `PREPARE_TRIAL` is sent with feedback mode
-`N/A` and modality `N/A (No Participant Feedback)`; the worker should run normal
-RL without collision rewind/human-control requests. The Console defensively
-auto-skips an unexpected request in observation mode, but worker-side no-feedback
-support is still recommended so the RL trajectory is truly baseline/no-feedback.
+This Console sends `BEGIN_ANYTIME_FEEDBACK` for live Continuous Anytime
+interventions in Training and Study 1. The Ubuntu worker is no longer used by
+Study 3 because Study 3 now plays the configured room-environment video locally.
 
 The older version sections below are retained as implementation history; the
-V1.3.x sections are authoritative for the current study flow.
+v1.8.0 section at the top is authoritative for Study 3 execution, while v1.7.0
+remains authoritative for Beam screen recording.
 
 ## What's in this version (V1.2.2 — Study 1 Training Quick Pass + Ubuntu continuous navigation)
 
 - **Study 1(b) Continuous Action-Space Room Navigation is now live-integrated.** The existing `Continuous Room Navigation` placeholder now connects to the Ubuntu `HINT_ContinuousNav_Ubuntu_v1` worker over WebSocket/HTTP.
-- The Windows Console remains authoritative for participant/session/trial IDs, HoloLens recording, Shimmer recording, participant input, and master events. Ubuntu remains authoritative for GA3C, simulator state, collision detection, rewind snapshots, N-step human control, and RL continuation.
+- The Windows Console remains authoritative for participant/session/trial IDs, Beam/HoloLens recording, Shimmer recording, participant input, and master events. Ubuntu remains authoritative for GA3C, simulator state, collision detection, rewind snapshots, N-step human control, and RL continuation.
 - Study 1(b) uses the collision-triggered **Requested Feedback** mechanism: collision → rewind `N` steps → request exactly one action for each restored human-control state → apply `N` human steps → resume RL from the final human-controlled state.
 - A new participant-facing room window renders the Ubuntu `.world` geometry locally and streams the current robot pose and goal. No VNC/screen capture is required.
 - Keyboard controls match the original Ubuntu popup: `W/S` straight, `A/D` medium turn, `Q/E` slight turn, `Shift+A/Shift+D` sharp turn, `Esc` skip. A selected joystick can also provide the seven discrete steering actions.
 - The Study 1 researcher panel now includes Ubuntu worker IP/hostname, **Connect / Test**, measured median network RTT / clock offset, rewind-control `N`, and feedback timeout.
-- Trial start order is synchronized: Ubuntu `PREPARE_TRIAL` → start HoloLens/Shimmer → Ubuntu `START_TRIAL`. Trial stop reverses this: stop Ubuntu task → close HINT trial/sensors → finalize/download Ubuntu data.
+- Trial start order is synchronized: Ubuntu `PREPARE_TRIAL` → participant Start → start Beam/Shimmer → Ubuntu `START_TRIAL`. Agent Observation substitutes HoloLens for Beam. Trial stop reverses this: stop Ubuntu task → close HINT trial/sensors → finalize/download Ubuntu data.
 - Console-side remote logs add `console_receive_timestamp_utc_ns` to every Ubuntu event and save `continuous_nav_state_stream.csv` and `continuous_nav_actions.csv`.
 - Ubuntu's finalized ZIP is downloaded to the same HINT `R##/rl/ubuntu/` folder and extracted there; immutable worker-v1 files are SHA-256 verified.
 - The previous Gridworld, voice, gaze, Shimmer, HoloLens, workflow, and readable folder naming behavior is retained.
@@ -176,7 +274,7 @@ V1.3.x sections are authoritative for the current study flow.
 
 2. On Ubuntu, find its LAN address with `hostname -I`. Keep TCP port `8875` reachable from the Windows study PC; port `8766` stays local to Ubuntu.
 3. On Windows, install/update dependencies with `pip install -r requirements.txt`, start `python main.py`, open **Workflow → Study 1 — Study**, select **1(b). Continuous action-space room navigation**, enter the Ubuntu IP, then press **Connect / Test**.
-4. Connect HoloLens, Shimmer, and the selected Keyboard or Joystick before starting the run.
+4. Connect and validate Beam, Shimmer, and the selected Keyboard before starting a Study 1 run. HoloLens is required later for Agent Observation.
 5. When the run starts, the participant room window opens automatically. The participant watches the live agent; after collision/rewind, it switches to Human Control for the configured `N` steps.
 
 ### Study 1(b) synchronized files
@@ -187,7 +285,9 @@ For example:
 data/P001/S01/Study1_ExplicitFeedback/
   T03_Room_Requested_Keyboard/R01/
     sensors/
-      hololens/...
+      beam/gaze.csv
+      beam/screen_gaze.mp4
+      beam/recording_metadata.json
       shimmer/...
     input/
       continuous_nav_actions.csv
@@ -261,17 +361,17 @@ can be identified directly from the filesystem:
 
     Devices  ->  Workflow  ->  Event Log
 
-- **Devices** — Microsoft HoloLens 2, Classic Shimmer3 GSR+, physical keyboards,
+- **Devices** — Beam Eye Tracker, Microsoft HoloLens 2, Classic Shimmer3 GSR+, physical keyboards,
   joystick/gamepad, and microphone all have real connection panels. HoloLens 2
   uses the official HL2SS client to keep the PV/front RGB camera and Extended
   Eye Tracking streams live over the local network. After the first successful
   connection, a separate validation window opens once to show live camera video
   plus combined/left/right gaze rays; **Validate Connection** reopens it later.
   Shimmer retains its guided Bluetooth COM workflow, live GSR+PPG verification,
-  and trial CSV recording. **HoloLens recording now follows every persisted
-  Training and Study trial:** each `R##` stores an annotated PV video, a
-  frame-synchronized gaze-pointer CSV, the raw EET packet CSV, and recording
-  metadata under `sensors/hololens/`.
+  and trial CSV recording. In v1.6.0, Beam follows required Training plus Study 1/2
+  runs and stores screen gaze under `sensors/beam/`; HoloLens PV + EET is limited
+  to optional HoloLens familiarization and Agent Observation under
+  `sensors/hololens/`.
 
 - **Workflow** — register a participant (name, age, email) or select an
   existing one, then step through the study using a left-hand menu:
@@ -323,23 +423,25 @@ cached, Vosk can obtain its small English model on first initialization; for a
 fully offline study machine, set `voice_recognition.model_path` in
 `config/study.yaml` to a pre-downloaded model directory before data collection.
 
-### HoloLens files per activity run
+### Eye-tracker files per activity run
 
 The existing naming convention is unchanged. For example:
 
 ```text
-data/P001/S01/Training/Study1/
-  TR01_Gridworld_Anytime_Gaze/R01/
+data/P001/S01/Study1_ExplicitFeedback/
+  T02_Gridworld_Anytime_Keyboard/R01/
+    sensors/beam/
+      gaze.csv
+      screen_gaze.mp4
+      recording_metadata.json
+
+data/P001/S01/Phase3_AgentObservation_NoFeedback/
+  T01_Gridworld_NoFeedback/R01/
     sensors/hololens/
       pv_gaze.mp4
       gaze.csv
       eet.csv
       meta.json
-
-data/P001/S01/Study1_ExplicitFeedback/
-  T02_Gridworld_Anytime_Joystick/R01/
-    sensors/hololens/
-      ...same four files...
 ```
 
 A repeated collection uses the next existing run directory (`R02`, `R03`, ...),
@@ -563,7 +665,7 @@ study recording path.
 
 Implement a class in `devices/` that subclasses `BaseDevice` (see
 `devices/base_device.py`) and register it in `DeviceManager.__init__`. The current
-HoloLens, Shimmer, keyboard, joystick, and microphone adapters demonstrate the
+Beam, HoloLens, Shimmer, keyboard, joystick, and microphone adapters demonstrate the
 shared connection/status pattern.
 
 ## How to wire up non-Keyboard Study 2 modalities

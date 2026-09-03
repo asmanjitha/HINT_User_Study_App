@@ -521,6 +521,18 @@ class Study2StudyPanel(QWidget):
         if not self._validate_modality_device(modality):
             return
 
+        if not self._controller.device_manager.beam_stream_healthy():
+            answer = QMessageBox.question(
+                self,
+                "Beam is not receiving live gaze",
+                "No fresh Beam eye-tracking samples are reaching HINT. Starting now "
+                "means no Beam gaze CSV or screen_gaze.mp4 will be recorded.\n\n"
+                "Return to Devices, calibrate/connect Beam, and validate live gaze.\n\n"
+                "Start this Study 2 run without Beam recording anyway?",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+
         if not self._controller.device_manager.shimmer_stream_healthy():
             answer = QMessageBox.question(
                 self,

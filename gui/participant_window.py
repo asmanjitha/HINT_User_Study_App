@@ -50,6 +50,7 @@ from models.enums import (
     EventType,
     FeedbackTiming,
     Modality,
+    Study,
 )
 from models.event import StudyEvent
 from gui.participant_start_overlay import ParticipantStartOverlay
@@ -767,12 +768,23 @@ class ParticipantWindow(QWidget):
             if (
                 trial is None
                 or trial.trial_id != event.trial_id
+                or trial.condition.study == Study.OBSERVATION
                 or trial.condition.environment == Environment.CONTINUOUS_ROOM
             ):
                 return
 
             self._status_label.setText("Activity ready — waiting for you to start")
-            if self._controller.config.mode == AppMode.STUDY:
+            # Actual Study 1 and Study 2 participant trials should always start
+            # fullscreen, even when the console itself is launched in DEVELOPMENT
+            # mode. Practice/training keeps the historical windowed DEVELOPMENT
+            # behavior.
+            if (
+                self._controller.config.mode == AppMode.STUDY
+                or (
+                    trial.condition.study in (Study.STUDY_1, Study.STUDY_2)
+                    and not trial.practice
+                )
+            ):
                 self.showFullScreen()
             else:
                 self.resize(850, 900)
@@ -792,6 +804,13 @@ class ParticipantWindow(QWidget):
 
     def _on_participant_start_requested(self, trial_id: str) -> None:
         try:
+            # In the recommended automatic Beam mode, resolve the physical
+            # monitor containing this actual participant window immediately
+            # before sensor recording starts. Manual mode intentionally keeps
+            # the experimenter-selected display instead.
+            self._controller.device_manager.sync_beam_capture_to_participant_window(
+                int(self.winId())
+            )
             self._controller.start_prepared_activity(trial_id)
         except Exception as exc:
             self._start_overlay.start_failed(
@@ -935,10 +954,15 @@ class ParticipantWindow(QWidget):
                 False
             )
 
+        # Keep real Study 1 and Study 2 trials fullscreen after the participant
+        # presses START ACTIVITY as well. This must not depend on the global app
+        # mode.
         if (
-            self._controller
-            .config.mode
-            == AppMode.STUDY
+            self._controller.config.mode == AppMode.STUDY
+            or (
+                trial.condition.study in (Study.STUDY_1, Study.STUDY_2)
+                and not trial.practice
+            )
         ):
 
             self.showFullScreen()
@@ -2111,6 +2135,16 @@ class ParticipantWindow(QWidget):
         self,
         event: QKeyEvent,
     ) -> None:
+
+        # Researcher/testing escape hatch: F11 toggles the participant window
+        # between fullscreen and normal mode without changing study state.
+        if event.key() == Qt.Key.Key_F11:
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
+            event.accept()
+            return
 
         if self._feedback_modality in (Modality.VOICE, Modality.JOYSTICK) or self._is_gaze_modality():
             # Do not silently turn keyboard presses into Voice/Eye-Gaze observations.

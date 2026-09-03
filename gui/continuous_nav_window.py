@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.participant_start_overlay import ParticipantStartOverlay
-from models.enums import AppMode, Environment, EventType, FeedbackTiming, Modality
+from models.enums import AppMode, Environment, EventType, FeedbackTiming, Modality, Study
 from models.event import StudyEvent
 
 
@@ -228,6 +228,7 @@ class ContinuousNavParticipantWindow(QWidget):
             if (
                 trial is None
                 or trial.trial_id != event.trial_id
+                or trial.condition.study == Study.OBSERVATION
                 or trial.condition.environment != Environment.CONTINUOUS_ROOM
             ):
                 return
@@ -235,7 +236,12 @@ class ContinuousNavParticipantWindow(QWidget):
             self._status.setText(
                 "Ubuntu room is prepared. Waiting for you to start the activity."
             )
-            if self._controller.config.mode == AppMode.STUDY:
+            # Actual Study 1 continuous-room trials should always start
+            # fullscreen, including when the console runs in DEVELOPMENT mode.
+            if (
+                self._controller.config.mode == AppMode.STUDY
+                or (trial.condition.study == Study.STUDY_1 and not trial.practice)
+            ):
                 self.showFullScreen()
             else:
                 self.show()
@@ -254,6 +260,12 @@ class ContinuousNavParticipantWindow(QWidget):
 
     def _on_participant_start_requested(self, trial_id: str) -> None:
         try:
+            # Resolve the Beam screen recorder against the monitor containing
+            # this participant-facing continuous-navigation window. This is a
+            # no-op in manual display-lock mode.
+            self._controller.device_manager.sync_beam_capture_to_participant_window(
+                int(self.winId())
+            )
             self._controller.start_prepared_activity(trial_id)
         except Exception as exc:
             self._start_overlay.start_failed(
@@ -306,7 +318,17 @@ class ContinuousNavParticipantWindow(QWidget):
             self._control_hint.setText("Keyboard Anytime mode: press SPACE or INTERVENE NOW whenever you want to provide corrective feedback.")
         elif self._current_modality() == Modality.NONE:
             self._control_hint.setText("Observation mode: watch the RL agent learn. No participant feedback is accepted.")
-        self.show()
+        trial = self._controller.active_trial
+        if (
+            trial is not None
+            and (
+                self._controller.config.mode == AppMode.STUDY
+                or (trial.condition.study == Study.STUDY_1 and not trial.practice)
+            )
+        ):
+            self.showFullScreen()
+        else:
+            self.show()
         self.raise_()
         self.activateWindow()
         self.setFocus()
@@ -408,6 +430,16 @@ class ContinuousNavParticipantWindow(QWidget):
 
     # ------------------------------------------------------------------
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        # F11 is reserved as a researcher/testing fullscreen toggle. It is
+        # handled before feedback keys so it never becomes a robot command.
+        if event.key() == Qt.Key.Key_F11:
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
+            event.accept()
+            return
+
         if self._waiting_request is None:
             if (event.key() == Qt.Key.Key_Space and self._current_modality() == Modality.KEYBOARD
                     and self._current_timing() == FeedbackTiming.ANYTIME):

@@ -1,4 +1,4 @@
-# HINT Study Console -- Version 1.5.0 (participant-controlled activity start)
+# HINT Study Console -- Version 1.8.4 (Study 1 + Study 2 participant fullscreen default)
 
 PySide6>=6.7
 PyYAML>=6.0
@@ -15,6 +15,13 @@ sounddevice>=0.5.1
 vosk==0.3.45
 
 pytest>=8.0
+
+# Webcam-based screen gaze for Training, Study 1, and Study 2. Requires the
+# Beam Eye Tracker desktop application 2.6.3 or newer on the study PC.
+beam-eye-tracker==2.2.0
+
+# Fast physical-pixel display capture for Beam screen_gaze.mp4 recordings.
+mss>=10.0
 
 # HoloLens 2 / HL2SS desktop client dependencies.
 # The official HL2SS Python modules themselves are selected from the downloaded

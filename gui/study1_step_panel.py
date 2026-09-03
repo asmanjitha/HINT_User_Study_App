@@ -178,6 +178,9 @@ class Study1StepPanel(QWidget):
         if c.key=="hololens_optional":
             ok,msg=self._controller.device_manager.check_hololens()
             if not ok: QMessageBox.warning(self,"HoloLens unavailable",msg); return
+        elif not self._controller.device_manager.beam_stream_healthy():
+            answer=QMessageBox.question(self,"Beam is not receiving live gaze","No fresh Beam eye-tracking samples are reaching HINT. This training run will have no Beam gaze CSV or screen_gaze.mp4 recording.\n\nReturn to Devices, calibrate/connect Beam, and validate live gaze.\n\nStart this training activity without Beam recording anyway?")
+            if answer!=QMessageBox.StandardButton.Yes:return
         if c.environment==Environment.CONTINUOUS_ROOM and not self._controller.continuous_nav_client.connected:
             try:self._controller.connect_continuous_nav_worker(self._host.text().strip(),self._port.value())
             except Exception as e:QMessageBox.critical(self,"Continuous worker unavailable",str(e));return

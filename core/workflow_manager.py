@@ -69,7 +69,7 @@ STEP_LABELS: dict[WorkflowStep, str] = {
     WorkflowStep.STUDY1_STUDY: "Study 1 — When Should a Human Intervene?",
     WorkflowStep.STUDY2_TRAINING: "Study 2 — Training (Legacy)",
     WorkflowStep.STUDY2_STUDY: "Study 2 — How Should a Human Provide Feedback?",
-    WorkflowStep.AGENT_OBSERVATION: "Agent Observation Phase — No Human Feedback",
+    WorkflowStep.AGENT_OBSERVATION: "Study 3 — Agent-Training Video Observation",
 }
 
 REPEATABLE_STEPS = set(STEP_STUDY) - {WorkflowStep.REGISTRATION}
@@ -180,8 +180,8 @@ class ObservationCondition(NamedTuple):
 
 
 OBSERVATION_REQUIRED_CONDITIONS: tuple[ObservationCondition, ...] = (
-    ObservationCondition("grid_observation", "Gridworld — Agent learns without human feedback", Environment.GRIDWORLD),
-    ObservationCondition("room_observation", "Continuous action space — Agent learns without human feedback", Environment.CONTINUOUS_ROOM),
+    ObservationCondition("grid_observation", "Gridworld agent-training video", Environment.GRIDWORLD),
+    ObservationCondition("room_observation", "Room-environment agent-training video", Environment.CONTINUOUS_ROOM),
 )
 OBSERVATION_REQUIRED_CONDITION_COUNT = len(OBSERVATION_REQUIRED_CONDITIONS)
 

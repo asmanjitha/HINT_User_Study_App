@@ -1,4 +1,4 @@
-study_version: "HINT_v1.5_participant_activity_start"
+study_version: "HINT_v1.8.4_study1_study2_fullscreen_default"
 
 # Revised participant flow:
 # Registration -> Training -> Study 1 (when) -> Study 2 (how) -> Agent Observation
@@ -11,6 +11,8 @@ timing:
   # Per-condition experimental countdowns shown only on the researcher console.
   study_1_condition_minutes: 8
   study_2_condition_minutes: 8
+  # Retained for compatibility with older datasets. In v1.8, Study 3 ends at
+  # the natural end of each configured video rather than a fixed countdown.
   observation_condition_minutes: 5
 
 training_phase:
@@ -26,6 +28,31 @@ training_phase:
     - "Gridworld - System-requested - Voice"
   optional_last:
     - "HoloLens familiarization / sensor check"
+
+eye_tracking_policy:
+  training_study_1_study_2: "Beam Eye Tracker"
+  hololens_optional_training_and_agent_observation: "HoloLens 2"
+  beam_sdk_version: "2.2.0"
+  minimum_beam_app_version: "2.6.3"
+  record_participant_webcam_video: false
+  beam_files:
+    - "sensors/beam/gaze.csv"
+    - "sensors/beam/screen_gaze.mp4"
+    - "sensors/beam/recording_metadata.json"
+
+beam_screen_recording:
+  enabled: true
+  fps: 30
+  codec: "mp4v"
+  # Recommended default. At the participant's Start click, HINT resolves the
+  # physical monitor containing the participant activity window and records it.
+  # The Devices page can override this with a manually locked display.
+  capture_display_mode: "auto_participant_window"
+  gaze_pointer_radius_px: 18
+  # Hide the pointer when the latest Beam sample is older than this threshold.
+  gaze_stale_seconds: 0.25
+  # Adds trial elapsed time and tracking state to the upper-left of the MP4.
+  show_status_overlay: true
 
 studies:
   study_1:
@@ -66,11 +93,14 @@ studies:
     counterbalancing_method: "experimenter_selected"
 
 agent_observation_phase:
-  label: "Agent Observation Phase - No Human Feedback"
+  label: "Study 3 - Fullscreen Agent-Training Video Observation"
   human_feedback: false
   required_environments:
-    - "Gridworld"
-    - "Continuous Room Navigation"
+    - "Gridworld agent-training video"
+    - "Room-environment agent-training video"
+  participant_start_required: true
+  playback_mode: "fullscreen"
+  completion_policy: "Natural video end automatically stops sensors and marks the run valid."
   required_sensors:
     - "Shimmer GSR"
     - "Shimmer PPG"

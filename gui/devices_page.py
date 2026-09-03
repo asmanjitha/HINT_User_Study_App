@@ -1,6 +1,6 @@
 """Study device connection page.
 
-Shimmer has a dedicated guided workflow because it is now a real hardware
+Beam and Shimmer have dedicated guided workflows because they are real hardware
 integration: select the paired Bluetooth COM port, watch handshake/config
 progress, confirm live GSR+PPG samples, and re-check stream health at any time.
 Keyboard, joystick/gamepad, and microphone also have selectable real-device panels;
@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.application_controller import ApplicationController
+from gui.beam_connection import BeamConnectionPanel
 from gui.hololens_connection import HoloLensConnectionPanel
 from models.enums import DeviceStatus, DeviceType
 
@@ -43,6 +44,7 @@ _STATUS_COLORS = {
 }
 
 _DEVICE_HINTS = {
+    DeviceType.BEAM: "Screen gaze recording for Training, Study 1, and Study 2",
     DeviceType.HOLOLENS: "Implicit feedback: gaze, hand joints, first-person view",
     DeviceType.JOYSTICK: "Explicit feedback input",
     DeviceType.KEYBOARD: "Explicit feedback input",
@@ -905,7 +907,7 @@ class DevicesPage(QWidget):
 
         subtitle = QLabel(
             "Connect and verify the exact hardware used for participant data collection. "
-            "HoloLens 2, Shimmer, keyboards, joystick/gamepad, and microphone now have real device integrations. "
+            "Beam, HoloLens 2, Shimmer, keyboards, joystick/gamepad, and microphone have real device integrations. "
             "Use each guided panel to connect and verify live data before participant collection."
         )
         subtitle.setWordWrap(True)
@@ -919,6 +921,9 @@ class DevicesPage(QWidget):
         root = QVBoxLayout(content)
         root.setContentsMargins(2, 2, 8, 8)
         root.setSpacing(12)
+
+        self._beam_panel = BeamConnectionPanel(controller)
+        root.addWidget(self._beam_panel)
 
         self._hololens_panel = HoloLensConnectionPanel(controller)
         root.addWidget(self._hololens_panel)
@@ -945,4 +950,3 @@ class DevicesPage(QWidget):
         root.addStretch()
         scroll.setWidget(content)
         outer.addWidget(scroll, 1)
-

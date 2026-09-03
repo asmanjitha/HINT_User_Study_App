@@ -1,0 +1,4 @@
+# Select these files from the Study 3 panel. Absolute Windows paths are allowed.
+observation_videos:
+  gridworld: ""
+  continuous_room: ""

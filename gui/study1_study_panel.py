@@ -475,7 +475,7 @@ class Study1StudyPanel(QWidget):
             state = "connected" if client.connected else "not connected"
             text = (
                 f"Continuous room {req.feedback_timing.value} runs on the Ubuntu HINT worker. The Console renders the live room/robot state, "
-                "records HoloLens + Shimmer, and uses Keyboard feedback. "
+                "records Beam gaze + Shimmer, and uses Keyboard feedback. "
                 f"Worker is currently {state}."
             )
         self._execution_label.setText(text)
@@ -583,6 +583,18 @@ class Study1StudyPanel(QWidget):
             if answer != QMessageBox.StandardButton.Yes:
                 return
 
+        if not self._controller.device_manager.beam_stream_healthy():
+            answer = QMessageBox.question(
+                self,
+                "Beam is not receiving live gaze",
+                "No fresh Beam eye-tracking samples are reaching HINT. If you start "
+                "this Study 1 run now, no Beam gaze CSV or screen_gaze.mp4 will be recorded.\n\n"
+                "Return to Devices, calibrate/connect Beam, and validate live gaze.\n\n"
+                "Start without Beam gaze recording anyway?",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+
         if not self._controller.device_manager.shimmer_stream_healthy():
             answer = QMessageBox.question(
                 self,
@@ -595,11 +607,12 @@ class Study1StudyPanel(QWidget):
             if answer != QMessageBox.StandardButton.Yes:
                 return
 
-        if not self._controller.device_manager.all_connected():
+        keyboard_ok, keyboard_message = self._controller.device_manager.check_keyboards()
+        if not keyboard_ok:
             answer = QMessageBox.question(
                 self,
-                "Devices not fully connected",
-                "Not all study devices show as Connected. Start this run anyway?",
+                "Keyboard input is not verified",
+                f"{keyboard_message}\n\nStart this Keyboard condition anyway?",
             )
             if answer != QMessageBox.StandardButton.Yes:
                 return

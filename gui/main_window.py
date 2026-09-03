@@ -40,6 +40,7 @@ from gui.devices_page import DevicesPage
 from gui.continuous_nav_window import ContinuousNavParticipantWindow
 from gui.event_log_page import EventLogPage
 from gui.participant_window import ParticipantWindow
+from gui.observation_video_window import ObservationVideoWindow
 from gui.storage_location_dialog import ensure_storage_location
 from gui.workflow_page import WorkflowPage
 from core.config_loader import PROJECT_ROOT
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow):
         # clock, recording, or task backend begins.
         self._participant_window = ParticipantWindow(controller)
         self._continuous_nav_window = ContinuousNavParticipantWindow(controller)
+        self._observation_video_window = ObservationVideoWindow(controller)
 
         self.setWindowTitle("HINT Study Console")
         self.resize(1280, 840)
@@ -201,6 +203,10 @@ class MainWindow(QMainWindow):
 
     def _start_study_timer(self, trial_id: str) -> None:
         trial = self._controller.trial_manager.get_trial(trial_id)
+        if trial is not None and trial.condition.study == Study.OBSERVATION:
+            self._clear_study_timer()
+            self._timer_label.setText("Study 3: video controls duration")
+            return
         if trial is None or trial.practice or trial.condition.study not in _STUDY_TIMER_CONFIG_KEYS:
             self._clear_study_timer()
             return
@@ -302,7 +308,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:
         self._timer_tick.stop()
+        self._controller.shutdown()
         self._participant_window.close()
         self._continuous_nav_window.close()
-        self._controller.shutdown()
+        self._observation_video_window.close()
         super().closeEvent(event)

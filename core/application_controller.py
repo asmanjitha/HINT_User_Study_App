@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import logging
+from pathlib import Path
 
 from core.config_loader import (
     AppConfig,
@@ -24,6 +26,8 @@ from core.session_manager import (
     SessionManager,
 )
 
+from core.sensor_policy import eye_tracker_for_trial
+
 from core.trial_manager import (
     TrialManager,
 )
@@ -41,6 +45,7 @@ from models.enums import (
     EventType,
     SessionStatus,
     Study,
+    DeviceType,
 )
 
 from models.event import StudyEvent
@@ -134,6 +139,7 @@ class ApplicationController:
             DeviceManager(
                 self.event_bus,
                 data_dir=self.config.data_dir,
+                beam_config=self.config.study_raw.get("beam_screen_recording", {}),
             )
         )
 
@@ -148,6 +154,7 @@ class ApplicationController:
 
         self._active_trial_backend = "none"
         self._activity_started = False
+        self._observation_video_path: Path | None = None
         self._continuous_nav_feedback_timeout_seconds = float(
             remote_cfg.get("feedback_timeout_seconds", 10)
         )
@@ -301,6 +308,122 @@ class ApplicationController:
         self._publish_activity_prepared(trial)
         return trial
 
+    def prepare_observation_video_trial(
+        self,
+        session_id: str,
+        condition: ExperimentCondition,
+        video_path: Path,
+        *,
+        practice: bool = False,
+    ) -> Trial:
+        """Prepare a Study 3 MP4 without starting time or sensor recording."""
+        if condition.study != Study.OBSERVATION:
+            raise ValueError("Observation video trials must belong to Study 3")
+        source = Path(video_path).expanduser().resolve()
+        if not source.is_file():
+            raise FileNotFoundError(f"Observation video not found: {source}")
+
+        if self.active_trial is not None:
+            raise RuntimeError(
+                f"Trial {self.active_trial.trial_id} is already active. Stop it first."
+            )
+        session = self.session_manager.get_session(session_id)
+        if session is None:
+            raise ValueError(f"Session not found: {session_id}")
+        if session.study not in (condition.study, Study.COMBINED_SESSION):
+            raise ValueError(
+                "Selected session and condition belong to incompatible study scopes"
+            )
+
+        trial = self.trial_manager.create_trial(session, condition, practice=practice)
+        try:
+            if trial.trial_path is not None:
+                media_dir = trial.trial_path / "observation_video"
+                media_dir.mkdir(parents=True, exist_ok=True)
+                stat = source.stat()
+                (media_dir / "source.json").write_text(
+                    json.dumps(
+                        {
+                            "source_path": str(source),
+                            "file_name": source.name,
+                            "size_bytes": stat.st_size,
+                            "modified_utc_timestamp": stat.st_mtime,
+                            "playback_mode": "fullscreen",
+                            "participant_start_required": True,
+                        },
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+            self.active_session = session
+            self.active_trial = trial
+            self._active_trial_backend = "observation_video"
+            self._observation_video_path = source
+            self._activity_started = False
+            self._publish_activity_prepared(trial)
+            return trial
+        except Exception:
+            try:
+                self.trial_manager.end_trial(trial, completed=False)
+            except Exception:
+                logger.exception("Could not close failed observation-video trial")
+            self.active_trial = None
+            self.active_session = None
+            self._active_trial_backend = "none"
+            self._observation_video_path = None
+            raise
+
+    def observation_video_path_for_trial(self, trial_id: str) -> Path | None:
+        trial = self.active_trial
+        if (
+            trial is None
+            or trial.trial_id != trial_id
+            or self._active_trial_backend != "observation_video"
+        ):
+            return None
+        return self._observation_video_path
+
+    def publish_observation_video_event(
+        self, event_type: EventType, trial_id: str, value: str
+    ) -> None:
+        trial = self.active_trial
+        if trial is None or trial.trial_id != trial_id:
+            return
+        self.event_bus.publish(
+            StudyEvent(
+                event_type=event_type,
+                participant_id=trial.participant_code,
+                session_id=trial.session_id,
+                trial_id=trial.trial_id,
+                value=value,
+            )
+        )
+
+    def complete_active_observation_video(self, trial_id: str) -> bool:
+        """Close the video trial and matching workflow run after EndOfMedia."""
+        trial = self.active_trial
+        if (
+            trial is None
+            or trial.trial_id != trial_id
+            or trial.condition.study != Study.OBSERVATION
+            or self._active_trial_backend != "observation_video"
+            or not self._activity_started
+        ):
+            return False
+        run = self.workflow_manager.has_active_run(trial.participant_code)
+        if run is None or run.trial_id != trial_id:
+            raise RuntimeError("Matching active Study 3 workflow run was not found")
+        self.stop_active_trial(
+            completed=True, collection_status=CollectionRunStatus.VALID
+        )
+        self.workflow_manager.end_run(
+            run.run_id,
+            completed=True,
+            notes="Automatically completed when the observation video ended.",
+            outcome=CollectionRunStatus.VALID,
+        )
+        return True
+
     def connect_continuous_nav_worker(
         self, host: str, port: int | None = None
     ) -> dict:
@@ -431,6 +554,19 @@ class ApplicationController:
         session = self.active_session
         if session is None:
             raise RuntimeError("The prepared activity has no active session")
+
+        if getattr(getattr(trial, "condition", None), "study", None) == Study.OBSERVATION:
+            missing: list[str] = []
+            if not self.device_manager.hololens_stream_healthy():
+                missing.append("HoloLens PV/EET")
+            if not self.device_manager.shimmer_stream_healthy():
+                missing.append("Shimmer GSR/PPG")
+            if missing:
+                raise RuntimeError(
+                    "Study 3 cannot start because fresh data is unavailable from: "
+                    + ", ".join(missing)
+                    + ". Ask the researcher to reconnect/check the sensors, then try again."
+                )
 
         try:
             if session.status == SessionStatus.CREATED:
@@ -637,7 +773,7 @@ class ApplicationController:
             except Exception as exc:
                 remote_error = str(exc)
                 logger.exception("Could not stop Ubuntu continuous-navigation task cleanly")
-        elif activity_started:
+        elif activity_started and backend not in ("tracked", "observation_video"):
             self.rl_manager.stop()
 
         self.trial_manager.end_trial(
@@ -671,7 +807,7 @@ class ApplicationController:
                 logger.exception("Could not finalize/download Ubuntu trial data")
             finally:
                 self.continuous_nav_client.clear_active_trial()
-        else:
+        elif backend not in ("tracked", "observation_video"):
             self.rl_manager.finalize_trial()
 
         if remote_error:
@@ -688,6 +824,7 @@ class ApplicationController:
         self.active_trial = None
         self._active_trial_backend = "none"
         self._activity_started = False
+        self._observation_video_path = None
 
     def complete_active_trial_at_time_limit(
         self,
@@ -750,16 +887,16 @@ class ApplicationController:
     def _start_trial_sensor_recordings(self, trial: Trial) -> None:
         """Attach connected sensors to the active readable R## directory.
 
-        HoloLens PV + EET is recorded for BOTH training/practice and primary
-        study trials. Shimmer keeps the existing experimental-only policy so
-        familiarization physiology is not mixed with primary physiology data.
-        Sensor unavailability never prevents the trial from running; it is
-        recorded as an experimenter-note event instead.
+        Beam records Training, Study 1, and Study 2. HoloLens records only the
+        Agent Observation phase (including its optional familiarization run).
+        Shimmer keeps the experimental-only policy. Study 3 performs an extra
+        required-sensor check at participant Start; earlier phases retain the
+        non-blocking sensor policy.
         """
 
-        # HoloLens: requested for every training/study activity when the stream
-        # is live. This creates sensors/hololens inside the current R## folder.
-        if self.device_manager.hololens_stream_healthy():
+        eye_tracker = eye_tracker_for_trial(trial)
+        use_hololens = eye_tracker == DeviceType.HOLOLENS
+        if use_hololens and self.device_manager.hololens_stream_healthy():
             try:
                 paths = self.device_manager.start_hololens_trial_recording(trial)
                 self.event_bus.publish(
@@ -786,7 +923,11 @@ class ApplicationController:
                         value=f"HoloLens recording NOT started: {exc}",
                     )
                 )
-        else:
+                if trial.condition.study == Study.OBSERVATION:
+                    raise RuntimeError(
+                        f"Required Study 3 HoloLens recording could not start: {exc}"
+                    ) from exc
+        elif use_hololens:
             self.event_bus.publish(
                 StudyEvent(
                     event_type=EventType.EXPERIMENTER_NOTE,
@@ -796,6 +937,62 @@ class ApplicationController:
                     value=(
                         "HoloLens recording NOT started: fresh PV + EET streams "
                         "were not available when this activity began."
+                    ),
+                )
+            )
+
+        use_beam = eye_tracker == DeviceType.BEAM
+        if use_beam and self.device_manager.beam_stream_healthy():
+            try:
+                paths = self.device_manager.start_beam_trial_recording(trial)
+                self.event_bus.publish(
+                    StudyEvent(
+                        event_type=EventType.RECORDING_STARTED,
+                        participant_id=trial.participant_code,
+                        session_id=trial.session_id,
+                        trial_id=trial.trial_id,
+                        value=(
+                            f"Beam screen gaze -> {paths['gaze_csv']} ; "
+                            f"screen_gaze_video={paths['screen_video']} ; "
+                            f"capture_viewport={paths.get('capture_viewport')} ; "
+                            f"capture_source={paths.get('capture_target_source')}"
+                        ),
+                    )
+                )
+                if paths.get("screen_video_error"):
+                    self.event_bus.publish(
+                        StudyEvent(
+                            event_type=EventType.EXPERIMENTER_NOTE,
+                            participant_id=trial.participant_code,
+                            session_id=trial.session_id,
+                            trial_id=trial.trial_id,
+                            value=(
+                                "Beam gaze CSV is recording, but screen_gaze.mp4 "
+                                f"could not start: {paths['screen_video_error']}"
+                            ),
+                        )
+                    )
+            except Exception as exc:
+                logger.exception("Could not start Beam recording for %s", trial.trial_id)
+                self.event_bus.publish(
+                    StudyEvent(
+                        event_type=EventType.EXPERIMENTER_NOTE,
+                        participant_id=trial.participant_code,
+                        session_id=trial.session_id,
+                        trial_id=trial.trial_id,
+                        value=f"Beam recording NOT started: {exc}",
+                    )
+                )
+        elif use_beam:
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.EXPERIMENTER_NOTE,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        "Beam recording NOT started: fresh webcam eye-tracking "
+                        "data was not available when this activity began."
                     ),
                 )
             )
@@ -833,6 +1030,28 @@ class ApplicationController:
         )
 
     def _stop_trial_sensor_recordings(self, trial: Trial, reason: str) -> None:
+        beam_summary = self.device_manager.stop_beam_trial_recording(
+            trial_id=trial.trial_id,
+            reason=reason,
+        )
+        if beam_summary is not None:
+            self.event_bus.publish(
+                StudyEvent(
+                    event_type=EventType.RECORDING_STOPPED,
+                    participant_id=trial.participant_code,
+                    session_id=trial.session_id,
+                    trial_id=trial.trial_id,
+                    value=(
+                        f"Beam screen gaze: {beam_summary['sample_count']} samples, "
+                        f"{beam_summary['valid_sample_count']} valid -> "
+                        f"{beam_summary['recording_dir']} ; "
+                        f"screen_video_frames={beam_summary['video_frame_count']} ; "
+                        f"screen_video={beam_summary['screen_video_path']} ; "
+                        f"capture_error={beam_summary['video_capture_error'] or 'none'}"
+                    ),
+                )
+            )
+
         holo_summary = self.device_manager.stop_hololens_trial_recording(
             trial_id=trial.trial_id,
             reason=reason,
