@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.participant_start_overlay import ParticipantStartOverlay
-from models.enums import AppMode, Environment, EventType, FeedbackTiming, Modality, Study
+from models.enums import Environment, EventType, FeedbackTiming, Modality, Study
 from models.event import StudyEvent
 
 
@@ -158,6 +158,19 @@ class ContinuousNavParticipantWindow(QWidget):
         self._status.setStyleSheet("font-size: 14px;")
         root.addWidget(self._status)
 
+        self._requested_feedback_alert = QLabel(
+            "SYSTEM IS WAITING FOR YOUR FEEDBACK — PLEASE PROVIDE FEEDBACK NOW"
+        )
+        self._requested_feedback_alert.setWordWrap(True)
+        self._requested_feedback_alert.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._requested_feedback_alert.setStyleSheet(
+            "font-size: 22px; font-weight: bold; color: #8b0000; "
+            "background: #fff3cd; border: 3px solid #d32f2f; "
+            "padding: 12px; margin: 4px;"
+        )
+        self._requested_feedback_alert.setVisible(False)
+        root.addWidget(self._requested_feedback_alert)
+
         self._canvas = ContinuousNavCanvas()
         root.addWidget(self._canvas, 1)
 
@@ -236,15 +249,9 @@ class ContinuousNavParticipantWindow(QWidget):
             self._status.setText(
                 "Ubuntu room is prepared. Waiting for you to start the activity."
             )
-            # Actual Study 1 continuous-room trials should always start
-            # fullscreen, including when the console runs in DEVELOPMENT mode.
-            if (
-                self._controller.config.mode == AppMode.STUDY
-                or (trial.condition.study == Study.STUDY_1 and not trial.practice)
-            ):
-                self.showFullScreen()
-            else:
-                self.show()
+            # Every participant-facing continuous-room activity, including
+            # training/practice, opens fullscreen.
+            self.showFullScreen()
             self.raise_()
             self.activateWindow()
             self._start_overlay.present(trial)
@@ -253,6 +260,7 @@ class ContinuousNavParticipantWindow(QWidget):
         if event.event_type == EventType.PARTICIPANT_ACTIVITY_STARTED:
             self._start_overlay.start_succeeded(event.trial_id or "")
         elif event.event_type == EventType.TRIAL_ENDED:
+            self._requested_feedback_alert.setVisible(False)
             gate_was_visible = self._start_overlay.isVisible()
             self._start_overlay.dismiss(event.trial_id or "")
             if gate_was_visible:
@@ -310,6 +318,7 @@ class ContinuousNavParticipantWindow(QWidget):
             return
         self._status.setText("Agent training is running on the Ubuntu PC.")
         self._waiting_request = None
+        self._requested_feedback_alert.setVisible(False)
         self._set_feedback_controls_enabled(False)
         anytime = self._current_timing() == FeedbackTiming.ANYTIME and self._current_modality() == Modality.KEYBOARD
         self._anytime_btn.setVisible(anytime)
@@ -318,17 +327,9 @@ class ContinuousNavParticipantWindow(QWidget):
             self._control_hint.setText("Keyboard Anytime mode: press SPACE or INTERVENE NOW whenever you want to provide corrective feedback.")
         elif self._current_modality() == Modality.NONE:
             self._control_hint.setText("Observation mode: watch the RL agent learn. No participant feedback is accepted.")
-        trial = self._controller.active_trial
-        if (
-            trial is not None
-            and (
-                self._controller.config.mode == AppMode.STUDY
-                or (trial.condition.study == Study.STUDY_1 and not trial.practice)
-            )
-        ):
-            self.showFullScreen()
-        else:
-            self.show()
+        # Keep every continuous-room participant activity fullscreen after
+        # START ACTIVITY as well, including training/practice.
+        self.showFullScreen()
         self.raise_()
         self.activateWindow()
         self.setFocus()
@@ -337,6 +338,7 @@ class ContinuousNavParticipantWindow(QWidget):
         if not self.isVisible() and not self._room_trial_active():
             return
         self._waiting_request = None
+        self._requested_feedback_alert.setVisible(False)
         self._set_feedback_controls_enabled(False)
         self._status.setText(
             f"Ubuntu navigation task stopped ({msg.get('status') or msg.get('type')})."
@@ -347,6 +349,7 @@ class ContinuousNavParticipantWindow(QWidget):
         if not self._room_trial_active():
             return
         self._waiting_request = None
+        self._requested_feedback_alert.setVisible(False)
         self._set_feedback_controls_enabled(False)
         first_line = str(message).splitlines()[0] if str(message).splitlines() else str(message)
         self._status.setText(f"Ubuntu RL failed: {first_line}")
@@ -363,6 +366,7 @@ class ContinuousNavParticipantWindow(QWidget):
 
     def _on_collision(self, msg: dict) -> None:
         if self._room_trial_active():
+            self._requested_feedback_alert.setVisible(False)
             self._status.setText("Collision detected — simulator is rewinding to the correction state…")
             self._control_hint.setText("Collision detected. Wait for the restored state before giving feedback.")
 
@@ -378,6 +382,14 @@ class ContinuousNavParticipantWindow(QWidget):
             self._status.setText("Observation mode — human feedback request ignored; agent continues without participant input.")
             return
         self._waiting_request = dict(msg)
+        trial = self._controller.active_trial
+        self._requested_feedback_alert.setVisible(
+            bool(
+                trial is not None
+                and trial.condition.study == Study.STUDY_1
+                and self._current_timing() == FeedbackTiming.REQUESTED
+            )
+        )
         self._anytime_btn.setEnabled(False)
         timeout_s = float(
             getattr(self._controller, "_continuous_nav_feedback_timeout_seconds", 10.0)
@@ -400,7 +412,7 @@ class ContinuousNavParticipantWindow(QWidget):
                 "Shift+A/Shift+D = sharp turn. Esc skips this intervention."
             )
         self._control_hint.setText(hint)
-        self.show()
+        self.showFullScreen()
         self.raise_()
         self.activateWindow()
         self.setFocus()
@@ -408,6 +420,7 @@ class ContinuousNavParticipantWindow(QWidget):
     def _on_action_applied(self, msg: dict) -> None:
         # The next STATE_UPDATE and HUMAN_ACTION_REQUEST define the next lock-step state.
         if self._room_trial_active():
+            self._requested_feedback_alert.setVisible(False)
             self._status.setText(
                 f"Applied human action at correction step {msg.get('human_step', '--')}. Updating state…"
             )
@@ -418,6 +431,7 @@ class ContinuousNavParticipantWindow(QWidget):
             self._status.setText("Rewind complete — human correction is starting.")
         elif kind == "RL_CONTROL_RESUMED" and self._room_trial_active():
             self._waiting_request = None
+            self._requested_feedback_alert.setVisible(False)
             self._set_feedback_controls_enabled(False)
             self._status.setText("Human correction finished — RL control resumed from the final corrected state.")
             anytime = self._current_timing() == FeedbackTiming.ANYTIME and self._current_modality() == Modality.KEYBOARD
@@ -425,6 +439,7 @@ class ContinuousNavParticipantWindow(QWidget):
             self._control_hint.setText("Press SPACE to intervene again." if anytime else "The RL agent is controlling the robot.")
         elif kind == "HUMAN_ACTION_TIMEOUT" and self._room_trial_active():
             self._waiting_request = None
+            self._requested_feedback_alert.setVisible(False)
             self._set_feedback_controls_enabled(False)
             self._status.setText("Human-feedback timeout — RL will continue from the restored state.")
 

@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
         )
         self._storage_button.clicked.connect(self._change_data_location)
         status_bar.addPermanentWidget(self._storage_button)
-        self._timer_label = QLabel("Study timer: --:--")
+        self._timer_label = QLabel("Activity time: --:--")
         self._timer_label.setMinimumWidth(310)
         self._timer_label.setStyleSheet(
             "font-size: 18px; font-weight: bold; padding: 3px 10px; "
@@ -139,6 +139,11 @@ class MainWindow(QMainWindow):
         self._timer_deadline = 0.0
         self._timer_paused = False
         self._timer_expiring = False
+        # Activity elapsed time is shown for every participant activity,
+        # including practice/training and Study 3.  The existing Study 1/2
+        # protocol countdown remains separate and retains its auto-stop logic.
+        self._activity_elapsed_seconds = 0.0
+        self._activity_resume_monotonic = 0.0
         controller.event_bus.event_published.connect(self._on_study_timer_event)
 
     def _build_pages(self) -> None:
@@ -184,18 +189,37 @@ class MainWindow(QMainWindow):
         total = max(0, int(math.ceil(seconds)))
         return f"{total // 60:02d}:{total % 60:02d}"
 
-    def _set_timer_label(self, remaining: float, *, paused: bool = False) -> None:
-        study = self._timed_study.value if self._timed_study is not None else "Study"
+    @staticmethod
+    def _format_elapsed(seconds: float) -> str:
+        total = max(0, int(seconds))
+        return f"{total // 60:02d}:{total % 60:02d}"
+
+    def _current_activity_elapsed(self) -> float:
+        elapsed = self._activity_elapsed_seconds
+        if self._timed_trial_id is not None and not self._timer_paused:
+            elapsed += max(0.0, time.monotonic() - self._activity_resume_monotonic)
+        return elapsed
+
+    def _set_timer_label(self, remaining: float | None = None, *, paused: bool = False) -> None:
+        elapsed_text = self._format_elapsed(self._current_activity_elapsed())
         state = " (paused)" if paused else ""
-        self._timer_label.setText(
-            f"{study} timer{state}: {self._format_remaining(remaining)}"
-        )
-        if remaining <= 10:
-            color = "#b71c1c"
-        elif remaining <= 60:
-            color = "#b35a00"
+
+        if self._timer_limit_seconds > 0 and remaining is not None:
+            study = self._timed_study.value if self._timed_study is not None else "Study"
+            self._timer_label.setText(
+                f"Activity elapsed{state}: {elapsed_text}  |  "
+                f"{study} remaining: {self._format_remaining(remaining)}"
+            )
+            if remaining <= 10:
+                color = "#b71c1c"
+            elif remaining <= 60:
+                color = "#b35a00"
+            else:
+                color = "#1b5e20"
         else:
+            self._timer_label.setText(f"Activity elapsed{state}: {elapsed_text}")
             color = "#1b5e20"
+
         self._timer_label.setStyleSheet(
             "font-size: 18px; font-weight: bold; padding: 3px 10px; "
             f"border-left: 1px solid #bbb; color: {color};"
@@ -203,37 +227,61 @@ class MainWindow(QMainWindow):
 
     def _start_study_timer(self, trial_id: str) -> None:
         trial = self._controller.trial_manager.get_trial(trial_id)
-        if trial is not None and trial.condition.study == Study.OBSERVATION:
-            self._clear_study_timer()
-            self._timer_label.setText("Study 3: video controls duration")
-            return
-        if trial is None or trial.practice or trial.condition.study not in _STUDY_TIMER_CONFIG_KEYS:
+        if trial is None:
             self._clear_study_timer()
             return
+
         self._timed_trial_id = trial_id
         self._timed_study = trial.condition.study
-        self._timer_limit_seconds = self._duration_seconds_for_study(self._timed_study)
-        self._timer_remaining_seconds = float(self._timer_limit_seconds)
-        self._timer_deadline = time.monotonic() + self._timer_remaining_seconds
         self._timer_paused = False
         self._timer_expiring = False
-        self._set_timer_label(self._timer_remaining_seconds)
+        self._activity_elapsed_seconds = 0.0
+        self._activity_resume_monotonic = time.monotonic()
+
+        # Preserve the existing protocol countdown/automatic completion only
+        # for real Study 1 and Study 2 trials. Practice/training and Study 3
+        # now get an elapsed activity clock without changing their lifecycle.
+        protocol_timed = (
+            not trial.practice
+            and trial.condition.study in (Study.STUDY_1, Study.STUDY_2)
+        )
+        if protocol_timed:
+            self._timer_limit_seconds = self._duration_seconds_for_study(self._timed_study)
+            self._timer_remaining_seconds = float(self._timer_limit_seconds)
+            self._timer_deadline = time.monotonic() + self._timer_remaining_seconds
+            self._set_timer_label(self._timer_remaining_seconds)
+        else:
+            self._timer_limit_seconds = 0
+            self._timer_remaining_seconds = 0.0
+            self._timer_deadline = 0.0
+            self._set_timer_label()
+
         self._timer_tick.start()
 
     def _pause_study_timer(self) -> None:
         if self._timed_trial_id is None or self._timer_paused:
             return
-        self._timer_remaining_seconds = max(0.0, self._timer_deadline - time.monotonic())
+        now = time.monotonic()
+        self._activity_elapsed_seconds += max(0.0, now - self._activity_resume_monotonic)
+        if self._timer_limit_seconds > 0:
+            self._timer_remaining_seconds = max(0.0, self._timer_deadline - now)
         self._timer_paused = True
         self._timer_tick.stop()
-        self._set_timer_label(self._timer_remaining_seconds, paused=True)
+        self._set_timer_label(
+            self._timer_remaining_seconds if self._timer_limit_seconds > 0 else None,
+            paused=True,
+        )
 
     def _resume_study_timer(self) -> None:
         if self._timed_trial_id is None or not self._timer_paused:
             return
-        self._timer_deadline = time.monotonic() + self._timer_remaining_seconds
+        self._activity_resume_monotonic = time.monotonic()
+        if self._timer_limit_seconds > 0:
+            self._timer_deadline = time.monotonic() + self._timer_remaining_seconds
         self._timer_paused = False
-        self._set_timer_label(self._timer_remaining_seconds)
+        self._set_timer_label(
+            self._timer_remaining_seconds if self._timer_limit_seconds > 0 else None
+        )
         self._timer_tick.start()
 
     def _clear_study_timer(self) -> None:
@@ -241,10 +289,14 @@ class MainWindow(QMainWindow):
         self._timed_trial_id = None
         self._prepared_trial_id = None
         self._timed_study = None
+        self._timer_limit_seconds = 0
         self._timer_remaining_seconds = 0.0
+        self._timer_deadline = 0.0
         self._timer_paused = False
         self._timer_expiring = False
-        self._timer_label.setText("Study timer: --:--")
+        self._activity_elapsed_seconds = 0.0
+        self._activity_resume_monotonic = 0.0
+        self._timer_label.setText("Activity time: --:--")
         self._timer_label.setStyleSheet(
             "font-size: 18px; font-weight: bold; padding: 3px 10px; "
             "border-left: 1px solid #bbb;"
@@ -253,6 +305,13 @@ class MainWindow(QMainWindow):
     def _update_study_timer(self) -> None:
         if self._timed_trial_id is None or self._timer_paused or self._timer_expiring:
             return
+
+        # Every activity gets an elapsed clock. Only Study 1/2 experimental
+        # trials additionally maintain the pre-existing countdown and auto-stop.
+        if self._timer_limit_seconds <= 0:
+            self._set_timer_label()
+            return
+
         self._timer_remaining_seconds = max(0.0, self._timer_deadline - time.monotonic())
         self._set_timer_label(self._timer_remaining_seconds)
         if self._timer_remaining_seconds > 0:
@@ -284,7 +343,7 @@ class MainWindow(QMainWindow):
     def _on_study_timer_event(self, event: StudyEvent) -> None:
         if event.event_type == EventType.ACTIVITY_PREPARED and event.trial_id:
             self._prepared_trial_id = event.trial_id
-            self._timer_label.setText("Study timer: waiting for participant")
+            self._timer_label.setText("Activity time: waiting for participant")
         elif event.event_type == EventType.TRIAL_STARTED and event.trial_id:
             self._prepared_trial_id = None
             self._start_study_timer(event.trial_id)

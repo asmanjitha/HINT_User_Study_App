@@ -45,7 +45,6 @@ from devices.gaze_gesture_recognizer import (
     EyeGazeGestureRecognizer,
 )
 from models.enums import (
-    AppMode,
     Environment,
     EventType,
     FeedbackTiming,
@@ -492,6 +491,19 @@ class ParticipantWindow(QWidget):
         )
         root.addWidget(self._condition_label)
 
+        self._requested_feedback_alert = QLabel(
+            "SYSTEM IS WAITING FOR YOUR FEEDBACK — PLEASE PROVIDE FEEDBACK NOW"
+        )
+        self._requested_feedback_alert.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._requested_feedback_alert.setWordWrap(True)
+        self._requested_feedback_alert.setStyleSheet(
+            "font-size: 22px; font-weight: bold; color: #8b0000; "
+            "background: #fff3cd; border: 3px solid #d32f2f; "
+            "padding: 12px; margin: 4px;"
+        )
+        self._requested_feedback_alert.setVisible(False)
+        root.addWidget(self._requested_feedback_alert)
+
         self._maze = MazeCanvas()
 
         root.addWidget(
@@ -768,27 +780,16 @@ class ParticipantWindow(QWidget):
             if (
                 trial is None
                 or trial.trial_id != event.trial_id
-                or trial.condition.study == Study.OBSERVATION
+                or (trial.condition.study == Study.OBSERVATION and not trial.practice)
                 or trial.condition.environment == Environment.CONTINUOUS_ROOM
             ):
                 return
 
             self._status_label.setText("Activity ready — waiting for you to start")
-            # Actual Study 1 and Study 2 participant trials should always start
-            # fullscreen, even when the console itself is launched in DEVELOPMENT
-            # mode. Practice/training keeps the historical windowed DEVELOPMENT
-            # behavior.
-            if (
-                self._controller.config.mode == AppMode.STUDY
-                or (
-                    trial.condition.study in (Study.STUDY_1, Study.STUDY_2)
-                    and not trial.practice
-                )
-            ):
-                self.showFullScreen()
-            else:
-                self.resize(850, 900)
-                self.show()
+            # Every participant-facing activity, including training/practice,
+            # opens fullscreen. F11 remains available as the existing testing
+            # toggle after the window has opened.
+            self.showFullScreen()
             self.raise_()
             self.activateWindow()
             self._start_overlay.present(trial)
@@ -797,6 +798,7 @@ class ParticipantWindow(QWidget):
         if event.event_type == EventType.PARTICIPANT_ACTIVITY_STARTED:
             self._start_overlay.start_succeeded(event.trial_id or "")
         elif event.event_type == EventType.TRIAL_ENDED:
+            self._requested_feedback_alert.setVisible(False)
             gate_was_visible = self._start_overlay.isVisible()
             self._start_overlay.dismiss(event.trial_id or "")
             if gate_was_visible:
@@ -837,6 +839,7 @@ class ParticipantWindow(QWidget):
         self._waiting_for_feedback = (
             False
         )
+        self._requested_feedback_alert.setVisible(False)
 
         self._anytime_feedback_active = False
         self._anytime_history = []
@@ -954,27 +957,9 @@ class ParticipantWindow(QWidget):
                 False
             )
 
-        # Keep real Study 1 and Study 2 trials fullscreen after the participant
-        # presses START ACTIVITY as well. This must not depend on the global app
-        # mode.
-        if (
-            self._controller.config.mode == AppMode.STUDY
-            or (
-                trial.condition.study in (Study.STUDY_1, Study.STUDY_2)
-                and not trial.practice
-            )
-        ):
-
-            self.showFullScreen()
-
-        else:
-
-            self.resize(
-                850,
-                900,
-            )
-
-            self.show()
+        # Keep every participant-facing activity fullscreen after START
+        # ACTIVITY as well, including all training/practice activities.
+        self.showFullScreen()
 
         self.raise_()
 
@@ -1069,6 +1054,15 @@ class ParticipantWindow(QWidget):
 
         self._waiting_for_feedback = (
             True
+        )
+
+        trial = self._controller.active_trial
+        self._requested_feedback_alert.setVisible(
+            bool(
+                trial is not None
+                and trial.condition.study == Study.STUDY_1
+                and self._feedback_timing == FeedbackTiming.REQUESTED
+            )
         )
 
         self._remaining_seconds = int(
@@ -1200,6 +1194,7 @@ class ParticipantWindow(QWidget):
             self._waiting_for_feedback = (
                 False
             )
+            self._requested_feedback_alert.setVisible(False)
 
             self._countdown.stop()
             if self._feedback_modality == Modality.VOICE:

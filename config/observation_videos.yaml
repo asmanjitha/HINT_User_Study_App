@@ -1,4 +1,3 @@
-# Select these files from the Study 3 panel. Absolute Windows paths are allowed.
 observation_videos:
-  gridworld: ""
-  continuous_room: ""
+  gridworld: D:/Courses/Independent Study 2/User_Study/gridworld_agent_training.mp4
+  continuous_room: D:/Courses/Independent Study 2/User_Study/room_agent_training.mp4

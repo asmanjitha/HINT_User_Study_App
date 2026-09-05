@@ -1,4 +1,4 @@
-study_version: "HINT_v1.8.4_study1_study2_fullscreen_default"
+study_version: "HINT_v1.8.5_fullscreen_activity_timer_requested_alert"
 
 # Revised participant flow:
 # Registration -> Training -> Study 1 (when) -> Study 2 (how) -> Agent Observation
@@ -9,8 +9,8 @@ timing:
   feedback_timeout_seconds: 10
   practice_duration_minutes: 5
   # Per-condition experimental countdowns shown only on the researcher console.
-  study_1_condition_minutes: 8
-  study_2_condition_minutes: 8
+  study_1_condition_minutes: 5
+  study_2_condition_minutes: 5
   # Retained for compatibility with older datasets. In v1.8, Study 3 ends at
   # the natural end of each configured video rather than a fixed countdown.
   observation_condition_minutes: 5
@@ -168,7 +168,7 @@ continuous_room_navigation:
 
 rl:
   actor_critic_gridworld:
-    step_interval_ms: 50
+    step_interval_ms: 200
 
     # Number of recent visited states shown after the participant
     # presses SPACE/Pause in Anytime Feedback mode.
